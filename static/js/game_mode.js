@@ -8,7 +8,21 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', function() {
             modeButtons.forEach(btn => btn.classList.remove('active'));
             this.classList.add('active');
-            gameModeInput.value = this.dataset.mode;
+            const selectedMode = this.dataset.mode;
+            
+            fetch('/set_game_mode', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({ 'game_mode': selectedMode })
+            }).then(response => {
+                if (response.ok) {
+                    console.log('Game mode set to ' + selectedMode);
+                } else {
+                    console.error('Failed to set game mode');
+                }
+            });
         });
     });
 });

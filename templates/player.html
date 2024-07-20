@@ -2,6 +2,17 @@
 
 {% block content %}
 <h1>Интерфейс игрока</h1>
+
+{% if character %}
+    <div class="character-section">
+        <label for="character-image">Персонаж:</label>
+        <div id="character-image">
+            <img src="{{ url_for('static', filename=character.image_url) }}" alt="Character Image">
+        </div>
+        <h2>{{ character.name }}</h2>
+    </div>
+{% endif %}
+
 <form method="post" action="{{ url_for('create_character') }}">
     <label for="name">Имя персонажа:</label>
     <input type="text" id="name" name="name" required>
@@ -15,13 +26,11 @@
 </form>
 
 <h2>Выбор режима игры</h2>
-<form method="post" action="{{ url_for('set_game_mode') }}" id="game-mode-form">
-    <input type="hidden" id="game_mode" name="game_mode" value="automatic">
+<div id="game-mode-buttons">
     <button type="button" class="mode-btn active" data-mode="automatic">Автоматический режим</button>
     <button type="button" class="mode-btn" data-mode="semi_automatic">Полуавтоматический режим</button>
     <button type="button" class="mode-btn" data-mode="manual">Ручной режим</button>
-    <button type="submit">Выбрать режим</button>
-</form>
+</div>
 
 <h2>Голосовой ввод характеристик</h2>
 <button id="voice-input-btn">Нажмите и говорите</button>
@@ -29,7 +38,12 @@
 
 <h2>Чат</h2>
 <div id="chat-box">
-    <!-- Здесь будут отображаться сообщения чата -->
+    {% for message in messages %}
+        <div class="chat-message {{ 'right' if message.user_id == 1 else 'left' }}">
+            <p>{{ message.content }}</p>
+            <span class="timestamp">{{ message.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+        </div>
+    {% endfor %}
 </div>
 <form id="chat-form" method="post" action="{{ url_for('send_message') }}">
     <input type="text" id="message" name="message" placeholder="Введите сообщение...">

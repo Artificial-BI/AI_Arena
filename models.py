@@ -1,3 +1,4 @@
+# --- models.py ---
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from datetime import datetime
@@ -9,6 +10,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
     role = db.Column(db.String(64))  # 'player', 'admin', 'viewer'
+    messages = db.relationship('Message', backref='author', lazy='dynamic')
 
 class Character(db.Model):
     id = db.Column(db.Integer, primary_key=True)

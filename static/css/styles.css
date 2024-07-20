@@ -129,3 +129,41 @@ form button:hover {
     background-color: var(--button-bg-color);
     color: var(--button-text-color);
 }
+
+/* Chat message styles */
+.chat-message {
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    max-width: 70%;
+}
+
+.chat-message.right {
+    background-color: var(--button-bg-color);
+    color: var(--button-text-color);
+    margin-left: auto;
+}
+
+.chat-message.left {
+    background-color: var(--button-inactive-bg-color);
+    color: var(--text-color);
+}
+
+.timestamp {
+    font-size: 0.8em;
+    color: #888;
+    display: block;
+    margin-top: 5px;
+}
+
+/* Character image styles */
+.character-section {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#character-image img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+}
