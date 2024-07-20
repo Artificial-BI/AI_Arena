@@ -1,3 +1,4 @@
+# --- app.py ---
 from flask import Flask, render_template, redirect, url_for, request, flash
 from config import Config
 from models import db, migrate, User, Character, Message
@@ -53,6 +54,13 @@ def update_settings():
     flash('Settings updated!', 'success')
     return redirect(url_for('admin'))
 
+@app.route('/set_game_mode', methods=['POST'])
+def set_game_mode():
+    game_mode = request.form['game_mode']
+    # Логика для сохранения выбранного режима игры
+    flash(f'Game mode set to {game_mode}!', 'success')
+    return redirect(url_for('player'))
+
 def generate_character_image(description):
     # Логика генерации изображения персонажа
     return "https://example.com/character_image.png"
@@ -63,4 +71,3 @@ def calculate_initial_health(description):
 
 if __name__ == '__main__':
     app.run(debug=True)
-

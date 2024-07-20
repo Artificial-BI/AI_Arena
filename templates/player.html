@@ -5,11 +5,33 @@
 <form method="post" action="{{ url_for('create_character') }}">
     <label for="name">Имя персонажа:</label>
     <input type="text" id="name" name="name" required>
+    
     <label for="description">Описание персонажа:</label>
     <textarea id="description" name="description" required></textarea>
+    
     <button type="submit">Создать персонажа</button>
+    
+    <p>Подсказка: Введите характеристики вашего персонажа, такие как рост, вес, оружие и т.д.</p>
 </form>
-<p>Подсказка: Введите характеристики вашего персонажа, такие как рост, вес, оружие и т.д.</p>
+
+<h2>Выбор режима игры</h2>
+<form method="post" action="{{ url_for('set_game_mode') }}">
+    <label>
+        <input type="radio" name="game_mode" value="automatic" required> Автоматический режим
+    </label>
+    <label>
+        <input type="radio" name="game_mode" value="semi_automatic" required> Полуавтоматический режим
+    </label>
+    <label>
+        <input type="radio" name="game_mode" value="manual" required> Ручной режим
+    </label>
+    <button type="submit">Выбрать режим</button>
+</form>
+
+<h2>Голосовой ввод характеристик</h2>
+<button id="voice-input-btn">Нажмите и говорите</button>
+<textarea id="voice-input" name="voice-input" readonly></textarea>
+
 <h2>Чат</h2>
 <div id="chat-box">
     <!-- Здесь будут отображаться сообщения чата -->
@@ -18,4 +40,6 @@
     <input type="text" id="message" name="message" placeholder="Введите сообщение...">
     <button type="submit">Отправить</button>
 </form>
+
+<script src="{{ url_for('static', filename='js/voice_input.js') }}"></script>
 {% endblock %}

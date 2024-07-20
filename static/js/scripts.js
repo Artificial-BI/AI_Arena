@@ -1,25 +1,18 @@
-// Функциональность для обновления чата и отправки сообщений
+// voice_input.js
 
 document.addEventListener('DOMContentLoaded', function() {
-    const chatForm = document.getElementById('chat-form');
-    chatForm.addEventListener('submit', function(event) {
-        event.preventDefault();
-        const messageInput = document.getElementById('message');
-        const message = messageInput.value;
-        if (message.trim() !== '') {
-            // Отправка сообщения на сервер
-            fetch('/send_message', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: new URLSearchParams({ 'message': message })
-            }).then(response => {
-                if (response.ok) {
-                    // Очистка поля ввода после успешной отправки
-                    messageInput.value = '';
-                }
-            });
-        }
+    const voiceInputBtn = document.getElementById('voice-input-btn');
+    const voiceInput = document.getElementById('voice-input');
+
+    voiceInputBtn.addEventListener('click', function() {
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'ru-RU';
+
+        recognition.onresult = function(event) {
+            const transcript = event.results[0][0].transcript;
+            voiceInput.value += transcript + '\n';
+        };
+
+        recognition.start();
     });
 });
