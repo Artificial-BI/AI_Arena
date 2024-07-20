@@ -62,3 +62,27 @@ FROM arena_message ORDER BY arena_message.timestamp ASC]
 2024-07-20 21:39:48,362 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:26]
 2024-07-20 21:39:50,976 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:26]
 2024-07-20 21:39:53,771 INFO: Loaded player page with 2 characters [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:40]
+2024-07-20 22:00:15,387 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:26]
+2024-07-20 22:00:17,873 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:26]
+2024-07-20 22:00:26,613 ERROR: Error loading player page: (sqlite3.OperationalError) no such table: arena_message
+[SQL: SELECT arena_message.id AS arena_message_id, arena_message.user_id AS arena_message_user_id, arena_message.content AS arena_message_content, arena_message.timestamp AS arena_message_timestamp 
+FROM arena_message ORDER BY arena_message.timestamp ASC]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:44]
+2024-07-20 22:00:43,620 INFO: Generating character image for description: нет описания [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:151]
+2024-07-20 22:00:43,625 INFO: Calculating initial health for description: нет описания [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:169]
+2024-07-20 22:00:43,863 INFO: Created new character: xeon with image URL: images\user_1\xeon\character_image.png [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:67]
+2024-07-20 22:00:43,882 ERROR: Error loading player page: (sqlite3.OperationalError) no such table: arena_message
+[SQL: SELECT arena_message.id AS arena_message_id, arena_message.user_id AS arena_message_user_id, arena_message.content AS arena_message_content, arena_message.timestamp AS arena_message_timestamp 
+FROM arena_message ORDER BY arena_message.timestamp ASC]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:44]
+2024-07-20 22:06:58,853 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:26]
+2024-07-20 22:07:00,572 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:26]
+2024-07-20 22:07:05,693 INFO: Loaded player page with 3 characters [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:40]
+2024-07-20 22:09:03,827 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:25]
+2024-07-20 22:09:06,314 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:25]
+2024-07-20 22:09:11,538 ERROR: Error loading player page: (sqlite3.OperationalError) no such table: arena_message
+[SQL: SELECT arena_message.id AS arena_message_id, arena_message.user_id AS arena_message_user_id, arena_message.content AS arena_message_content, arena_message.timestamp AS arena_message_timestamp 
+FROM arena_message ORDER BY arena_message.timestamp ASC]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:43]
+2024-07-20 22:09:47,456 INFO: Generating character image for description: нет [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:150]
+2024-07-20 22:11:27,613 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:26]
