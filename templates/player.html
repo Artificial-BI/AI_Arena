@@ -6,11 +6,11 @@
 <h2>Ваши персонажи</h2>
 <ul>
     {% for character in characters %}
-        <li>
+        <li class="character-item">
             <form method="post" action="{{ url_for('select_character', character_id=character.id) }}">
                 <button type="submit">{{ character.name }}</button>
             </form>
-            <form method="post" action="{{ url_for('delete_character', character_id=character.id) }}" style="display:inline;">
+            <form method="post" action="{{ url_for('delete_character', character_id=character.id) }}" class="delete-form">
                 <button type="submit">Удалить</button>
             </form>
         </li>
@@ -24,20 +24,27 @@
             <img src="{{ url_for('static', filename=selected_character.image_url.replace('\\', '/')) }}" alt="Character Image">
         </div>
         <h2>{{ selected_character.name }}</h2>
+        <p>{{ selected_character.description }}</p>
     </div>
 {% endif %}
 
-<form method="post" action="{{ url_for('create_character') }}">
-    <label for="name">Имя персонажа:</label>
-    <input type="text" id="name" name="name" required>
-    
-    <label for="description">Описание персонажа:</label>
-    <textarea id="description" name="description" required></textarea>
-    
-    <button type="submit">Создать персонажа</button>
-    
-    <p>Подсказка: Введите характеристики вашего персонажа, такие как рост, вес, оружие и т.д.</p>
-</form>
+<div class="create-character-block">
+    <h2>Создание персонажа</h2>
+    <form method="post" action="{{ url_for('create_character') }}">
+        <label for="name">Имя персонажа:</label>
+        <input type="text" id="name" name="name" required>
+        
+        <label for="description">Описание персонажа:</label>
+        <textarea id="description" name="description" required></textarea>
+        
+        <button type="submit">Создать персонажа</button>
+        
+        <p>Подсказка: Введите характеристики вашего персонажа, такие как рост, вес, оружие и т.д.</p>
+
+        <h2>Голосовой ввод характеристик</h2>
+        <button type="button" id="voice-input-btn">Нажмите и говорите</button>
+    </form>
+</div>
 
 <h2>Выбор режима игры</h2>
 <div id="game-mode-buttons">
@@ -45,10 +52,6 @@
     <button type="button" class="mode-btn" data-mode="semi_automatic">Полуавтоматический режим</button>
     <button type="button" class="mode-btn" data-mode="manual">Ручной режим</button>
 </div>
-
-<h2>Голосовой ввод характеристик</h2>
-<button id="voice-input-btn">Нажмите и говорите</button>
-<textarea id="voice-input" name="voice-input" readonly></textarea>
 
 <h2>Чат</h2>
 <div id="chat-box">
