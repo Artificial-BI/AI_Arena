@@ -167,3 +167,21 @@ form button:hover {
     height: auto;
     border-radius: 10px;
 }
+
+/* Character list styles */
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+ul li {
+    margin-bottom: 10px;
+}
+
+ul li form {
+    display: inline;
+}
+
+ul li button {
+    margin-right: 5px;
+}

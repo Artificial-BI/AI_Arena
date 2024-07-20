@@ -10,6 +10,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
     role = db.Column(db.String(64))  # 'player', 'admin', 'viewer'
+    characters = db.relationship('Character', backref='owner', lazy='dynamic')
     messages = db.relationship('Message', backref='author', lazy='dynamic')
 
 class Character(db.Model):

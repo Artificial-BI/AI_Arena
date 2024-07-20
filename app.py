@@ -1,5 +1,5 @@
 # --- app.py ---
-from flask import Flask, render_template, redirect, url_for, request, flash, jsonify
+from flask import Flask, render_template, redirect, url_for, request, flash, jsonify, session
 from config import Config
 from models import db, migrate, User, Character, Message
 import logging
@@ -32,13 +32,16 @@ def index():
 @app.route('/player')
 def player():
     try:
+        user_id = 1  # Здесь нужно определить ID текущего пользователя
         messages = Message.query.order_by(Message.timestamp.asc()).all()
-        character = Character.query.filter_by(user_id=1).first()  # Замените 1 на идентификатор текущего пользователя
-        app.logger.info('Loaded player page with character: %s', character.name if character else 'No character found')
-        return render_template('player.html', messages=messages, character=character)
+        characters = Character.query.filter_by(user_id=user_id).all()
+        selected_character_id = session.get('selected_character_id')
+        selected_character = Character.query.get(selected_character_id) if selected_character_id else None
+        app.logger.info('Loaded player page with %d characters', len(characters))
+        return render_template('player.html', messages=messages, characters=characters, selected_character=selected_character)
     except Exception as e:
         app.logger.error('Error loading player page: %s', e)
-        return render_template('player.html', messages=[], character=None)
+        return render_template('player.html', messages=[], characters=[], selected_character=None)
 
 @app.route('/admin')
 def admin():
@@ -65,6 +68,37 @@ def create_character():
     except Exception as e:
         app.logger.error('Error creating character: %s', e)
         flash('Error creating character!', 'danger')
+    return redirect(url_for('player'))
+
+@app.route('/delete_character/<int:character_id>', methods=['POST'])
+def delete_character(character_id):
+    try:
+        character = Character.query.get(character_id)
+        if character:
+            db.session.delete(character)
+            db.session.commit()
+            app.logger.info('Deleted character: %s', character.name)
+            flash('Character deleted successfully!', 'success')
+        else:
+            flash('Character not found!', 'danger')
+    except Exception as e:
+        app.logger.error('Error deleting character: %s', e)
+        flash('Error deleting character!', 'danger')
+    return redirect(url_for('player'))
+
+@app.route('/select_character/<int:character_id>', methods=['POST'])
+def select_character(character_id):
+    try:
+        character = Character.query.get(character_id)
+        if character:
+            session['selected_character_id'] = character_id
+            app.logger.info('Selected character: %s', character.name)
+            flash('Character selected successfully!', 'success')
+        else:
+            flash('Character not found!', 'danger')
+    except Exception as e:
+        app.logger.error('Error selecting character: %s', e)
+        flash('Error selecting character!', 'danger')
     return redirect(url_for('player'))
 
 @app.route('/send_message', methods=['POST'])
@@ -100,7 +134,7 @@ def generate_character_image(description, user_id, character_name):
     # Логика генерации изображения персонажа
     app.logger.info('Generating character image for description: %s', description)
     image_filename = 'character_image.png'  # Название файла изображения
-    user_folder = os.path.join(Config.IMAGE_UPLOADS, f'user_{user_id}')
+    user_folder = os.path.join(app.root_path, 'static/images', f'user_{user_id}')
     character_folder = os.path.join(user_folder, character_name)
 
     if not os.path.exists(character_folder):
@@ -112,7 +146,7 @@ def generate_character_image(description, user_id, character_name):
     with open(image_path, 'wb') as f:
         f.write(b'')  # Сюда нужно поместить реальные данные изображения
 
-    return image_path
+    return os.path.relpath(image_path, app.root_path + '/static')
 
 def calculate_initial_health(description):
     # Логика расчета начальных баллов

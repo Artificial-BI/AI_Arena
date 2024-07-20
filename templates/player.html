@@ -3,13 +3,27 @@
 {% block content %}
 <h1>Интерфейс игрока</h1>
 
-{% if character %}
+<h2>Ваши персонажи</h2>
+<ul>
+    {% for character in characters %}
+        <li>
+            <form method="post" action="{{ url_for('select_character', character_id=character.id) }}">
+                <button type="submit">{{ character.name }}</button>
+            </form>
+            <form method="post" action="{{ url_for('delete_character', character_id=character.id) }}" style="display:inline;">
+                <button type="submit">Удалить</button>
+            </form>
+        </li>
+    {% endfor %}
+</ul>
+
+{% if selected_character %}
     <div class="character-section">
         <label for="character-image">Персонаж:</label>
         <div id="character-image">
-            <img src="{{ url_for('static', filename=character.image_url) }}" alt="Character Image">
+            <img src="{{ url_for('static', filename=selected_character.image_url.replace('\\', '/')) }}" alt="Character Image">
         </div>
-        <h2>{{ character.name }}</h2>
+        <h2>{{ selected_character.name }}</h2>
     </div>
 {% endif %}
 
