@@ -15,16 +15,11 @@
 </form>
 
 <h2>Выбор режима игры</h2>
-<form method="post" action="{{ url_for('set_game_mode') }}">
-    <label>
-        <input type="radio" name="game_mode" value="automatic" required> Автоматический режим
-    </label>
-    <label>
-        <input type="radio" name="game_mode" value="semi_automatic" required> Полуавтоматический режим
-    </label>
-    <label>
-        <input type="radio" name="game_mode" value="manual" required> Ручной режим
-    </label>
+<form method="post" action="{{ url_for('set_game_mode') }}" id="game-mode-form">
+    <input type="hidden" id="game_mode" name="game_mode" value="automatic">
+    <button type="button" class="mode-btn active" data-mode="automatic">Автоматический режим</button>
+    <button type="button" class="mode-btn" data-mode="semi_automatic">Полуавтоматический режим</button>
+    <button type="button" class="mode-btn" data-mode="manual">Ручной режим</button>
     <button type="submit">Выбрать режим</button>
 </form>
 
@@ -42,4 +37,5 @@
 </form>
 
 <script src="{{ url_for('static', filename='js/voice_input.js') }}"></script>
+<script src="{{ url_for('static', filename='js/game_mode.js') }}"></script>
 {% endblock %}
