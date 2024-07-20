@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Добро пожаловать в AI Arena</h1>
+<p>Это главная страница AI Arena. Здесь вы можете создать своего персонажа, участвовать в боях и соревноваться с другими игроками.</p>
+<p>Выберите режим:</p>
+<ul>
+    <li><a href="{{ url_for('player') }}">Игрок</a></li>
+    <li><a href="{{ url_for('admin') }}">Администратор</a></li>
+    <li><a href="{{ url_for('viewer') }}">Зритель</a></li>
+</ul>
+{% endblock %}

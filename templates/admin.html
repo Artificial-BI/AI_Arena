@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Интерфейс администратора</h1>
+<h2>Управление пользователями</h2>
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Имя пользователя</th>
+            <th>Роль</th>
+            <th>Действия</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Здесь будет динамически загружаться список пользователей -->
+    </tbody>
+</table>
+<h2>Настройки нейросетей</h2>
+<form method="post" action="{{ url_for('update_settings') }}">
+    <label for="temperature">Температура:</label>
+    <input type="number" id="temperature" name="temperature" step="0.01" value="1.0">
+    <label for="top_p">Топ-p:</label>
+    <input type="number" id="top_p" name="top_p" step="0.01" value="0.9">
+    <label for="top_k">Топ-k:</label>
+    <input type="number" id="top_k" name="top_k" value="50">
+    <button type="submit">Обновить настройки</button>
+</form>
+{% endblock %}

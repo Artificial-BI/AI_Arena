@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Интерфейс игрока</h1>
+<form method="post" action="{{ url_for('create_character') }}">
+    <label for="name">Имя персонажа:</label>
+    <input type="text" id="name" name="name" required>
+    <label for="description">Описание персонажа:</label>
+    <textarea id="description" name="description" required></textarea>
+    <button type="submit">Создать персонажа</button>
+</form>
+<p>Подсказка: Введите характеристики вашего персонажа, такие как рост, вес, оружие и т.д.</p>
+<h2>Чат</h2>
+<div id="chat-box">
+    <!-- Здесь будут отображаться сообщения чата -->
+</div>
+<form id="chat-form" method="post" action="{{ url_for('send_message') }}">
+    <input type="text" id="message" name="message" placeholder="Введите сообщение...">
+    <button type="submit">Отправить</button>
+</form>
+{% endblock %}
