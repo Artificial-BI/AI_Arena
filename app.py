@@ -1,6 +1,6 @@
 from flask import Flask, render_template, redirect, url_for, request, flash, jsonify, session
 from config import Config
-from models import db, migrate, User, Character, Message
+from models import db, migrate, User, Character, Message, RefereePrompt
 import logging
 from logging.handlers import RotatingFileHandler
 import os
@@ -36,16 +36,9 @@ def player():
         characters = Character.query.filter_by(user_id=user_id).all()
         selected_character_id = session.get('selected_character_id')
         selected_character = Character.query.get(selected_character_id) if selected_character_id else None
-        app.logger.info('Loaded player page with %d characters', len(characters))
         return render_template('player.html', messages=messages, characters=characters, selected_character=selected_character)
     except Exception as e:
-        app.logger.error('Error loading player page: %s', e)
         return render_template('player.html', messages=[], characters=[], selected_character=None)
-
-@app.route('/admin')
-def admin():
-    return render_template('admin.html')
-
 
 @app.route('/update_settings', methods=['POST'])
 def update_settings():
@@ -53,25 +46,29 @@ def update_settings():
         temperature = request.form['temperature']
         top_p = request.form['top_p']
         top_k = request.form['top_k']
-        # Здесь можно добавить логику обновления настроек
-        app.logger.info('Updated settings: temperature=%s, top_p=%s, top_k=%s', temperature, top_p, top_k)
+        # Здесь вы можете сохранить эти значения в базу данных или использовать их для конфигурации
         flash('Settings updated successfully!', 'success')
     except Exception as e:
-        app.logger.error('Error updating settings: %s', e)
         flash('Error updating settings!', 'danger')
     return redirect(url_for('admin'))
 
 
+@app.route('/admin')
+def admin():
+    try:
+        messages = Message.query.order_by(Message.timestamp.asc()).all()
+        referee_prompts = RefereePrompt.query.all()
+        return render_template('admin.html', messages=messages, referee_prompts=referee_prompts)
+    except Exception as e:
+        return render_template('admin.html', messages=[], referee_prompts=[])
 
 @app.route('/viewer')
-def viewer_page():
+def viewer():
     try:
-        characters = Character.query.all()
         messages = Message.query.order_by(Message.timestamp.asc()).all()
-        return render_template('viewer.html', characters=characters, messages=messages)
+        return render_template('viewer.html', messages=messages)
     except Exception as e:
-        app.logger.error('Error loading viewer page: %s', e)
-        return render_template('viewer.html', characters=[], messages=[])
+        return render_template('viewer.html', messages=[])
 
 @app.route('/create_character', methods=['POST'])
 def create_character():
@@ -79,16 +76,13 @@ def create_character():
         name = request.form['name']
         description = request.form['description']
         user_id = 1  # Замените 1 на идентификатор текущего пользователя
-        # Генерация изображения и начальных баллов
         image_url = generate_character_image(description, user_id, name)
         health_points = calculate_initial_health(description)
         new_character = Character(name=name, description=description, image_url=image_url, health_points=health_points, user_id=user_id)
         db.session.add(new_character)
         db.session.commit()
-        app.logger.info('Created new character: %s with image URL: %s', name, image_url)
         flash('Character created successfully!', 'success')
     except Exception as e:
-        app.logger.error('Error creating character: %s', e)
         flash('Error creating character!', 'danger')
     return redirect(url_for('player'))
 
@@ -99,12 +93,10 @@ def delete_character(character_id):
         if character:
             db.session.delete(character)
             db.session.commit()
-            app.logger.info('Deleted character: %s', character.name)
             flash('Character deleted successfully!', 'success')
         else:
             flash('Character not found!', 'danger')
     except Exception as e:
-        app.logger.error('Error deleting character: %s', e)
         flash('Error deleting character!', 'danger')
     return redirect(url_for('player'))
 
@@ -114,12 +106,10 @@ def select_character(character_id):
         character = Character.query.get(character_id)
         if character:
             session['selected_character_id'] = character_id
-            app.logger.info('Selected character: %s', character.name)
             flash('Character selected successfully!', 'success')
         else:
             flash('Character not found!', 'danger')
     except Exception as e:
-        app.logger.error('Error selecting character: %s', e)
         flash('Error selecting character!', 'danger')
     return redirect(url_for('player'))
 
@@ -131,26 +121,53 @@ def send_message():
         new_message = Message(user_id=user_id, content=content)
         db.session.add(new_message)
         db.session.commit()
-        app.logger.info('Message sent by user %d: %s', user_id, content)
         flash('Message sent!', 'success')
     except Exception as e:
-        app.logger.error('Error sending message: %s', e)
         flash('Error sending message!', 'danger')
     return redirect(url_for('player'))
 
-@app.route('/get_messages', methods=['GET'])
-def get_messages():
+@app.route('/add_referee_prompt', methods=['POST'])
+def add_referee_prompt():
     try:
-        messages = Message.query.order_by(Message.timestamp.asc()).all()
-        app.logger.info('Fetched messages: %d messages', len(messages))
-        return jsonify([{
-            'user_id': message.user_id,
-            'content': message.content,
-            'timestamp': message.timestamp.strftime('%Y-%m-%d %H:%M:%S')
-        } for message in messages])
+        prompt_text = request.form['referee_prompt']
+        new_prompt = RefereePrompt(prompt_text=prompt_text)
+        db.session.add(new_prompt)
+        db.session.commit()
+        flash('Referee prompt added successfully!', 'success')
     except Exception as e:
-        app.logger.error('Error fetching messages: %s', e)
-        return jsonify([])
+        flash('Error adding referee prompt!', 'danger')
+    return redirect(url_for('admin'))
+
+@app.route('/select_referee_prompt', methods=['POST'])
+def select_referee_prompt():
+    try:
+        prompt_id = request.form['existing_prompts']
+        selected_prompt = RefereePrompt.query.get(prompt_id)
+        if selected_prompt:
+            session['selected_referee_prompt'] = selected_prompt.prompt_text
+            flash('Referee prompt selected successfully!', 'success')
+        else:
+            flash('Referee prompt not found!', 'danger')
+    except Exception as e:
+        flash('Error selecting referee prompt!', 'danger')
+    return redirect(url_for('admin'))
+
+def generate_character_image(description, user_id, character_name):
+    image_filename = 'character_image.png'
+    user_folder = os.path.join(app.root_path, 'static/images', f'user_{user_id}')
+    character_folder = os.path.join(user_folder, character_name)
+
+    if not os.path.exists(character_folder):
+        os.makedirs(character_folder)
+
+    image_path = os.path.join(character_folder, image_filename)
+    with open(image_path, 'wb') as f:
+        f.write(b'')
+    return os.path.relpath(image_path, app.root_path + '/static')
+
+def calculate_initial_health(description):
+    return 1000
+
 
 def generate_character_image(description, user_id, character_name):
     # Логика генерации изображения персонажа
@@ -174,32 +191,6 @@ def calculate_initial_health(description):
     # Логика расчета начальных баллов
     app.logger.info('Calculating initial health for description: %s', description)
     return 1000
-
-# Add a function to get character details
-@app.route('/get_characters', methods=['GET'])
-def get_characters():
-    try:
-        characters = Character.query.all()
-        return jsonify([{
-            'name': character.name,
-            'description': character.description,
-            'image_url': character.image_url
-        } for character in characters])
-    except Exception as e:
-        app.logger.error('Error fetching characters: %s', e)
-        return jsonify([])
-
-@app.route('/get_battle_updates', methods=['GET'])
-def get_battle_updates():
-    try:
-        messages = Message.query.order_by(Message.timestamp.asc()).all()
-        return jsonify([{
-            'content': message.content,
-            'timestamp': message.timestamp.strftime('%Y-%m-%d %H:%M:%S')
-        } for message in messages])
-    except Exception as e:
-        app.logger.error('Error fetching battle updates: %s', e)
-        return jsonify([])
 
 if __name__ == '__main__':
     app.run(debug=True)

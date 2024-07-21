@@ -75,6 +75,7 @@ form button:active {
     background-color: var(--button-active-color);
 }
 
+
 #chat-box {
     border: 1px solid var(--chat-box-border-color);
     background-color: var(--chat-box-bg-color);

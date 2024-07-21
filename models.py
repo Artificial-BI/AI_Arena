@@ -1,4 +1,3 @@
-# --- models.py ---
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from datetime import datetime
@@ -27,3 +26,9 @@ class Message(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     content = db.Column(db.Text)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+
+class RefereePrompt(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    prompt_text = db.Column(db.Text)
+    
+    

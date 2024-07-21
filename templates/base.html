@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <title>AI Arena</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    {% block head %}{% endblock %}
 </head>
 <body>
     <nav>
@@ -12,7 +13,7 @@
             <li><a href="{{ url_for('index') }}">Home</a></li>
             <li><a href="{{ url_for('player') }}">Player</a></li>
             <li><a href="{{ url_for('admin') }}">Admin</a></li>
-            <li><a href="{{ url_for('viewer_page') }}">Viewer</a></li> <!-- Обновлено -->
+            <li><a href="{{ url_for('viewer') }}">Viewer</a></li>
         </ul>
     </nav>
     <div class="container">
