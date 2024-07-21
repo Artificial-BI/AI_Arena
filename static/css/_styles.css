@@ -161,7 +161,7 @@ form button:active {
 
 .chat-message.left {
     background-color: var(--button-inactive-bg-color);
-    color: var (--text-color);
+    color: var(--text-color);
 }
 
 .timestamp {
@@ -233,101 +233,3 @@ form button:active {
 .delete-form {
     margin-left: auto;
 }
-
-/* Styles for viewer interface */
-#players-names {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 20px;
-}
-
-.player-name {
-    width: 45%;
-    text-align: center;
-    border: 1px solid #ccc;
-    padding: 10px;
-    border-radius: 10px;
-    background-color: #fff;
-}
-
-.player-name h3 {
-    margin: 0;
-    font-size: 1.2em;
-}
-
-.character-section {
-    margin-top: 10px;
-}
-
-.character-section img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 10px;
-}
-
-.character-section p {
-    margin-top: 10px;
-    font-size: 1em;
-}
-
-#battle-box {
-    margin-top: 20px;
-}
-
-/* Styles for battle slideshow */
-#battle-slideshow {
-    margin-top: 20px;
-    text-align: center;
-}
-
-#slideshow-container {
-    position: relative;
-    max-width: 100%;
-    margin: auto;
-    overflow: hidden;
-}
-
-.slides {
-    display: flex;
-    transition: transform 0.5s ease-in-out;
-}
-
-.slides img {
-    width: 100%;
-    border-radius: 10px;
-}
-
-#prev-slide,
-#next-slide {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background-color: rgba(0, 0, 0, 0.5);
-    color: white;
-    border: none;
-    padding: 10px;
-    cursor: pointer;
-    border-radius: 50%;
-}
-
-#prev-slide {
-    left: 10px;
-}
-
-#next-slide {
-    right: 10px;
-}
-
-#prev-slide:hover,
-#next-slide:hover {
-    background-color: rgba(0, 0, 0, 0.7);
-}
-
-/* Styles for viewer chat */
-/*#viewer-chat {
-    margin-top: 20px;
-}
-
-#viewer-chat #chat-box {
-    height: 300px; /* Высота окна чата */
-/*}*/

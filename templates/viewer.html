@@ -1,8 +1,54 @@
 {% extends 'base.html' %}
 
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/viewer.css') }}">
+{% endblock %}
+
 {% block content %}
 <h1>Интерфейс зрителя</h1>
-<div id="battle-box">
-    <!-- Здесь будут отображаться информация о бою и персонажах -->
+
+<h2>Магическая арена</h2>
+
+<div id="players-names">
+    <div id="player1" class="player-name">
+        <h3>Игрок 1: <span id="player1-name"></span></h3>
+        <div class="character-section">
+            <img id="player1-image" src="/static/images/default/player1.png" alt="Player 1 Character Image">
+            <p id="player1-description">Описание игрока 1</p>
+        </div>
+    </div>
+    <div id="player2" class="player-name">
+        <h3>Игрок 2: <span id="player2-name"></span></h3>
+        <div class="character-section">
+            <img id="player2-image" src="/static/images/default/player2.png" alt="Player 2 Character Image">
+            <p id="player2-description">Описание игрока 2</p>
+        </div>
+    </div>
 </div>
+
+<div id="battle-slideshow">
+    <h2>Ключевые моменты боя</h2>
+    <div id="slideshow-container">
+        <button id="prev-slide">❮</button>
+        <div id="slides" class="slides">
+            <img src="/static/images/default/battle1.png" alt="Default Battle Image">
+            <img src="/static/images/default/battle2.png" alt="Default Battle Image">
+            <img src="/static/images/default/battle3.png" alt="Default Battle Image">
+        </div>
+        <button id="next-slide">❯</button>
+    </div>
+</div>
+
+<div id="viewer-chat">
+    <h2>Чат</h2>
+    <div id="chat-box">
+        <!-- Здесь будут отображаться сообщения чата -->
+    </div>
+    <form id="chat-form" method="post" action="{{ url_for('send_message') }}">
+        <input type="text" id="message" name="message" placeholder="Введите сообщение...">
+        <button type="submit">Отправить</button>
+    </form>
+</div>
+
+<script src="{{ url_for('static', filename='js/viewer.js') }}"></script>
 {% endblock %}

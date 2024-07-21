@@ -1,5 +1,9 @@
 {% extends 'base.html' %}
 
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/player.css') }}">
+{% endblock %}
+
 {% block content %}
 <h1>Интерфейс игрока</h1>
 
@@ -70,3 +74,4 @@
 <script src="{{ url_for('static', filename='js/voice_input.js') }}"></script>
 <script src="{{ url_for('static', filename='js/game_mode.js') }}"></script>
 {% endblock %}
+ы

@@ -1,4 +1,3 @@
-# --- app.py ---
 from flask import Flask, render_template, redirect, url_for, request, flash, jsonify, session
 from config import Config
 from models import db, migrate, User, Character, Message
@@ -47,9 +46,32 @@ def player():
 def admin():
     return render_template('admin.html')
 
+
+@app.route('/update_settings', methods=['POST'])
+def update_settings():
+    try:
+        temperature = request.form['temperature']
+        top_p = request.form['top_p']
+        top_k = request.form['top_k']
+        # Здесь можно добавить логику обновления настроек
+        app.logger.info('Updated settings: temperature=%s, top_p=%s, top_k=%s', temperature, top_p, top_k)
+        flash('Settings updated successfully!', 'success')
+    except Exception as e:
+        app.logger.error('Error updating settings: %s', e)
+        flash('Error updating settings!', 'danger')
+    return redirect(url_for('admin'))
+
+
+
 @app.route('/viewer')
-def viewer():
-    return render_template('viewer.html')
+def viewer_page():
+    try:
+        characters = Character.query.all()
+        messages = Message.query.order_by(Message.timestamp.asc()).all()
+        return render_template('viewer.html', characters=characters, messages=messages)
+    except Exception as e:
+        app.logger.error('Error loading viewer page: %s', e)
+        return render_template('viewer.html', characters=[], messages=[])
 
 @app.route('/create_character', methods=['POST'])
 def create_character():
@@ -152,6 +174,32 @@ def calculate_initial_health(description):
     # Логика расчета начальных баллов
     app.logger.info('Calculating initial health for description: %s', description)
     return 1000
+
+# Add a function to get character details
+@app.route('/get_characters', methods=['GET'])
+def get_characters():
+    try:
+        characters = Character.query.all()
+        return jsonify([{
+            'name': character.name,
+            'description': character.description,
+            'image_url': character.image_url
+        } for character in characters])
+    except Exception as e:
+        app.logger.error('Error fetching characters: %s', e)
+        return jsonify([])
+
+@app.route('/get_battle_updates', methods=['GET'])
+def get_battle_updates():
+    try:
+        messages = Message.query.order_by(Message.timestamp.asc()).all()
+        return jsonify([{
+            'content': message.content,
+            'timestamp': message.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+        } for message in messages])
+    except Exception as e:
+        app.logger.error('Error fetching battle updates: %s', e)
+        return jsonify([])
 
 if __name__ == '__main__':
     app.run(debug=True)

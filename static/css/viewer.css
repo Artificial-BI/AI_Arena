@@ -1,0 +1,199 @@
+/* Основные переменные и базовые стили */
+:root {
+    --bg-color: #f4f4f4;
+    --text-color: #333;
+    --nav-bg-color: #333;
+    --nav-text-color: #fff;
+    --button-bg-color: #4CAF50;
+    --button-text-color: #fff;
+    --button-inactive-bg-color: #ccc;
+    --input-border-color: #ccc;
+    --input-focus-border-color: #66afe9;
+    --input-focus-shadow-color: rgba(102, 175, 233, 0.6);
+    --chat-box-border-color: #ccc;
+    --chat-box-bg-color: #fff;
+    --chat-box-text-color: #333;
+    --button-hover-color: #45a049; /* Slightly darker */
+    --button-active-color: #5bcf63; /* Brighter */
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 0;
+}
+
+nav ul {
+    list-style: none;
+    background-color: var(--nav-bg-color);
+    padding: 10px;
+    margin: 0;
+    display: flex;
+}
+
+nav ul li {
+    margin-right: 10px;
+}
+
+nav ul li a {
+    color: var(--nav-text-color);
+    text-decoration: none;
+    padding: 8px 16px;
+    display: block;
+}
+
+nav ul li a:hover {
+    background-color: darken(var(--button-bg-color), 10%);
+    color: var(--button-text-color);
+}
+
+.container {
+    padding: 20px;
+}
+
+/* Styles for viewer interface */
+#players-names {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.player-name {
+    width: 45%;
+    text-align: center;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 10px;
+    background-color: #fff;
+}
+
+.player-name h3 {
+    margin: 0;
+    font-size: 1.2em;
+}
+
+.character-section {
+    margin-top: 10px;
+}
+
+.character-section img {
+    max-width: 100%;
+    height: auto;
+    max-height: 50%; /* Уменьшаем высоту изображения на 50% */
+    border-radius: 10px;
+}
+
+.character-section p {
+    margin-top: 10px;
+    font-size: 1em;
+}
+
+#battle-box {
+    margin-top: 20px;
+}
+
+/* Styles for battle slideshow */
+#battle-slideshow {
+    margin-top: 20px;
+    text-align: center;
+}
+
+#slideshow-container {
+    position: relative;
+    max-width: 100%;
+    margin: auto;
+    overflow: hidden;
+}
+
+.slides {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+}
+
+.slides img {
+    width: 50%; /* Уменьшаем ширину изображений на 50% */
+    border-radius: 10px;
+}
+
+#prev-slide,
+#next-slide {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 50%;
+}
+
+#prev-slide {
+    left: 10px;
+}
+
+#next-slide {
+    right: 10px;
+}
+
+#prev-slide:hover,
+#next-slide:hover {
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+/* Styles for viewer chat */
+#viewer-chat {
+    margin-top: 20px;
+}
+
+#viewer-chat #chat-box {
+    border: 1px solid var(--chat-box-border-color);
+    background-color: var(--chat-box-bg-color);
+    color: var(--chat-box-text-color);
+    padding: 10px;
+    height: 300px; /* Высота окна чата */
+    overflow-y: scroll;
+}
+
+#chat-form {
+    margin-top: 10px;
+    display: flex;
+}
+
+#chat-form input[type="text"] {
+    flex: 1;
+    margin-right: 10px;
+}
+
+/* Уменьшение высоты кнопки отправки на 20% */
+#chat-form button {
+    padding: 8px 20px; /* Уменьшаем высоту кнопки на 20% */
+}
+
+/* Chat message styles */
+.chat-message {
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    max-width: 70%;
+}
+
+.chat-message.right {
+    background-color: var(--button-bg-color);
+    color: var(--button-text-color);
+    margin-left: auto;
+}
+
+.chat-message.left {
+    background-color: var(--button-inactive-bg-color);
+    color: var(--text-color);
+}
+
+.timestamp {
+    font-size: 0.8em;
+    color: #888;
+    display: block;
+    margin-top: 5px;
+}
