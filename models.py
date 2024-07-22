@@ -39,7 +39,7 @@ class CommentatorPrompt(db.Model):
 
 # Подключение к базе данных
 def get_db_connection():
-    conn = sqlite3.connect('ai_arena.db')
+    conn = sqlite3.connect('instance/ai_arena.db')
     conn.row_factory = sqlite3.Row
     return conn
 

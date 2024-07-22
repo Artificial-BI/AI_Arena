@@ -7,7 +7,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     IMAGE_UPLOADS = os.path.join('static', 'images')  # Папка для хранения изображений
     #---
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///ai_arena.db'
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///instance/ai_arena.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Настройки для логирования
