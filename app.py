@@ -4,6 +4,10 @@ from models import db, migrate, User, Character, Message, RefereePrompt, Comment
 import logging
 from logging.handlers import RotatingFileHandler
 import os
+#---
+from models import get_db_connection, create_tables
+from core import BattleManager, ArenaManager, TournamentManager
+#----
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -62,14 +66,6 @@ def admin():
     except Exception as e:
         return render_template('admin.html', messages=[], referee_prompts=[])
 
-# @app.route('/viewer')
-# def viewer():
-#     try:
-#         messages = Message.query.order_by(Message.timestamp.asc()).all()
-#         return render_template('viewer.html', messages=messages)
-#     except Exception as e:
-#         return render_template('viewer.html', messages=[])
-    
 @app.route('/viewer')
 def viewer():
     try:
@@ -186,7 +182,39 @@ def select_commentator_prompt():
     else:
         flash('Error selecting commentator prompt!', 'danger')
     return redirect(url_for('admin'))
+#---
 
+create_tables()
+
+battle_manager = BattleManager()
+arena_manager = ArenaManager()
+tournament_manager = TournamentManager()
+
+@app.route('/organize_battle', methods=['POST'])
+def organize_battle():
+    data = request.json
+    character1_id = data.get('character1_id')
+    character2_id = data.get('character2_id')
+    arena_id = data.get('arena_id')
+    battle_manager.organize_battle(character1_id, character2_id, arena_id)
+    return jsonify({'status': 'success'})
+
+@app.route('/create_arena', methods=['POST'])
+def create_arena():
+    data = request.json
+    description = data.get('description')
+    parameters = data.get('parameters')
+    arena_manager.create_arena(description, parameters)
+    return jsonify({'status': 'success'})
+
+@app.route('/create_tournament', methods=['POST'])
+def create_tournament():
+    data = request.json
+    name = data.get('name')
+    format = data.get('format')
+    tournament_manager.create_tournament(name, format)
+    return jsonify({'status': 'success'})
+#---
 
 
 def generate_character_image(description, user_id, character_name):
@@ -231,3 +259,6 @@ def calculate_initial_health(description):
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+
+#==========
