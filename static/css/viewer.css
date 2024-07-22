@@ -1,9 +1,9 @@
 :root {
     --bg-color: #f4f4f4;
     --text-color: #333;
-    --nav-bg-color: #333;
+    --nav-bg-color: #013908;
     --nav-text-color: #fff;
-    --button-bg-color: #4CAF50;
+    --button-bg-color: #013908;
     --button-text-color: #fff;
     --button-inactive-bg-color: #ccc;
     --input-border-color: #ccc;
@@ -12,8 +12,8 @@
     --chat-box-border-color: #ccc;
     --chat-box-bg-color: #fff;
     --chat-box-text-color: #333;
-    --button-hover-color: #45a049;
-    --button-active-color: #5bcf63;
+    --button-hover-color: #013908;
+    --button-active-color: #013908;
 }
 
 body {

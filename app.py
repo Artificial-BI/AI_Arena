@@ -4,10 +4,10 @@ from models import db, migrate, User, Character, Message, RefereePrompt, Comment
 import logging
 from logging.handlers import RotatingFileHandler
 import os
-#---
+
+# Импорт дополнительных модулей
 from models import get_db_connection, create_tables
 from core import BattleManager, ArenaManager, TournamentManager
-#----
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -28,18 +28,26 @@ if not app.debug:
     app.logger.setLevel(logging.INFO)
     app.logger.info('AI Arena startup')
 
-# @app.route('/')
-# def index():
-#     return render_template('index.html')
+# Маршрут для главной страницы
 @app.route('/')
 def index():
     top_players = [
-        {"name": "JohnDoe", "wins": 10, "losses": 2},
-        {"name": "JaneSmith", "wins": 8, "losses": 4},
-        {"name": "RoboWarrior", "wins": 7, "losses": 5},
-        {"name": "AIChamp", "wins": 6, "losses": 6},
+        {"name": "JohnDoe", "wins": 10, "losses": 2, "character_name": "Warrior John", "weekly_wins": 5, "weekly_losses": 1},
+        {"name": "JaneSmith", "wins": 8, "losses": 4, "character_name": "Mage Jane", "weekly_wins": 4, "weekly_losses": 2},
+        {"name": "RoboWarrior", "wins": 7, "losses": 5, "character_name": "Robot Robo", "weekly_wins": 3, "weekly_losses": 3},
+        {"name": "AIChamp", "wins": 6, "losses": 6, "character_name": "Champion AI", "weekly_wins": 2, "weekly_losses": 4},
+        {"name": "Player5", "wins": 5, "losses": 5, "character_name": "Character 5", "weekly_wins": 1, "weekly_losses": 5},
+        {"name": "Player6", "wins": 4, "losses": 6, "character_name": "Character 6", "weekly_wins": 0, "weekly_losses": 6},
+        {"name": "Player7", "wins": 3, "losses": 7, "character_name": "Character 7", "weekly_wins": 6, "weekly_losses": 0},
+        {"name": "Player8", "wins": 2, "losses": 8, "character_name": "Character 8", "weekly_wins": 5, "weekly_losses": 1},
+        {"name": "Player9", "wins": 1, "losses": 9, "character_name": "Character 9", "weekly_wins": 4, "weekly_losses": 2},
+        {"name": "Player10", "wins": 0, "losses": 10, "character_name": "Character 10", "weekly_wins": 3, "weekly_losses": 3},
     ]
-    return render_template('index.html', top_players=top_players)
+    tournaments = [
+        {"id": 1, "name": "Summer Cup", "format": "круговой", "start_date": "2024-06-01", "end_date": "2024-06-30", "current_stage": "финал"},
+        {"id": 2, "name": "Winter Cup", "format": "плей-офф", "start_date": "2024-12-01", "end_date": "2024-12-31", "current_stage": "полуфинал"},
+    ]
+    return render_template('index.html', top_players=top_players, tournaments=tournaments)
 
 @app.route('/player')
 def player():
@@ -65,7 +73,6 @@ def update_settings():
         flash('Error updating settings!', 'danger')
     return redirect(url_for('admin'))
 
-
 @app.route('/admin')
 def admin():
     try:
@@ -74,7 +81,6 @@ def admin():
         return render_template('admin.html', messages=messages, referee_prompts=referee_prompts)
     except Exception as e:
         return render_template('admin.html', messages=[], referee_prompts=[])
-
 @app.route('/viewer')
 def viewer():
     try:
@@ -84,8 +90,6 @@ def viewer():
     except Exception as e:
         app.logger.error('Error loading viewer: %s', e)
         return render_template('viewer.html', characters=[], messages=[])
-    
-
 
 @app.route('/create_character', methods=['POST'])
 def create_character():
@@ -191,14 +195,16 @@ def select_commentator_prompt():
     else:
         flash('Error selecting commentator prompt!', 'danger')
     return redirect(url_for('admin'))
-#---
 
+# Инициализация базы данных и создание таблиц
 create_tables()
 
+# Инициализация менеджеров
 battle_manager = BattleManager()
 arena_manager = ArenaManager()
 tournament_manager = TournamentManager()
 
+# Маршруты для управления боями, аренами и турнирами
 @app.route('/organize_battle', methods=['POST'])
 def organize_battle():
     data = request.json
@@ -223,28 +229,9 @@ def create_tournament():
     format = data.get('format')
     tournament_manager.create_tournament(name, format)
     return jsonify({'status': 'success'})
-#---
 
-
+# Функции для генерации изображений и расчета здоровья персонажей
 def generate_character_image(description, user_id, character_name):
-    image_filename = 'character_image.png'
-    user_folder = os.path.join(app.root_path, 'static/images', f'user_{user_id}')
-    character_folder = os.path.join(user_folder, character_name)
-
-    if not os.path.exists(character_folder):
-        os.makedirs(character_folder)
-
-    image_path = os.path.join(character_folder, image_filename)
-    with open(image_path, 'wb') as f:
-        f.write(b'')
-    return os.path.relpath(image_path, app.root_path + '/static')
-
-def calculate_initial_health(description):
-    return 1000
-
-
-def generate_character_image(description, user_id, character_name):
-    # Логика генерации изображения персонажа
     app.logger.info('Generating character image for description: %s', description)
     image_filename = 'character_image.png'  # Название файла изображения
     user_folder = os.path.join(app.root_path, 'static/images', f'user_{user_id}')
@@ -262,12 +249,8 @@ def generate_character_image(description, user_id, character_name):
     return os.path.relpath(image_path, app.root_path + '/static')
 
 def calculate_initial_health(description):
-    # Логика расчета начальных баллов
     app.logger.info('Calculating initial health for description: %s', description)
     return 1000
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-
-#==========

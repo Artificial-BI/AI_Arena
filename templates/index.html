@@ -1,4 +1,3 @@
-
 {% extends 'base.html' %}
 
 {% block content %}
@@ -13,63 +12,96 @@
         <table>
             <thead>
                 <tr>
-                    <th>Игрок</th>
-                    <th>Победы</th>
-                    <th>Поражения</th>
+                    <th>ID турнира</th>
+                    <th>Название турнира</th>
+                    <th>Формат</th>
+                    <th>Дата начала</th>
+                    <th>Дата окончания</th>
+                    <th>Текущий этап</th>
                 </tr>
             </thead>
             <tbody>
-                {% for player in top_players %}
+                {% for tournament in tournaments %}
                 <tr>
-                    <td>{{ player.name }}</td>
-                    <td>{{ player.wins }}</td>
-                    <td>{{ player.losses }}</td>
+                    <td>{{ tournament.id }}</td>
+                    <td>{{ tournament.name }}</td>
+                    <td>{{ tournament.format }}</td>
+                    <td>{{ tournament.start_date }}</td>
+                    <td>{{ tournament.end_date }}</td>
+                    <td>{{ tournament.current_stage }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </section>
 
-    <section class="charts">
-        <h3>График побед-поражений</h3>
-        <!-- Здесь можно вставить график с использованием Google Charts или другого инструмента -->
-        <div id="chart_div"></div>
+    <section class="top-players">
+        <h3>10 лучших игроков</h3>
+        <div class="top-players-list">
+            <ul>
+                {% for player in top_players %}
+                <li>{{ player.name }} - {{ player.character_name }}</li>
+                {% endfor %}
+            </ul>
+        </div>
     </section>
 
+    <section class="charts">
+        <h3>График побед-поражений за неделю</h3>
+        <div id="chart_div" style="width: 100%; height: 500px;"></div>
+    </section>
+    
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(drawChart);
+    
+      function drawChart() {
+        var data = google.visualization.arrayToDataTable([
+          ['Игрок', 'Победы', 'Поражения'],
+          {% for player in top_players %}
+            ['{{ player.name }}', {{ player.weekly_wins }}, {{ player.weekly_losses }}],
+          {% endfor %}
+        ]);
+    
+        var options = {
+          title: 'Победы и поражения за неделю',
+          hAxis: {title: 'Игроки'},
+          vAxis: {title: 'Количество'},
+          seriesType: 'bars',
+          series: {5: {type: 'line'}}
+        };
+    
+        var chart = new google.visualization.ComboChart(document.getElementById('chart_div'));
+        chart.draw(data, options);
+      }
+    </script>
+    
     <section class="sliders">
-        <h3>Арены</h3>
-        <div class="slider" id="arena-slider">
-            <!-- Изображения арен -->
-            <img src="{{ url_for('static', filename='images/default/arena1.png') }}" alt="Fantasy Arena">
-            <img src="{{ url_for('static', filename='images/default/arena2.png') }}" alt="Futuristic Arena">
-            <img src="{{ url_for('static', filename='images/default/arena3.png') }}" alt="Futuristic Arena">
-            <img src="{{ url_for('static', filename='images/default/arena4.png') }}" alt="Futuristic Arena">
-            <img src="{{ url_for('static', filename='images/default/arena5.png') }}" alt="Fantasy Arena">
-            <img src="{{ url_for('static', filename='images/default/arena6.png') }}" alt="Futuristic Arena">
-            <img src="{{ url_for('static', filename='images/default/arena7.png') }}" alt="Futuristic Arena">
-            <img src="{{ url_for('static', filename='images/default/arena8.png') }}" alt="Futuristic Arena">
-            <img src="{{ url_for('static', filename='images/default/arena9.png') }}" alt="Fantasy Arena">
-            <img src="{{ url_for('static', filename='images/default/arena10.png') }}" alt="Futuristic Arena">
-            <img src="{{ url_for('static', filename='images/default/arena11.png') }}" alt="Futuristic Arena">
-            <img src="{{ url_for('static', filename='images/default/arena12.png') }}" alt="Futuristic Arena">
-            <img src="{{ url_for('static', filename='images/default/arena13.png') }}" alt="Fantasy Arena">
-            <img src="{{ url_for('static', filename='images/default/arena14.png') }}" alt="Futuristic Arena">
-            <img src="{{ url_for('static', filename='images/default/arena15.png') }}" alt="Futuristic Arena">
-            <img src="{{ url_for('static', filename='images/default/arena16.png') }}" alt="Futuristic Arena">
-        </div>
+        <div class="slider-container">
+            <div class="slider" id="arena-slider">
+                <h3>Арены</h3>
+                <!-- Изображения арен -->
+                <img src="{{ url_for('static', filename='images/default/arena1.png') }}" alt="Fantasy Arena">
+                <img src="{{ url_for('static', filename='images/default/arena2.png') }}" alt="Futuristic Arena">
+                <img src="{{ url_for('static', filename='images/default/arena3.png') }}" alt="Futuristic Arena">
+                <!-- Add more images as needed -->
+            </div>
 
-        <h3>Персонажи</h3>
-        <div class="slider" id="character-slider">
-            <!-- Изображения персонажей -->
-            <img src="{{ url_for('static', filename='images/default/player1.png') }}" alt="Cyber Warrior">
-            <img src="{{ url_for('static', filename='images/default/player2.png') }}" alt="Magic Mage">
-        </div>
+            <div class="slider" id="character-slider">
+                <h3>Персонажи</h3>
+                <!-- Изображения персонажей -->
+                <img src="{{ url_for('static', filename='images/default/player1.png') }}" alt="Cyber Warrior">
+                <img src="{{ url_for('static', filename='images/default/player2.png') }}" alt="Magic Mage">
+                <!-- Add more images as needed -->
+            </div>
 
-        <h3>Видео боёв</h3>
-        <div class="slider" id="video-slider">
-            <!-- Видео боёв -->
-            <video src="{{ url_for('static', filename='videos/default/vid1.mp4') }}" controls></video>
-            <video src="{{ url_for('static', filename='videos/default/vid2.mp4') }}" controls></video>
+            <div class="slider" id="video-slider">
+                <h3>Видео боёв</h3>
+                <!-- Видео боёв -->
+                <video src="{{ url_for('static', filename='videos/default/battle1.mp4') }}" controls></video>
+                <video src="{{ url_for('static', filename='videos/default/battle2.mp4') }}" controls></video>
+            </div>
         </div>
     </section>
 
@@ -77,8 +109,8 @@
         <h3>Гиф-изображения боёв</h3>
         <div class="gif-container">
             <!-- Гифки боёв -->
-            <img src="{{ url_for('static', filename='images/default/battle1.gif') }}" alt="Battle GIF 1">
-            <img src="{{ url_for('static', filename='images/default/battle1.gif') }}" alt="Battle GIF 2">
+            <img src="{{ url_for('static', filename='images/default/gif/battle1.gif') }}" alt="Battle GIF 1">
+            <img src="{{ url_for('static', filename='images/default/gif/battle2.gif') }}" alt="Battle GIF 2">
         </div>
     </section>
 </div>

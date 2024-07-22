@@ -1,9 +1,9 @@
 :root {
     --bg-color: #f4f4f4;
     --text-color: #333;
-    --nav-bg-color: #333;
+    --nav-bg-color: #013908;
     --nav-text-color: #fff;
-    --button-bg-color: #4CAF50;
+    --button-bg-color: #013908;
     --button-text-color: #fff;
     --button-inactive-bg-color: #ccc;
     --input-border-color: #ccc;
@@ -143,4 +143,77 @@ footer .social-links a {
 
 footer .social-links a:hover {
     text-decoration: underline;
+}
+
+.slider-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.slider {
+    flex: 1;
+}
+
+#arena-slider img, #character-slider img, #video-slider video {
+    width: 100%;
+    height: auto;
+}
+
+#arena-slider, #character-slider, #video-slider {
+    overflow-x: scroll;
+    white-space: nowrap;
+}
+
+#arena-slider img, #character-slider img, #video-slider video {
+    display: inline-block;
+    margin-right: 10px;
+}
+
+/* Стили для таблицы турниров */
+.tournament-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.tournament-table th, .tournament-table td {
+    border: 1px solid #000;  /* Бордюр толщиной в 1 пиксель */
+    padding: 8px;
+    text-align: left;
+}
+
+.tournament-table th {
+    background-color: #f2f2f2;
+}
+
+/* Стили для списка топ-игроков */
+.top-players-list {
+    border: 1px solid #000;  /* Бордюр толщиной в 1 пиксель */
+    padding: 10px;
+    margin-bottom: 20px;
+}
+
+.top-players-list ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.top-players-list li {
+    margin: 5px 0;
+}
+
+/* Стили для GIF контейнера */
+.gif-container {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px; /* Увеличиваем расстояние между GIF изображениями */
+}
+
+.gif-container img {
+    width: 100%; /* Устанавливаем ширину 100% для адаптивности */
+    height: auto;
+    max-width: 100%; /* Максимальная ширина для больших экранов */
+    flex: 1;
 }
