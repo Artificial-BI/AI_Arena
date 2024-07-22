@@ -1,11 +1,71 @@
+
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>Добро пожаловать в AI Arena</h1>
-<p>Это главная страница AI Arena. Здесь вы можете создать своего персонажа, участвовать в боях и соревноваться с другими игроками.</p>
-<ul>
-    <li><a href="{{ url_for('player') }}">Игрок</a></li>
-    <li><a href="{{ url_for('admin') }}">Администратор</a></li>
-    <li><a href="{{ url_for('viewer') }}">Зритель</a></li>
-</ul>
+<div class="container">
+    <section class="description">
+        <h2>Добро пожаловать на AI Arena</h2>
+        <p>Уникальная платформа для виртуальных боёв нейросетевых персонажей. Создавайте своих персонажей, наблюдайте за их боями на арене и участвуйте в захватывающих турнирах. Присоединяйтесь к нам и погружайтесь в мир интеллектуальных сражений!</p>
+    </section>
+
+    <section class="tournament-table">
+        <h3>Турнирная таблица</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Игрок</th>
+                    <th>Победы</th>
+                    <th>Поражения</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for player in top_players %}
+                <tr>
+                    <td>{{ player.name }}</td>
+                    <td>{{ player.wins }}</td>
+                    <td>{{ player.losses }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+
+    <section class="charts">
+        <h3>График побед-поражений</h3>
+        <!-- Здесь можно вставить график с использованием Google Charts или другого инструмента -->
+        <div id="chart_div"></div>
+    </section>
+
+    <section class="sliders">
+        <h3>Арены</h3>
+        <div class="slider" id="arena-slider">
+            <!-- Изображения арен -->
+            <img src="{{ url_for('static', filename='images/fantasy_arena.jpg') }}" alt="Fantasy Arena">
+            <img src="{{ url_for('static', filename='images/futuristic_arena.jpg') }}" alt="Futuristic Arena">
+        </div>
+
+        <h3>Персонажи</h3>
+        <div class="slider" id="character-slider">
+            <!-- Изображения персонажей -->
+            <img src="{{ url_for('static', filename='images/cyber_warrior.jpg') }}" alt="Cyber Warrior">
+            <img src="{{ url_for('static', filename='images/magic_mage.jpg') }}" alt="Magic Mage">
+        </div>
+
+        <h3>Видео боёв</h3>
+        <div class="slider" id="video-slider">
+            <!-- Видео боёв -->
+            <video src="{{ url_for('static', filename='videos/fight1.mp4') }}" controls></video>
+            <video src="{{ url_for('static', filename='videos/fight2.mp4') }}" controls></video>
+        </div>
+    </section>
+
+    <section class="gifs">
+        <h3>Гиф-изображения боёв</h3>
+        <div class="gif-container">
+            <!-- Гифки боёв -->
+            <img src="{{ url_for('static', filename='gifs/battle1.gif') }}" alt="Battle GIF 1">
+            <img src="{{ url_for('static', filename='gifs/battle2.gif') }}" alt="Battle GIF 2">
+        </div>
+    </section>
+</div>
 {% endblock %}

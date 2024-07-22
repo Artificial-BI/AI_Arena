@@ -28,9 +28,18 @@ if not app.debug:
     app.logger.setLevel(logging.INFO)
     app.logger.info('AI Arena startup')
 
+# @app.route('/')
+# def index():
+#     return render_template('index.html')
 @app.route('/')
 def index():
-    return render_template('index.html')
+    top_players = [
+        {"name": "JohnDoe", "wins": 10, "losses": 2},
+        {"name": "JaneSmith", "wins": 8, "losses": 4},
+        {"name": "RoboWarrior", "wins": 7, "losses": 5},
+        {"name": "AIChamp", "wins": 6, "losses": 6},
+    ]
+    return render_template('index.html', top_players=top_players)
 
 @app.route('/player')
 def player():

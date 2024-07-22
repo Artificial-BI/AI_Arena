@@ -26,3 +26,63 @@ FROM character
  LIMIT ? OFFSET ?]
 [parameters: (2, 0)]
 (Background on this error at: https://sqlalche.me/e/20/e3q8) [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:76]
+2024-07-22 12:21:35,555 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:29]
+2024-07-22 12:21:37,893 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:29]
+2024-07-22 12:24:46,945 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:29]
+2024-07-22 12:24:48,873 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:29]
+2024-07-22 12:28:03,822 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:29]
+2024-07-22 12:28:06,096 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:29]
+2024-07-22 12:34:13,164 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:29]
+2024-07-22 12:34:15,166 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:29]
+2024-07-22 12:36:08,421 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:29]
+2024-07-22 12:36:11,011 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:29]
+2024-07-22 12:41:55,576 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:29]
+2024-07-22 12:41:57,875 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:29]
+2024-07-22 12:46:06,019 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:29]
+2024-07-22 12:46:08,655 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:29]
+2024-07-22 12:48:33,940 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:29]
+2024-07-22 12:48:36,251 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:29]
+2024-07-22 12:52:59,925 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:29]
+2024-07-22 12:53:02,116 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:29]
+2024-07-22 12:53:46,803 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:29]
+2024-07-22 12:53:49,278 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:29]
+2024-07-22 12:54:33,687 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:29]
+2024-07-22 12:54:36,511 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:29]
+2024-07-22 12:55:21,079 ERROR: Error loading viewer: (sqlite3.OperationalError) no such table: character
+[SQL: SELECT character.id AS character_id, character.user_id AS character_user_id, character.name AS character_name, character.description AS character_description, character.image_url AS character_image_url, character.health_points AS character_health_points, character.is_alive AS character_is_alive 
+FROM character
+ LIMIT ? OFFSET ?]
+[parameters: (2, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:85]
+2024-07-22 12:59:11,036 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:29]
+2024-07-22 12:59:13,580 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:29]
+2024-07-22 12:59:22,128 ERROR: Error loading viewer: (sqlite3.OperationalError) no such table: character
+[SQL: SELECT character.id AS character_id, character.user_id AS character_user_id, character.name AS character_name, character.description AS character_description, character.image_url AS character_image_url, character.health_points AS character_health_points, character.is_alive AS character_is_alive 
+FROM character
+ LIMIT ? OFFSET ?]
+[parameters: (2, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:85]
+2024-07-22 13:03:38,854 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:29]
+2024-07-22 13:03:41,235 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:29]
+2024-07-22 13:03:54,113 ERROR: Error loading viewer: (sqlite3.OperationalError) no such table: character
+[SQL: SELECT character.id AS character_id, character.user_id AS character_user_id, character.name AS character_name, character.description AS character_description, character.image_url AS character_image_url, character.health_points AS character_health_points, character.is_alive AS character_is_alive 
+FROM character
+ LIMIT ? OFFSET ?]
+[parameters: (2, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:85]
+2024-07-22 13:05:54,747 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:29]
+2024-07-22 13:05:57,079 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:29]
+2024-07-22 13:08:37,437 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:29]
+2024-07-22 13:08:40,223 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:29]
+2024-07-22 13:08:47,971 ERROR: Error loading viewer: (sqlite3.OperationalError) no such table: character
+[SQL: SELECT character.id AS character_id, character.user_id AS character_user_id, character.name AS character_name, character.description AS character_description, character.image_url AS character_image_url, character.health_points AS character_health_points, character.is_alive AS character_is_alive 
+FROM character
+ LIMIT ? OFFSET ?]
+[parameters: (2, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:85]
+2024-07-22 13:09:24,784 ERROR: Error loading viewer: (sqlite3.OperationalError) no such table: character
+[SQL: SELECT character.id AS character_id, character.user_id AS character_user_id, character.name AS character_name, character.description AS character_description, character.image_url AS character_image_url, character.health_points AS character_health_points, character.is_alive AS character_is_alive 
+FROM character
+ LIMIT ? OFFSET ?]
+[parameters: (2, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:85]

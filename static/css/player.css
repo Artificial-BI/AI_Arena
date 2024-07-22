@@ -215,3 +215,54 @@ form button:active {
 .delete-form {
     margin-left: auto;
 }
+
+/* Стили для шапки и подвала */
+header {
+    background-color: var(--nav-bg-color);
+    color: var(--nav-text-color);
+    padding: 10px 0;
+    text-align: center;
+}
+
+header .logo h1 {
+    margin: 0;
+}
+
+nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+}
+
+nav ul li {
+    margin: 0 15px;
+}
+
+nav ul li a {
+    color: var(--nav-text-color);
+    text-decoration: none;
+}
+
+footer {
+    background-color: var(--nav-bg-color);
+    color: var(--nav-text-color);
+    padding: 20px 0;
+    text-align: center;
+}
+
+footer .footer-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+footer .social-links a {
+    margin: 0 10px;
+    color: var(--nav-text-color);
+    text-decoration: none;
+}
+
+footer .social-links a:hover {
+    text-decoration: underline;
+}

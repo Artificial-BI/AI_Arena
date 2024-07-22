@@ -1,18 +1,55 @@
-// voice_input.js
+// // voice_input.js
+
+// document.addEventListener('DOMContentLoaded', function() {
+//     const voiceInputBtn = document.getElementById('voice-input-btn');
+//     const voiceInput = document.getElementById('voice-input');
+
+//     voiceInputBtn.addEventListener('click', function() {
+//         const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+//         recognition.lang = 'ru-RU';
+
+//         recognition.onresult = function(event) {
+//             const transcript = event.results[0][0].transcript;
+//             voiceInput.value += transcript + '\n';
+//         };
+
+//         recognition.start();
+//     });
+// });
+
+// scripts.js
 
 document.addEventListener('DOMContentLoaded', function() {
-    const voiceInputBtn = document.getElementById('voice-input-btn');
-    const voiceInput = document.getElementById('voice-input');
+    function initSlider(sliderId) {
+        const slider = document.getElementById(sliderId);
+        let currentIndex = 0;
+        const slides = slider.getElementsByTagName('img');
+        const totalSlides = slides.length;
 
-    voiceInputBtn.addEventListener('click', function() {
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = 'ru-RU';
+        function showSlide(index) {
+            for (let i = 0; i < totalSlides; i++) {
+                slides[i].style.display = 'none';
+            }
+            slides[index].style.display = 'block';
+        }
 
-        recognition.onresult = function(event) {
-            const transcript = event.results[0][0].transcript;
-            voiceInput.value += transcript + '\n';
-        };
+        function nextSlide() {
+            currentIndex = (currentIndex + 1) % totalSlides;
+            showSlide(currentIndex);
+        }
 
-        recognition.start();
-    });
+        function prevSlide() {
+            currentIndex = (currentIndex - 1 + totalSlides) % totalSlides;
+            showSlide(currentIndex);
+        }
+
+        showSlide(currentIndex);
+
+        // Auto slide every 3 seconds
+        setInterval(nextSlide, 3000);
+    }
+
+    initSlider('arena-slider');
+    initSlider('character-slider');
+    initSlider('video-slider');
 });
