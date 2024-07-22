@@ -20,3 +20,9 @@ FROM character
 2024-07-22 11:49:24,897 INFO: AI Arena startup [in D:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:30]
 2024-07-22 11:50:07,482 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:29]
 2024-07-22 11:50:09,412 INFO: AI Arena startup [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:29]
+2024-07-22 11:50:24,599 ERROR: Error loading viewer: (sqlite3.OperationalError) no such table: character
+[SQL: SELECT character.id AS character_id, character.user_id AS character_user_id, character.name AS character_name, character.description AS character_description, character.image_url AS character_image_url, character.health_points AS character_health_points, character.is_alive AS character_is_alive 
+FROM character
+ LIMIT ? OFFSET ?]
+[parameters: (2, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8) [in d:\GIT\2024\ArtificialBI\ARENA\AI_Arena\app.py:76]
