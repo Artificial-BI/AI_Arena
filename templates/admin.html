@@ -113,6 +113,24 @@
         </select>
         <button type="submit">Выбрать промт</button>
     </form>
+
+    <!-- Поле для ввода промта для нейросети комментатора -->
+    <form method="post" action="{{ url_for('add_commentator_prompt') }}">
+        <label for="commentator_prompt">Промт для нейросети комментатора:</label>
+        <textarea id="commentator_prompt" name="commentator_prompt" required></textarea>
+        <button type="submit">Сохранить промт</button>
+    </form>
+
+    <!-- Выпадающий список с имеющимися промтами для комментатора -->
+    <h3>Выбрать существующий промт:</h3>
+    <form method="post" action="{{ url_for('select_commentator_prompt') }}">
+        <select id="existing_commentator_prompts" name="existing_commentator_prompts">
+            {% for prompt in commentator_prompts %}
+                <option value="{{ prompt.id }}">{{ prompt.prompt_text }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Выбрать промт</button>
+    </form>
 </div>
 
 {% endblock %}

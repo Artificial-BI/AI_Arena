@@ -31,4 +31,9 @@ class RefereePrompt(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     prompt_text = db.Column(db.Text)
     
+class CommentatorPrompt(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    prompt_text = db.Column(db.Text, nullable=False)
+    
+    
     

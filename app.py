@@ -1,6 +1,6 @@
 from flask import Flask, render_template, redirect, url_for, request, flash, jsonify, session
 from config import Config
-from models import db, migrate, User, Character, Message, RefereePrompt
+from models import db, migrate, User, Character, Message, RefereePrompt, CommentatorPrompt
 import logging
 from logging.handlers import RotatingFileHandler
 import os
@@ -62,13 +62,25 @@ def admin():
     except Exception as e:
         return render_template('admin.html', messages=[], referee_prompts=[])
 
+# @app.route('/viewer')
+# def viewer():
+#     try:
+#         messages = Message.query.order_by(Message.timestamp.asc()).all()
+#         return render_template('viewer.html', messages=messages)
+#     except Exception as e:
+#         return render_template('viewer.html', messages=[])
+    
 @app.route('/viewer')
 def viewer():
     try:
+        characters = Character.query.limit(2).all()
         messages = Message.query.order_by(Message.timestamp.asc()).all()
-        return render_template('viewer.html', messages=messages)
+        return render_template('viewer.html', characters=characters, messages=messages)
     except Exception as e:
-        return render_template('viewer.html', messages=[])
+        app.logger.error('Error loading viewer: %s', e)
+        return render_template('viewer.html', characters=[], messages=[])
+    
+
 
 @app.route('/create_character', methods=['POST'])
 def create_character():
@@ -151,6 +163,31 @@ def select_referee_prompt():
     except Exception as e:
         flash('Error selecting referee prompt!', 'danger')
     return redirect(url_for('admin'))
+
+@app.route('/add_commentator_prompt', methods=['POST'])
+def add_commentator_prompt():
+    try:
+        prompt_text = request.form['commentator_prompt']
+        new_prompt = CommentatorPrompt(prompt_text=prompt_text)
+        db.session.add(new_prompt)
+        db.session.commit()
+        flash('Commentator prompt added successfully!', 'success')
+    except Exception as e:
+        app.logger.error('Error adding commentator prompt: %s', e)
+        flash('Error adding commentator prompt!', 'danger')
+    return redirect(url_for('admin'))
+
+@app.route('/select_commentator_prompt', methods=['POST'])
+def select_commentator_prompt():
+    prompt_id = request.form['existing_commentator_prompts']
+    selected_prompt = CommentatorPrompt.query.get(prompt_id)
+    if selected_prompt:
+        flash(f'Selected commentator prompt: {selected_prompt.prompt_text}', 'success')
+    else:
+        flash('Error selecting commentator prompt!', 'danger')
+    return redirect(url_for('admin'))
+
+
 
 def generate_character_image(description, user_id, character_name):
     image_filename = 'character_image.png'

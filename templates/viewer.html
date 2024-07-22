@@ -7,48 +7,57 @@
 {% block content %}
 <h1>Интерфейс зрителя</h1>
 
+<!-- Название арены -->
 <h2>Магическая арена</h2>
 
+<!-- Имена персонажей -->
 <div id="players-names">
-    <div id="player1" class="player-name">
-        <h3>Игрок 1: <span id="player1-name"></span></h3>
-        <div class="character-section">
-            <img id="player1-image" src="/static/images/default/player1.png" alt="Player 1 Character Image">
-            <p id="player1-description">Описание игрока 1</p>
-        </div>
+    <div class="player-name">
+        <h3>{{ characters[0].name if characters|length > 0 else 'Player 1' }}</h3>
     </div>
-    <div id="player2" class="player-name">
-        <h3>Игрок 2: <span id="player2-name"></span></h3>
-        <div class="character-section">
-            <img id="player2-image" src="/static/images/default/player2.png" alt="Player 2 Character Image">
-            <p id="player2-description">Описание игрока 2</p>
-        </div>
+    <div class="player-name">
+        <h3>{{ characters[1].name if characters|length > 1 else 'Player 2' }}</h3>
     </div>
 </div>
 
+<!-- Изображения персонажей и их характеристики -->
+<div class="character-section">
+    <div class="character">
+        <img src="{{ url_for('static', filename='images/default/player1.png') }}" alt="Player 1 Image">
+        <p>{{ characters[0].description if characters|length > 0 else 'Описание персонажа 1' }}</p>
+    </div>
+    <div class="character">
+        <img src="{{ url_for('static', filename='images/default/player2.png') }}" alt="Player 2 Image">
+        <p>{{ characters[1].description if characters|length > 1 else 'Описание персонажа 2' }}</p>
+    </div>
+</div>
+
+<!-- Слайд-шоу битвы -->
 <div id="battle-slideshow">
-    <h2>Ключевые моменты боя</h2>
     <div id="slideshow-container">
-        <button id="prev-slide">❮</button>
-        <div id="slides" class="slides">
-            <img src="/static/images/default/battle1.png" alt="Default Battle Image">
-            <img src="/static/images/default/battle2.png" alt="Default Battle Image">
-            <img src="/static/images/default/battle3.png" alt="Default Battle Image">
+        <div class="slides">
+            <img src="{{ url_for('static', filename='images/default/battle1.png') }}" alt="Battle Image 1">
+            <img src="{{ url_for('static', filename='images/default/battle2.png') }}" alt="Battle Image 2">
+            <img src="{{ url_for('static', filename='images/default/battle3.png') }}" alt="Battle Image 3">
         </div>
-        <button id="next-slide">❯</button>
+        <button id="prev-slide" onclick="changeSlide(-1)">&#10094;</button>
+        <button id="next-slide" onclick="changeSlide(1)">&#10095;</button>
     </div>
 </div>
 
-<div id="viewer-chat">
-    <h2>Чат</h2>
-    <div id="chat-box">
-        <!-- Здесь будут отображаться сообщения чата -->
-    </div>
-    <form id="chat-form" method="post" action="{{ url_for('send_message') }}">
-        <input type="text" id="message" name="message" placeholder="Введите сообщение...">
-        <button type="submit">Отправить</button>
-    </form>
+<!-- Чат -->
+<h2>Чат</h2>
+<div id="chat-box">
+    {% for message in messages %}
+        <div class="chat-message {{ 'right' if message.user_id == 1 else 'left' }}">
+            <p>{{ message.content }}</p>
+            <span class="timestamp">{{ message.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+        </div>
+    {% endfor %}
 </div>
+<form id="chat-form" method="post" action="{{ url_for('send_message') }}">
+    <input type="text" id="message" name="message" placeholder="Введите сообщение...">
+    <button type="submit">Отправить</button>
+</form>
 
-<script src="{{ url_for('static', filename='js/viewer.js') }}"></script>
 {% endblock %}
