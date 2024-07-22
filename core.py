@@ -1,11 +1,9 @@
-# core.py
-import sqlite3
 from datetime import datetime
-from models import get_db_connection
+from models import db, Character, Arena, Tournament, TournamentMatch, Fight
 
 class BattleManager:
     def __init__(self):
-        self.connection = get_db_connection()
+        pass
 
     def organize_battle(self, character1_id, character2_id, arena_id):
         # Логика проведения боя
@@ -19,51 +17,57 @@ class BattleManager:
         return result
 
     def save_battle(self, character1_id, character2_id, arena_id, result):
-        with self.connection as conn:
-            conn.execute(
-                'INSERT INTO fights (character1_id, character2_id, arena_id, result, fight_date) VALUES (?, ?, ?, ?, ?)',
-                (character1_id, character2_id, arena_id, result, datetime.now())
-            )
+        fight = Fight(
+            character1_id=character1_id,
+            character2_id=character2_id,
+            arena_id=arena_id,
+            result=result,
+            fight_date=datetime.now()
+        )
+        db.session.add(fight)
+        db.session.commit()
 
 class ArenaManager:
     def __init__(self):
-        self.connection = get_db_connection()
+        pass
 
     def create_arena(self, description, parameters):
-        with self.connection as conn:
-            conn.execute(
-                'INSERT INTO arenas (description, parameters) VALUES (?, ?)',
-                (description, parameters)
-            )
+        arena = Arena(description=description, parameters=parameters)
+        db.session.add(arena)
+        db.session.commit()
 
     def configure_arena(self, arena_id, parameters):
-        with self.connection as conn:
-            conn.execute(
-                'UPDATE arenas SET parameters = ? WHERE id = ?',
-                (parameters, arena_id)
-            )
+        arena = Arena.query.get(arena_id)
+        if arena:
+            arena.parameters = parameters
+            db.session.commit()
 
 class TournamentManager:
     def __init__(self):
-        self.connection = get_db_connection()
+        pass
 
     def create_tournament(self, name, format):
-        with self.connection as conn:
-            conn.execute(
-                'INSERT INTO tournaments (name, format, start_date, end_date, current_stage) VALUES (?, ?, ?, ?, ?)',
-                (name, format, datetime.now(), None, 'initial')
-            )
+        tournament = Tournament(
+            name=name,
+            format=format,
+            start_date=datetime.now(),
+            end_date=None,
+            current_stage='initial'
+        )
+        db.session.add(tournament)
+        db.session.commit()
 
     def register_for_tournament(self, tournament_id, character_id):
-        with self.connection as conn:
-            conn.execute(
-                'INSERT INTO tournament_matches (tournament_id, character_id, status) VALUES (?, ?, ?)',
-                (tournament_id, character_id, 'scheduled')
-            )
+        match = TournamentMatch(
+            tournament_id=tournament_id,
+            character_id=character_id,
+            status='scheduled'
+        )
+        db.session.add(match)
+        db.session.commit()
 
     def update_tournament(self, tournament_id, stage):
-        with self.connection as conn:
-            conn.execute(
-                'UPDATE tournaments SET current_stage = ? WHERE id = ?',
-                (stage, tournament_id)
-            )
+        tournament = Tournament.query.get(tournament_id)
+        if tournament:
+            tournament.current_stage = stage
+            db.session.commit()

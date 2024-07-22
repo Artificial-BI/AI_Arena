@@ -212,8 +212,45 @@ footer .social-links a:hover {
 }
 
 .gif-container img {
-    width: 100%; /* Устанавливаем ширину 100% для адаптивности */
+    width: 48%; /* Устанавливаем ширину 100% для адаптивности */
     height: auto;
     max-width: 100%; /* Максимальная ширина для больших экранов */
     flex: 1;
+}
+
+/* Стили для модального окна регистрации */
+.modal {
+    display: none; /* Скрыто по умолчанию */
+    position: fixed; /* Остается на месте (фиксируется) */
+    z-index: 1; /* Сидит наверху */
+    left: 0;
+    top: -10%;
+    width: 60%; /* Полная ширина */
+    height: 100%; /* Полная высота */
+    overflow: auto; /* Включить прокрутку, если необходимо */
+    background-color: rgb(0,0,0); /* Черный фон с непрозрачностью */
+    background-color: rgba(0,0,0,0.4); /* Черный с непрозрачностью */
+    padding-top: 60px;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto; /* 15% сверху и центрировано */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; /* Может быть больше или меньше, в зависимости от размера экрана */
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
 }

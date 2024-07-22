@@ -1,8 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from datetime import datetime
-import sqlite3
-from datetime import datetime
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -13,6 +11,12 @@ class User(db.Model):
     role = db.Column(db.String(64))  # 'player', 'admin', 'viewer'
     characters = db.relationship('Character', backref='owner', lazy='dynamic')
     messages = db.relationship('Message', backref='author', lazy='dynamic')
+    name = db.Column(db.String(64))  # Добавляем поле name
+    email = db.Column(db.String(120), unique=True)  # Добавляем поле email
+    password = db.Column(db.String(128))  # Добавляем поле password
+
+    def __repr__(self):
+        return f'<User {self.username}>'
 
 class Character(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -37,72 +41,30 @@ class CommentatorPrompt(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     prompt_text = db.Column(db.Text, nullable=False)
 
-# Подключение к базе данных
-def get_db_connection():
-    conn = sqlite3.connect('instance/ai_arena.db')
-    conn.row_factory = sqlite3.Row
-    return conn
 
-# Пример моделей данных
-def create_tables():
-    connection = get_db_connection()
-    with connection as conn:
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS characters (
-                id INTEGER PRIMARY KEY,
-                name TEXT,
-                attributes TEXT,
-                player_id INTEGER,
-                created_date TEXT
-            )
-        ''')
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS players (
-                id INTEGER PRIMARY KEY,
-                name TEXT,
-                email TEXT,
-                password TEXT,
-                registered_date TEXT
-            )
-        ''')
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS fights (
-                id INTEGER PRIMARY KEY,
-                character1_id INTEGER,
-                character2_id INTEGER,
-                arena_id INTEGER,
-                result TEXT,
-                fight_date TEXT
-            )
-        ''')
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS arenas (
-                id INTEGER PRIMARY KEY,
-                description TEXT,
-                parameters TEXT
-            )
-        ''')
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS tournaments (
-                id INTEGER PRIMARY KEY,
-                name TEXT,
-                format TEXT,
-                start_date TEXT,
-                end_date TEXT,
-                current_stage TEXT
-            )
-        ''')
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS tournament_matches (
-                id INTEGER PRIMARY KEY,
-                tournament_id INTEGER,
-                character_id INTEGER,
-                status TEXT,
-                match_date TEXT
-            )
-        ''')
+class Fight(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    character1_id = db.Column(db.Integer)
+    character2_id = db.Column(db.Integer)
+    arena_id = db.Column(db.Integer)
+    result = db.Column(db.String(64))
+    fight_date = db.Column(db.DateTime, default=datetime.utcnow)
 
-create_tables()
-    
-    
-    
+class Arena(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    description = db.Column(db.String(256))
+    parameters = db.Column(db.Text)
+
+class Tournament(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64))
+    format = db.Column(db.String(64))
+    start_date = db.Column(db.DateTime)
+    end_date = db.Column(db.DateTime, nullable=True)
+    current_stage = db.Column(db.String(64))
+
+class TournamentMatch(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    tournament_id = db.Column(db.Integer, db.ForeignKey('tournament.id'))
+    character_id = db.Column(db.Integer, db.ForeignKey('character.id'))
+    status = db.Column(db.String(64))

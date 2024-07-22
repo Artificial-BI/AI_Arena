@@ -1,19 +1,27 @@
 from flask import Flask, render_template, redirect, url_for, request, flash, jsonify, session
 from config import Config
-from models import db, migrate, User, Character, Message, RefereePrompt, CommentatorPrompt
+from models import db, User, Character, Message, RefereePrompt, CommentatorPrompt
 import logging
 from logging.handlers import RotatingFileHandler
 import os
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_migrate import Migrate
 
 # Импорт дополнительных модулей
-from models import get_db_connection, create_tables
 from core import BattleManager, ArenaManager, TournamentManager
 
+migrate = Migrate()
 app = Flask(__name__)
 app.config.from_object(Config)
+app.secret_key = Config.SECRET_KEY
 
+# Инициализация расширений
 db.init_app(app)
 migrate.init_app(app, db)
+
+# Создание таблиц при первом запуске
+with app.app_context():
+    db.create_all()
 
 # Настройка логирования
 if not app.debug:
@@ -49,17 +57,51 @@ def index():
     ]
     return render_template('index.html', top_players=top_players, tournaments=tournaments)
 
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        name = request.form['name']
+        email = request.form['email']
+        username = request.form['username']
+        password = generate_password_hash(request.form['password'])
+
+        new_user = User(name=name, email=email, username=username, password=password)
+        db.session.add(new_user)
+        db.session.commit()
+
+        flash('Регистрация прошла успешно! Теперь вы можете войти в систему.', 'success')
+        return redirect(url_for('index'))
+    return render_template('register.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        user = User.query.filter_by(username=username).first()
+        if user and check_password_hash(user.password, password):
+            session['user_id'] = user.id
+            return redirect(url_for('player'))
+        else:
+            flash('Неверное имя пользователя или пароль', 'danger')
+            return redirect(url_for('login'))
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.pop('user_id', None)
+    return redirect(url_for('index'))
+
 @app.route('/player')
 def player():
-    try:
-        user_id = 1  # Здесь нужно определить ID текущего пользователя
-        messages = Message.query.order_by(Message.timestamp.asc()).all()
-        characters = Character.query.filter_by(user_id=user_id).all()
-        selected_character_id = session.get('selected_character_id')
-        selected_character = Character.query.get(selected_character_id) if selected_character_id else None
-        return render_template('player.html', messages=messages, characters=characters, selected_character=selected_character)
-    except Exception as e:
-        return render_template('player.html', messages=[], characters=[], selected_character=None)
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    user_id = session['user_id']
+    messages = Message.query.order_by(Message.timestamp.asc()).all()
+    characters = Character.query.filter_by(user_id=user_id).all()
+    selected_character_id = session.get('selected_character_id')
+    selected_character = Character.query.get(selected_character_id) if selected_character_id else None
+    return render_template('player.html', messages=messages, characters=characters, selected_character=selected_character)
 
 @app.route('/update_settings', methods=['POST'])
 def update_settings():
@@ -81,6 +123,7 @@ def admin():
         return render_template('admin.html', messages=messages, referee_prompts=referee_prompts)
     except Exception as e:
         return render_template('admin.html', messages=[], referee_prompts=[])
+
 @app.route('/viewer')
 def viewer():
     try:
@@ -96,7 +139,7 @@ def create_character():
     try:
         name = request.form['name']
         description = request.form['description']
-        user_id = 1  # Замените 1 на идентификатор текущего пользователя
+        user_id = session.get('user_id')  # Используем идентификатор текущего пользователя из сессии
         image_url = generate_character_image(description, user_id, name)
         health_points = calculate_initial_health(description)
         new_character = Character(name=name, description=description, image_url=image_url, health_points=health_points, user_id=user_id)
@@ -138,7 +181,7 @@ def select_character(character_id):
 def send_message():
     try:
         content = request.form['message']
-        user_id = 1  # Здесь нужно определить ID текущего пользователя
+        user_id = session.get('user_id')
         new_message = Message(user_id=user_id, content=content)
         db.session.add(new_message)
         db.session.commit()
@@ -195,9 +238,6 @@ def select_commentator_prompt():
     else:
         flash('Error selecting commentator prompt!', 'danger')
     return redirect(url_for('admin'))
-
-# Инициализация базы данных и создание таблиц
-create_tables()
 
 # Инициализация менеджеров
 battle_manager = BattleManager()
