@@ -12,10 +12,10 @@
 <ul>
     {% for character in characters %}
         <li class="character-item">
-            <form method="post" action="{{ url_for('select_character', character_id=character.id) }}">
+            <form method="post" action="{{ url_for('main.select_character', character_id=character.id) }}">
                 <button type="submit">{{ character.name }}</button>
             </form>
-            <form method="post" action="{{ url_for('delete_character', character_id=character.id) }}" class="delete-form">
+            <form method="post" action="{{ url_for('main.delete_character', character_id=character.id) }}" class="delete-form">
                 <button type="submit">Удалить</button>
             </form>
         </li>
@@ -35,7 +35,7 @@
 
 <div class="create-character-block">
     <h2>Создание персонажа</h2>
-    <form method="post" action="{{ url_for('create_character') }}">
+    <form method="post" action="{{ url_for('main.create_character') }}">
         <label for="name">Имя персонажа:</label>
         <input type="text" id="name" name="name" required>
         
@@ -67,7 +67,7 @@
         </div>
     {% endfor %}
 </div>
-<form id="chat-form" method="post" action="{{ url_for('send_message') }}">
+<form id="chat-form" method="post" action="{{ url_for('main.send_message') }}">
     <input type="text" id="message" name="message" placeholder="Введите сообщение...">
     <button type="submit">Отправить</button>
 </form>

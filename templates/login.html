@@ -12,7 +12,7 @@
         <h1>AI Arena - Login</h1>
     </header>
     <main>
-        <form action="{{ url_for('login') }}" method="POST">
+        <form action="{{ url_for('auth.register') }}" method="POST">
             <label for="username">Username:</label>
             <input type="text" id="username" name="username" required>
             <label for="password">Password:</label>

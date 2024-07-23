@@ -19,13 +19,17 @@ class User(db.Model):
         return f'<User {self.username}>'
 
 class Character(db.Model):
+    __tablename__ = 'character'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    player_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=False)
     name = db.Column(db.String(64))
-    description = db.Column(db.Text)
+    description = db.Column(db.String(255), nullable=False)
     image_url = db.Column(db.String(256))
     health_points = db.Column(db.Integer)
     is_alive = db.Column(db.Boolean, default=True)
+    traits = db.Column(db.Text, nullable=False)
+
 
 class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -68,3 +72,13 @@ class TournamentMatch(db.Model):
     tournament_id = db.Column(db.Integer, db.ForeignKey('tournament.id'))
     character_id = db.Column(db.Integer, db.ForeignKey('character.id'))
     status = db.Column(db.String(64))
+
+class Role(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)
+    instructions = db.Column(db.Text, nullable=False)
+
+class Player(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)
+    characters = db.relationship('Character', backref='player', lazy=True)

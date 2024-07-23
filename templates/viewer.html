@@ -9,7 +9,6 @@
 
 <!-- Название арены -->
 <h2>Магическая арена</h2>
-
 <!-- Имена персонажей -->
 <div id="players-names">
     <div class="player-name">
@@ -55,7 +54,7 @@
         </div>
     {% endfor %}
 </div>
-<form id="chat-form" method="post" action="{{ url_for('send_message') }}">
+<form id="chat-form" method="post" action="{{ url_for('main.send_message') }}">
     <input type="text" id="message" name="message" placeholder="Введите сообщение...">
     <button type="submit">Отправить</button>
 </form>
