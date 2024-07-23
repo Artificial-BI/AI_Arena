@@ -17,10 +17,8 @@
                 <li><a href="/">Главная</a></li>
                 <li><a href="/viewer">Зритель</a></li>
                 <li><a href="/player">Участник</a></li>
-                <li><a href="/contacts">Контакты</a></li>
-                <li><a href="/about">О нас</a></li>
                 <li><a id="register-btn" href="#">Регистрация</a></li>
-                <li><a id="login-btn" href="#">Войти</a></li>
+                <li><a href="/login">Войти</a></li>
             </ul>
         </nav>
     </header>
@@ -33,7 +31,7 @@
     <footer>
         <div class="footer-content">
             <p>Контактная информация: <a href="mailto:xeon3@mail.com">xeon3@mail.com</a></p>
-            <p><a href="/privacy">Политика конфиденциальности</a> | <a href="/terms">Условия использования</a></p>
+            <p><a href="/privacy">Политика конфиденциальности</a> | <a href="/terms">Условия использования</a> | <a href="/about">О нас</a> | <a href="/contacts">Контакты</a></p>
             <p>© 2024 AI Arena. Все права защищены.</p>
             <div class="social-links">
                 <a href="https://facebook.com">Facebook</a>
@@ -66,61 +64,27 @@
         </div>
     </div>
 
-    <!-- Форма входа -->
-    <div id="login-modal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Войти</h2>
-            <form action="{{ url_for('login') }}" method="POST">
-                <label for="username">Логин</label>
-                <input type="text" id="username" name="username" required>
-
-                <label for="password">Пароль</label>
-                <input type="password" id="password" name="password" required>
-
-                <button type="submit">Войти</button>
-            </form>
-        </div>
-    </div>
-
     <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
     <script src="{{ url_for('static', filename='js/game_mode.js') }}"></script>
     <script src="{{ url_for('static', filename='js/viewer.js') }}"></script>
     <script src="{{ url_for('static', filename='js/voice_input.js') }}"></script>
     <script>
         // Открытие модального окна регистрации
-        var registerModal = document.getElementById("register-modal");
-        var registerBtn = document.getElementById("register-btn");
-        var registerClose = registerModal.getElementsByClassName("close")[0];
+        var modal = document.getElementById("register-modal");
+        var btn = document.getElementById("register-btn");
+        var span = document.getElementsByClassName("close")[0];
 
-        registerBtn.onclick = function() {
-            registerModal.style.display = "block";
+        btn.onclick = function() {
+            modal.style.display = "block";
         }
 
-        registerClose.onclick = function() {
-            registerModal.style.display = "none";
+        span.onclick = function() {
+            modal.style.display = "none";
         }
 
-        // Открытие модального окна входа
-        var loginModal = document.getElementById("login-modal");
-        var loginBtn = document.getElementById("login-btn");
-        var loginClose = loginModal.getElementsByClassName("close")[0];
-
-        loginBtn.onclick = function() {
-            loginModal.style.display = "block";
-        }
-
-        loginClose.onclick = function() {
-            loginModal.style.display = "none";
-        }
-
-        // Закрытие модальных окон при клике вне их области
         window.onclick = function(event) {
-            if (event.target == registerModal) {
-                registerModal.style.display = "none";
-            }
-            if (event.target == loginModal) {
-                loginModal.style.display = "none";
+            if (event.target == modal) {
+                modal.style.display = "none";
             }
         }
     </script>

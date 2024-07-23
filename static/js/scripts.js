@@ -53,3 +53,10 @@ document.addEventListener('DOMContentLoaded', function() {
     initSlider('character-slider');
     initSlider('video-slider');
 });
+function showPopup() {
+    document.getElementById('popup').style.display = 'block';
+}
+
+function closePopup() {
+    document.getElementById('popup').style.display = 'none';
+}

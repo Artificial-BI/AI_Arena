@@ -135,6 +135,15 @@ footer .footer-content {
     margin: 0 auto;
 }
 
+footer .footer-content a {
+    color: var(--nav-text-color);
+    text-decoration: none;
+}
+
+footer .footer-content a:hover {
+    text-decoration: underline;
+}
+
 footer .social-links a {
     margin: 0 10px;
     color: var(--nav-text-color);
@@ -253,4 +262,28 @@ footer .social-links a:hover {
     color: black;
     text-decoration: none;
     cursor: pointer;
+}
+
+.user-icon {
+    transform: translate(90%, -45%);
+}
+
+.popup {
+    display: none; /* Скрыто по умолчанию */
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+.popup-text {
+    display: block;
+    margin-bottom: 20px;
+    font-size: 16px;
+    text-align: center;
 }

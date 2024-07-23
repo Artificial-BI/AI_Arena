@@ -7,21 +7,22 @@ import os
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate
 
+
 # Импорт дополнительных модулей
 from core import BattleManager, ArenaManager, TournamentManager
-
 migrate = Migrate()
 app = Flask(__name__)
 app.config.from_object(Config)
-app.secret_key = Config.SECRET_KEY
+app.secret_key = '4349459044808681'  # Убедитесь, что секретный ключ задан
 
-# Инициализация расширений
+#------------------
+
 db.init_app(app)
 migrate.init_app(app, db)
 
-# Создание таблиц при первом запуске
+# Добавьте этот код в app.py
 with app.app_context():
-    db.create_all()
+    db.create_all()  # Создание таблиц, если они еще не созданы
 
 # Настройка логирования
 if not app.debug:
@@ -57,51 +58,55 @@ def index():
     ]
     return render_template('index.html', top_players=top_players, tournaments=tournaments)
 
-@app.route('/register', methods=['GET', 'POST'])
+@app.route('/register', methods=['POST'])
 def register():
-    if request.method == 'POST':
-        name = request.form['name']
-        email = request.form['email']
-        username = request.form['username']
-        password = generate_password_hash(request.form['password'])
+    name = request.form['name']
+    email = request.form['email']
+    username = request.form['username']
+    password = generate_password_hash(request.form['password'])
 
-        new_user = User(name=name, email=email, username=username, password=password)
-        db.session.add(new_user)
-        db.session.commit()
+    new_user = User(name=name, email=email, username=username, password=password)
+    db.session.add(new_user)
+    db.session.commit()
 
-        flash('Регистрация прошла успешно! Теперь вы можете войти в систему.', 'success')
-        return redirect(url_for('index'))
-    return render_template('register.html')
+    flash('Регистрация прошла успешно! Теперь вы можете войти в систему.', 'success')
+    return redirect(url_for('index'))
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/login', methods=['POST'])
 def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        user = User.query.filter_by(username=username).first()
-        if user and check_password_hash(user.password, password):
-            session['user_id'] = user.id
-            return redirect(url_for('player'))
-        else:
-            flash('Неверное имя пользователя или пароль', 'danger')
-            return redirect(url_for('login'))
-    return render_template('login.html')
+    username = request.form['username']
+    password = request.form['password']
+    user = User.query.filter_by(username=username).first()
+    app.logger.info('user: %s', user)
+    if user and check_password_hash(user.password, password):
+        session['user_id'] = user.id
+        session['username'] = user.username
+        flash('Вход в систему выполнен успешно!', 'success')
+        app.logger.info('user in sys: %s', user)
+        return redirect(url_for('index'))
+    else:
+        flash('Неверный логин или пароль.', 'danger')
+        app.logger.info('Error input: %s', user)
+        return redirect(url_for('index'))
 
 @app.route('/logout')
 def logout():
     session.pop('user_id', None)
+    session.pop('username', None)
+    flash('Вы вышли из системы.', 'success')
     return redirect(url_for('index'))
 
 @app.route('/player')
 def player():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-    user_id = session['user_id']
-    messages = Message.query.order_by(Message.timestamp.asc()).all()
-    characters = Character.query.filter_by(user_id=user_id).all()
-    selected_character_id = session.get('selected_character_id')
-    selected_character = Character.query.get(selected_character_id) if selected_character_id else None
-    return render_template('player.html', messages=messages, characters=characters, selected_character=selected_character)
+    try:
+        user_id = session.get('user_id')
+        messages = Message.query.order_by(Message.timestamp.asc()).all()
+        characters = Character.query.filter_by(user_id=user_id).all()
+        selected_character_id = session.get('selected_character_id')
+        selected_character = Character.query.get(selected_character_id) if selected_character_id else None
+        return render_template('player.html', messages=messages, characters=characters, selected_character=selected_character)
+    except Exception as e:
+        return render_template('player.html', messages=[], characters=[], selected_character=None)
 
 @app.route('/update_settings', methods=['POST'])
 def update_settings():
@@ -123,7 +128,7 @@ def admin():
         return render_template('admin.html', messages=messages, referee_prompts=referee_prompts)
     except Exception as e:
         return render_template('admin.html', messages=[], referee_prompts=[])
-
+    
 @app.route('/viewer')
 def viewer():
     try:
@@ -139,7 +144,7 @@ def create_character():
     try:
         name = request.form['name']
         description = request.form['description']
-        user_id = session.get('user_id')  # Используем идентификатор текущего пользователя из сессии
+        user_id = session.get('user_id')
         image_url = generate_character_image(description, user_id, name)
         health_points = calculate_initial_health(description)
         new_character = Character(name=name, description=description, image_url=image_url, health_points=health_points, user_id=user_id)
@@ -239,6 +244,9 @@ def select_commentator_prompt():
         flash('Error selecting commentator prompt!', 'danger')
     return redirect(url_for('admin'))
 
+# Инициализация базы данных и создание таблиц
+#create_tables()
+
 # Инициализация менеджеров
 battle_manager = BattleManager()
 arena_manager = ArenaManager()
@@ -291,6 +299,12 @@ def generate_character_image(description, user_id, character_name):
 def calculate_initial_health(description):
     app.logger.info('Calculating initial health for description: %s', description)
     return 1000
+
+# # Подключение к базе данных через SQLAlchemy
+# def create_tables():
+#     db.create_all()
+
+# create_tables()
 
 if __name__ == '__main__':
     app.run(debug=True)
