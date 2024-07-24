@@ -1,8 +1,10 @@
 import google.generativeai as genai
+from config import Config
 
 class GeminiAssistant:
-    def __init__(self, gemini_api_key, role_instructions):
-        genai.configure(api_key=gemini_api_key)
+    def __init__(self, role_instructions):
+        conf = Config()
+        genai.configure(api_key=conf.GEMINI_API_TOKEN)
         self.model = genai.GenerativeModel(
             'gemini-1.5-flash',
             system_instruction=role_instructions
@@ -15,5 +17,3 @@ class GeminiAssistant:
             return response.candidates[0].content.parts[0].text
         else:
             return "Sorry, I couldn't understand your message."
-
-

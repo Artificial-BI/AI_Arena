@@ -30,7 +30,6 @@ class Character(db.Model):
     is_alive = db.Column(db.Boolean, default=True)
     traits = db.Column(db.Text, nullable=False)
 
-
 class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -40,11 +39,10 @@ class Message(db.Model):
 class RefereePrompt(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     prompt_text = db.Column(db.Text)
-    
+
 class CommentatorPrompt(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     prompt_text = db.Column(db.Text, nullable=False)
-
 
 class Fight(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -82,3 +80,15 @@ class Player(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), unique=True, nullable=False)
     characters = db.relationship('Character', backref='player', lazy=True)
+
+class TopPlayer(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), nullable=False)
+    wins = db.Column(db.Integer, nullable=False)
+    losses = db.Column(db.Integer, nullable=False)
+    character_name = db.Column(db.String(64), nullable=False)
+    weekly_wins = db.Column(db.Integer, nullable=False)
+    weekly_losses = db.Column(db.Integer, nullable=False)
+
+    def __repr__(self):
+        return f'<TopPlayer {self.name}>'

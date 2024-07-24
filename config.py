@@ -1,17 +1,22 @@
 import os
 
 class Config:
-    #SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
-    #SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///instance/aiarena.db'
-    #SQLALCHEMY_TRACK_MODIFICATIONS = False
-
+    # Секретный ключ для защиты данных сессий
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
+    
+    # Токен для доступа к API Gemini
+    GEMINI_API_TOKEN = os.getenv('GEMINI_API_TOKEN')
+    
+    # Определение базовой директории проекта
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+    
+    # Настройка базы данных SQLite
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(BASE_DIR, 'instance', 'aiarena.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
-    # Папка для хранения изображений
-    IMAGE_UPLOADS = os.path.join('static', 'images')  #
+    # Папка для хранения загружаемых изображений
+    IMAGE_UPLOADS = os.path.join('static', 'images')
+    
     # Настройки для логирования
     LOG_DIR = 'logs'
     if not os.path.exists(LOG_DIR):

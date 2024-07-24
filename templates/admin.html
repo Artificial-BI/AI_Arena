@@ -43,7 +43,7 @@
                     <td>{{ message.id }}</td>
                     <td>{{ message.content }}</td>
                     <td>
-                        <form method="post" action="{{ url_for('delete_message', message_id=message.id) }}">
+                        <form method="post" action="{{ url_for('main.delete_message', message_id=message.id) }}">
                             <button type="submit">Удалить</button>
                         </form>
                     </td>
@@ -56,7 +56,7 @@
 <!-- Настройки нейросетей -->
 <div id="network-settings">
     <h2>Настройки нейросетей</h2>
-    <form method="post" action="{{ url_for('update_settings') }}">
+    <form method="post" action="{{ url_for('main.update_settings') }}">
         <div class="settings-row">
             <div class="settings-col">
                 <label for="temperature">Температура:</label>
@@ -97,7 +97,7 @@
 <div id="additional-settings">
     <h2>Настройки дополнительных параметров</h2>
     <!-- Поле для ввода промта для нейросети рефери -->
-    <form method="post" action="{{ url_for('add_referee_prompt') }}">
+    <form method="post" action="{{ url_for('main.add_referee_prompt') }}">
         <label for="referee_prompt">Промт для нейросети рефери:</label>
         <textarea id="referee_prompt" name="referee_prompt" required></textarea>
         <button type="submit">Сохранить промт</button>
@@ -105,7 +105,7 @@
 
     <!-- Выпадающий список с имеющимися промтами -->
     <h3>Выбрать существующий промт:</h3>
-    <form method="post" action="{{ url_for('select_referee_prompt') }}">
+    <form method="post" action="{{ url_for('main.select_referee_prompt') }}">
         <select id="existing_prompts" name="existing_prompts">
             {% for prompt in referee_prompts %}
                 <option value="{{ prompt.id }}">{{ prompt.prompt_text }}</option>
@@ -115,7 +115,7 @@
     </form>
 
     <!-- Поле для ввода промта для нейросети комментатора -->
-    <form method="post" action="{{ url_for('add_commentator_prompt') }}">
+    <form method="post" action="{{ url_for('main.add_commentator_prompt') }}">
         <label for="commentator_prompt">Промт для нейросети комментатора:</label>
         <textarea id="commentator_prompt" name="commentator_prompt" required></textarea>
         <button type="submit">Сохранить промт</button>
@@ -123,7 +123,7 @@
 
     <!-- Выпадающий список с имеющимися промтами для комментатора -->
     <h3>Выбрать существующий промт:</h3>
-    <form method="post" action="{{ url_for('select_commentator_prompt') }}">
+    <form method="post" action="{{ url_for('main.select_commentator_prompt') }}">
         <select id="existing_commentator_prompts" name="existing_commentator_prompts">
             {% for prompt in commentator_prompts %}
                 <option value="{{ prompt.id }}">{{ prompt.prompt_text }}</option>

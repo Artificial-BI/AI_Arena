@@ -12,15 +12,7 @@
         <div class="logo">
             <h1>AI Arena</h1>
         </div>
-        <nav>
-            <ul>
-                <li><a href="/">Главная</a></li>
-                <li><a href="/viewer">Зритель</a></li>
-                <li><a href="/player">Участник</a></li>
-                <li><a id="register-btn" href="#">Регистрация</a></li>
-                <li><a href="/login">Войти</a></li>
-            </ul>
-        </nav>
+        {% block nav %}{% endblock %}
     </header>
 
     <div class="content">
@@ -40,29 +32,6 @@
             </div>
         </div>
     </footer>
-
-    <!-- Форма регистрации -->
-    <div id="register-modal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Регистрация</h2>
-            <form action="{{ url_for('auth.register') }}" method="POST">
-                <label for="name">Имя</label>
-                <input type="text" id="name" name="name" required>
-
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" required>
-
-                <label for="username">Логин</label>
-                <input type="text" id="username" name="username" required>
-
-                <label for="password">Пароль</label>
-                <input type="password" id="password" name="password" required>
-
-                <button type="submit">Зарегистрироваться</button>
-            </form>
-        </div>
-    </div>
 
     <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
     <script src="{{ url_for('static', filename='js/game_mode.js') }}"></script>

@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, session, request, flash, jsonify, redirect, url_for
-from models import db, Message, Character, RefereePrompt, CommentatorPrompt
+from models import db, Message, Character, RefereePrompt, CommentatorPrompt, TopPlayer, Tournament
 from managers import battle_manager, arena_manager, tournament_manager
 import os
 
@@ -7,22 +7,8 @@ main_bp = Blueprint('main', __name__)
 
 @main_bp.route('/')
 def index():
-    top_players = [
-        {"name": "JohnDoe", "wins": 10, "losses": 2, "character_name": "Warrior John", "weekly_wins": 5, "weekly_losses": 1},
-        {"name": "JaneSmith", "wins": 8, "losses": 4, "character_name": "Mage Jane", "weekly_wins": 4, "weekly_losses": 2},
-        {"name": "RoboWarrior", "wins": 7, "losses": 5, "character_name": "Robot Robo", "weekly_wins": 3, "weekly_losses": 3},
-        {"name": "AIChamp", "wins": 6, "losses": 6, "character_name": "Champion AI", "weekly_wins": 2, "weekly_losses": 4},
-        {"name": "Player5", "wins": 5, "losses": 5, "character_name": "Character 5", "weekly_wins": 1, "weekly_losses": 5},
-        {"name": "Player6", "wins": 4, "losses": 6, "character_name": "Character 6", "weekly_wins": 0, "weekly_losses": 6},
-        {"name": "Player7", "wins": 3, "losses": 7, "character_name": "Character 7", "weekly_wins": 6, "weekly_losses": 0},
-        {"name": "Player8", "wins": 2, "losses": 8, "character_name": "Character 8", "weekly_wins": 5, "weekly_losses": 1},
-        {"name": "Player9", "wins": 1, "losses": 9, "character_name": "Character 9", "weekly_wins": 4, "weekly_losses": 2},
-        {"name": "Player10", "wins": 0, "losses": 10, "character_name": "Character 10", "weekly_wins": 3, "weekly_losses": 3},
-    ]
-    tournaments = [
-        {"id": 1, "name": "Summer Cup", "format": "круговой", "start_date": "2024-06-01", "end_date": "2024-06-30", "current_stage": "финал"},
-        {"id": 2, "name": "Winter Cup", "format": "плей-офф", "start_date": "2024-12-01", "end_date": "2024-12-31", "current_stage": "полуфинал"},
-    ]
+    top_players = TopPlayer.query.all()
+    tournaments = Tournament.query.all()
     return render_template('index.html', top_players=top_players, tournaments=tournaments)
 
 @main_bp.route('/player')
@@ -123,6 +109,19 @@ def send_message():
         flash('Error sending message!', 'danger')
     return redirect(url_for('main.player'))
 
+@main_bp.route('/send_general_message', methods=['POST'])
+def send_general_message():
+    try:
+        content = request.form['message']
+        user_id = session.get('user_id')
+        new_message = Message(user_id=user_id, content=content)
+        db.session.add(new_message)
+        db.session.commit()
+        flash('Message sent!', 'success')
+    except Exception as e:
+        flash('Error sending message!', 'danger')
+    return redirect(url_for('main.player'))
+
 @main_bp.route('/add_referee_prompt', methods=['POST'])
 def add_referee_prompt():
     try:
@@ -170,31 +169,6 @@ def select_commentator_prompt():
     else:
         flash('Error selecting commentator prompt!', 'danger')
     return redirect(url_for('main.admin'))
-
-@main_bp.route('/organize_battle', methods=['POST'])
-def organize_battle():
-    data = request.json
-    character1_id = data.get('character1_id')
-    character2_id = data.get('character2_id')
-    arena_id = data.get('arena_id')
-    battle_manager.organize_battle(character1_id, character2_id, arena_id)
-    return jsonify({'status': 'success'})
-
-@main_bp.route('/create_arena', methods=['POST'])
-def create_arena():
-    data = request.json
-    description = data.get('description')
-    parameters = data.get('parameters')
-    arena_manager.create_arena(description, parameters)
-    return jsonify({'status': 'success'})
-
-@main_bp.route('/create_tournament', methods=['POST'])
-def create_tournament():
-    data = request.json
-    name = data.get('name')
-    format = data.get('format')
-    tournament_manager.create_tournament(name, format)
-    return jsonify({'status': 'success'})
 
 # Функции для генерации изображений и расчета здоровья персонажей
 def generate_character_image(description, user_id, character_name):

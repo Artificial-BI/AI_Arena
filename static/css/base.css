@@ -5,8 +5,11 @@
     --nav-text-color: #fff;
     --button-bg-color: #065311;
     --button-text-color: #fff;
+    --button-hover-bg-color: #054010;
+    --button-active-bg-color: #03300a;
+    --button-border-color: #000000;
     --button-inactive-bg-color: #ccc;
-    --input-border-color: #ccc;
+    --input-border-color: #000000;
     --input-focus-border-color: #66afe9;
     --input-focus-shadow-color: rgba(102, 175, 233, 0.6);
 }
@@ -39,7 +42,7 @@ nav ul li a {
 }
 
 nav ul li a:hover {
-    background-color: darken(var(--button-bg-color), 10%);
+    background-color: var(--button-hover-bg-color);
     color: var(--button-text-color);
 }
 
@@ -79,19 +82,21 @@ form button {
     background-color: var(--button-bg-color);
     color: var(--button-text-color);
     padding: 10px 20px;
-    border: none;
+    border: 2px solid var(--button-border-color);
     border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 form button:hover {
-    background-color: var(--button-hover-color);
+    background-color: var(--button-hover-bg-color);
+    border-color: var(--button-border-color);
 }
 
 form button:active {
-    background-color: var(--button-active-color);
+    background-color: var(--button-active-bg-color);
+    border-color: var(--button-border-color);
 }
 
 /* Стили для шапки и подвала */
@@ -187,7 +192,7 @@ footer .social-links a:hover {
 }
 
 .tournament-table th, .tournament-table td {
-    border: 1px solid #000;  /* Бордюр толщиной в 1 пиксель */
+    border: 1px solid #000;
     padding: 8px;
     text-align: left;
 }
@@ -198,7 +203,7 @@ footer .social-links a:hover {
 
 /* Стили для списка топ-игроков */
 .top-players-list {
-    border: 1px solid #000;  /* Бордюр толщиной в 1 пиксель */
+    border: 1px solid #000;
     padding: 10px;
     margin-bottom: 20px;
 }
@@ -217,37 +222,37 @@ footer .social-links a:hover {
     display: flex;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 20px; /* Увеличиваем расстояние между GIF изображениями */
+    gap: 20px;
 }
 
 .gif-container img {
-    width: 48%; /* Устанавливаем ширину 100% для адаптивности */
+    width: 48%;
     height: auto;
-    max-width: 100%; /* Максимальная ширина для больших экранов */
+    max-width: 100%;
     flex: 1;
 }
 
 /* Стили для модального окна регистрации */
 .modal {
-    display: none; /* Скрыто по умолчанию */
-    position: fixed; /* Остается на месте (фиксируется) */
-    z-index: 1; /* Сидит наверху */
+    display: none;
+    position: fixed;
+    z-index: 1;
     left: 0;
     top: -10%;
-    width: 60%; /* Полная ширина */
-    height: 100%; /* Полная высота */
-    overflow: auto; /* Включить прокрутку, если необходимо */
-    background-color: rgb(0,0,0); /* Черный фон с непрозрачностью */
-    background-color: rgba(0,0,0,0.4); /* Черный с непрозрачностью */
+    width: 60%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(0,0,0);
+    background-color: rgba(0,0,0,0.4);
     padding-top: 60px;
 }
 
 .modal-content {
     background-color: #fefefe;
-    margin: 5% auto; /* 15% сверху и центрировано */
+    margin: 5% auto;
     padding: 20px;
     border: 1px solid #888;
-    width: 80%; /* Может быть больше или меньше, в зависимости от размера экрана */
+    width: 80%;
 }
 
 .close {
@@ -269,7 +274,7 @@ footer .social-links a:hover {
 }
 
 .popup {
-    display: none; /* Скрыто по умолчанию */
+    display: none;
     position: fixed;
     left: 50%;
     top: 50%;
