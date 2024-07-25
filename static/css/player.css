@@ -1,3 +1,5 @@
+/* player.css */
+
 :root {
     --bg-color: #f4f4f4;
     --text-color: #333;
@@ -121,7 +123,7 @@ header nav ul li button:active {
 
 .chat-message.left {
     background-color: var(--button-border-color);
-    color: var(--text-color);
+    color: var (--text-color);
 }
 
 .timestamp {

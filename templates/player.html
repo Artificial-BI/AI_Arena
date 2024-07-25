@@ -14,6 +14,7 @@
 
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/player.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}
 
 {% block content %}
@@ -56,9 +57,6 @@
         <div class="create-character">
             <h2>Создание нового персонажа</h2>
             <form method="post" action="{{ url_for('main.create_character') }}">
-                <label for="name">Имя персонажа:</label>
-                <input type="text" id="name" name="name" required>
-
                 <label for="description">Описание персонажа:</label>
                 <textarea id="description" name="description" required></textarea>
 
@@ -90,7 +88,7 @@
                 {% for message in general_messages %}
                 <div class="chat-message {{ 'right' if message.user_id == 1 else 'left' }}">
                     <p>{{ message.content }}</p>
-                    <span class="timestamp">{{ message.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                    <span class="timestamp">{{ message.timestamp.strftime('%Y-%м-%d %H:%M:%S') }}</span>
                 </div>
                 {% endfor %}
             </div>
@@ -101,4 +99,43 @@
         </div>
     </main>
 </div>
+
+<script>
+    // Функция для отображения характеристик персонажа на графике
+    function displayCharacterStats(traits) {
+        const ctx = document.getElementById('character-chart').getContext('2d');
+        const chartData = {
+            labels: Object.keys(traits),
+            datasets: [{
+                label: 'Характеристики персонажа',
+                data: Object.values(traits),
+                fill: false,
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }]
+        };
+        const myChart = new Chart(ctx, {
+            type: 'line',
+            data: chartData,
+            options: {
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                return tooltipItem.label + ': ' + tooltipItem.raw + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Проверка, есть ли выбранный персонаж и его характеристики
+    {% if selected_character %}
+        const traits = {{ selected_character.traits | tojson }};
+        displayCharacterStats(traits);
+    {% endif %}
+</script>
+
 {% endblock %}

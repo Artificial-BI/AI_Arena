@@ -22,19 +22,23 @@ class Character(db.Model):
     __tablename__ = 'character'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    player_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=False)
+    player_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=True)  # Добавляем внешний ключ
     name = db.Column(db.String(64))
-    description = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text, nullable=False)
     image_url = db.Column(db.String(256))
-    health_points = db.Column(db.Integer)
-    is_alive = db.Column(db.Boolean, default=True)
-    traits = db.Column(db.Text, nullable=False)
+    traits = db.Column(db.Text, nullable=False)  # Список характеристик в формате JSON
+
+    def __repr__(self):
+        return f'<Character {self.name}>'
 
 class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     content = db.Column(db.Text)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<Message {self.content[:15]}>'
 
 class RefereePrompt(db.Model):
     id = db.Column(db.Integer, primary_key=True)
