@@ -1,3 +1,4 @@
+<!-- templates/player.html -->
 {% extends 'base.html' %}
 
 {% block nav %}
@@ -5,9 +6,9 @@
     <ul class="nav-group">
         <li><a href="/">Главная</a></li>
         <li><a href="/profile">Профиль</a></li>
-        <li><a href="/logout">Выход</a></li>
         <li>До начала игры осталось: <span id="countdown">{{ tournament_countdown }}</span></li>
         <li><button id="participate-button">Участвовать</button></li>
+        <li><a href="/logout">Выход</a></li>
     </ul>
 </nav>
 {% endblock %}
@@ -20,46 +21,48 @@
 {% block content %}
 <div class="player-container">
     <main>
-        <!-- Изображение персонажа -->
-        {% if selected_character %}
-        <div class="selected-character">
-            <h2>Ваш Персонаж</h2>
-            <img src="{{ url_for('static', filename=selected_character.image_url.replace('\\', '/')) }}" alt="Character Image">
-            <h3>{{ selected_character.name }}</h3>
-            <p>{{ selected_character.description }}</p>
-        </div>
-        {% endif %}
+        <div class="character-info">
+            <!-- Изображение персонажа -->
+            {% if selected_character %}
+            <div class="selected-character">
+                <img src="{{ url_for('static', filename=selected_character.image_url.replace('\\', '/')) }}" alt="Character Image">
+                <h3 id="character-name">{{ selected_character.name }}</h3>
+                <p id="character-description">{{ selected_character.description }}</p>
+            </div>
+            {% endif %}
 
-        <!-- Список персонажей -->
-        <div class="characters-section">
-            <ul>
-                {% for character in characters %}
-                <li class="character-item">
-                    <form method="post" action="{{ url_for('player_bp.select_character', character_id=character.id) }}">
-                        <button type="submit">{{ character.name }}</button>
-                    </form>
-                    <form method="post" action="{{ url_for('player_bp.delete_character', character_id=character.id) }}" class="delete-form">
-                        <button type="submit">Удалить</button>
-                    </form>
-                </li>
-                {% endfor %}
-            </ul>
+            <!-- График характеристик персонажа -->
+            <div class="character-stats">
+                <h2>Характеристики персонажа</h2>
+                <canvas id="character-chart"></canvas>
+            </div>
         </div>
 
-        <!-- График характеристик персонажа -->
-        <div class="character-stats">
-            <h2>Характеристики персонажа</h2>
-            <canvas id="character-chart"></canvas>
-        </div>
+        <div class="character-management">
+            <!-- Список персонажей -->
+            <div class="characters-section">
+                <ul id="character-list">
+                    {% for character in characters %}
+                    <li class="character-item">
+                        <button type="button" onclick="selectCharacter({{ character.id }})">{{ character.name }}</button>
+                        <form method="post" action="{{ url_for('player_bp.delete_character', character_id=character.id) }}" class="delete-form">
+                            <button type="submit">Удалить</button>
+                        </form>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
 
-        <!-- Создание персонажа -->
-        <div class="create-character">
-            <h2>Создание нового персонажа</h2>
-            <form method="post" action="{{ url_for('player_bp.create_character') }}">
-                <label for="description">Описание персонажа:</label>
-                <textarea id="description" name="description" required></textarea>
-                <button type="submit">Создать персонажа</button>
-            </form>
+            <!-- Создание персонажа -->
+            <div class="create-character">
+                <form id="create-character-form" method="post" action="{{ url_for('player_bp.create_character') }}">
+                    <label for="name">Имя персонажа:</label>
+                    <input type="text" id="name" name="name" required>
+                    <label for="description">Описание персонажа:</label>
+                    <textarea id="description" name="description" rows="6" required></textarea>
+                    <button type="submit">Создать персонажа</button>
+                </form>
+            </div>
         </div>
 
         <!-- Чат с нейросетью -->
@@ -69,13 +72,7 @@
                 {% for message in messages %}
                 <div class="chat-message {{ 'right' if message.user_id == 1 else 'left' }}">
                     <p>{{ message.content }}</p>
-                    <span class="timestamp">
-                        {% if message.timestamp %}
-                            {{ message.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
-                        {% else %}
-                            Unknown time
-                        {% endif %}
-                    </span>
+                    <span class="timestamp">{{ message.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</span>
                 </div>
                 {% endfor %}
             </div>
@@ -92,13 +89,7 @@
                 {% for message in general_messages %}
                 <div class="chat-message {{ 'right' if message.user_id == 1 else 'left' }}">
                     <p>{{ message.content }}</p>
-                    <span class="timestamp">
-                        {% if message.timestamp %}
-                            {{ message.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
-                        {% else %}
-                            Unknown time
-                        {% endif %}
-                    </span>
+                    <span class="timestamp">{{ message.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</span>
                 </div>
                 {% endfor %}
             </div>
@@ -111,41 +102,8 @@
 </div>
 
 <script>
-    // Функция для отображения характеристик персонажа на графике
-    function displayCharacterStats(traits) {
-        const ctx = document.getElementById('character-chart').getContext('2d');
-        const chartData = {
-            labels: Object.keys(traits),
-            datasets: [{
-                label: 'Характеристики персонажа',
-                data: Object.values(traits),
-                fill: false,
-                borderColor: 'rgb(75, 192, 192)',
-                tension: 0.1
-            }]
-        };
-        const myChart = new Chart(ctx, {
-            type: 'line',
-            data: chartData,
-            options: {
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(tooltipItem) {
-                                return tooltipItem.label + ': ' + tooltipItem.raw + '%';
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    // Проверка, есть ли выбранный персонаж и его характеристики
-    {% if selected_character %}
-        const traits = {{ selected_character.traits | tojson }};
-        displayCharacterStats(traits);
-    {% endif %}
+    const selectedCharacterTraits = {% if selected_character %}{{ selected_character.traits | tojson }}{% else %}null{% endif %};
 </script>
 
+<script src="{{ url_for('static', filename='js/player.js') }}"></script>
 {% endblock %}

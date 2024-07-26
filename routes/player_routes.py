@@ -11,25 +11,25 @@ def fetch_messages():
     try:
         return Message.query.all()
     except Exception as e:
-        return {"error": str(e)}
+        return []
 
 def fetch_characters():
     try:
         return Character.query.all()
     except Exception as e:
-        return {"error": str(e)}
+        return []
 
 def get_selected_character():
     try:
         return Character.query.first()  # Замените на вашу логику выбора персонажа
     except Exception as e:
-        return {"error": str(e)}
+        return None
 
 def fetch_general_messages():
     try:
         return Message.query.filter_by(general=True).all()
     except Exception as e:
-        return {"error": str(e)}
+        return []
 
 # Пример преобразования строки в datetime
 def convert_to_datetime(timestamp_str):
@@ -47,12 +47,14 @@ def player():
 
 @player_bp.route('/select_character/<int:character_id>', methods=['POST'])
 def select_character(character_id):
-    # Логика для выбора персонажа
     character = Character.query.get(character_id)
     if character:
-        # Замените на вашу логику сохранения выбранного персонажа
-        selected_character = character
-    return redirect(url_for('player_bp.player'))
+        selected_character = {
+            "name": character.name,
+            "description": character.description
+        }
+        return jsonify(selected_character)
+    return jsonify({"error": "Character not found"}), 404
 
 @player_bp.route('/delete_character/<int:character_id>', methods=['POST'])
 def delete_character(character_id):
@@ -67,9 +69,9 @@ def delete_character(character_id):
 @player_bp.route('/create_character', methods=['POST'])
 def create_character():
     try:
+        name = request.form['name']
         description = request.form['description']
-        # Логика для создания нового персонажа на основе описания
-        new_character = Character(name='Новый персонаж', description=description, image_url='images/default/character.png', traits='{}')
+        new_character = Character(name=name, description=description, image_url='images/default/character.png', traits='{}')
         db.session.add(new_character)
         db.session.commit()
         return redirect(url_for('player_bp.player'))
@@ -84,7 +86,7 @@ def send_message():
         message = Message(content=content, user_id=user_id)
         db.session.add(message)
         db.session.commit()
-        return redirect(url_for('player_bp.player'))
+        return jsonify({"status": "Message sent"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -96,6 +98,6 @@ def send_general_message():
         message = Message(content=content, user_id=user_id, general=True)
         db.session.add(message)
         db.session.commit()
-        return redirect(url_for('player_bp.player'))
+        return jsonify({"status": "General message sent"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
