@@ -30,16 +30,15 @@
         </div>
         {% endif %}
 
-        <!-- Фрейм со списком созданных персонажей -->
+        <!-- Список персонажей -->
         <div class="characters-section">
-            <h2>Ваши персонажи</h2>
             <ul>
                 {% for character in characters %}
                 <li class="character-item">
-                    <form method="post" action="{{ url_for('main.select_character', character_id=character.id) }}">
+                    <form method="post" action="{{ url_for('player_bp.select_character', character_id=character.id) }}">
                         <button type="submit">{{ character.name }}</button>
                     </form>
-                    <form method="post" action="{{ url_for('main.delete_character', character_id=character.id) }}" class="delete-form">
+                    <form method="post" action="{{ url_for('player_bp.delete_character', character_id=character.id) }}" class="delete-form">
                         <button type="submit">Удалить</button>
                     </form>
                 </li>
@@ -56,10 +55,9 @@
         <!-- Создание персонажа -->
         <div class="create-character">
             <h2>Создание нового персонажа</h2>
-            <form method="post" action="{{ url_for('main.create_character') }}">
+            <form method="post" action="{{ url_for('player_bp.create_character') }}">
                 <label for="description">Описание персонажа:</label>
                 <textarea id="description" name="description" required></textarea>
-
                 <button type="submit">Создать персонажа</button>
             </form>
         </div>
@@ -71,11 +69,17 @@
                 {% for message in messages %}
                 <div class="chat-message {{ 'right' if message.user_id == 1 else 'left' }}">
                     <p>{{ message.content }}</p>
-                    <span class="timestamp">{{ message.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                    <span class="timestamp">
+                        {% if message.timestamp %}
+                            {{ message.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
+                        {% else %}
+                            Unknown time
+                        {% endif %}
+                    </span>
                 </div>
                 {% endfor %}
             </div>
-            <form id="chat-form" method="post" action="{{ url_for('main.send_message') }}">
+            <form id="chat-form" method="post" action="{{ url_for('player_bp.send_message') }}">
                 <input type="text" id="message" name="message" placeholder="Введите сообщение...">
                 <button type="submit">Отправить</button>
             </form>
@@ -88,12 +92,18 @@
                 {% for message in general_messages %}
                 <div class="chat-message {{ 'right' if message.user_id == 1 else 'left' }}">
                     <p>{{ message.content }}</p>
-                    <span class="timestamp">{{ message.timestamp.strftime('%Y-%м-%d %H:%M:%S') }}</span>
+                    <span class="timestamp">
+                        {% if message.timestamp %}
+                            {{ message.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
+                        {% else %}
+                            Unknown time
+                        {% endif %}
+                    </span>
                 </div>
                 {% endfor %}
             </div>
-            <form id="general-chat-form" method="post" action="{{ url_for('main.send_general_message') }}">
-                <input type="text" id="general-message" name="general-message" placeholder="Введите сообщение...">
+            <form id="general-chat-form" method="post" action="{{ url_for('player_bp.send_general_message') }}">
+                <input type="text" name="message" id="general-message" placeholder="Введите сообщение...">
                 <button type="submit">Отправить</button>
             </form>
         </div>

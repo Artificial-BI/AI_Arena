@@ -1,43 +1,41 @@
-from flask import Flask, jsonify, request
+from flask import Flask, render_template
 from config import Config
-from models import db
-from flask_migrate import Migrate
-from auth import auth_bp
-from routes import main_bp
-from initialization import init_db
 from logging_config import configure_logging
-from managers import battle_manager, arena_manager, tournament_manager  # Импорт менеджеров
+from initialization import init_extensions_and_db  # Импортируем объединенную функцию инициализации
+from extensions import db
 
-# Инициализация Flask приложения и конфигурация
 app = Flask(__name__)
 app.config.from_object(Config)
-app.secret_key = '4349459044808681'
 
-# Инициализация базы данных и миграций
-db.init_app(app)
-migrate = Migrate(app, db)
+# Инициализация расширений и базы данных
+init_extensions_and_db(app)
 
-with app.app_context():
-    init_db()
+# Импортируем и регистрируем блюпринты
+from routes.index_routes import index_bp
+from routes.common_routes import common_bp
+from routes.player_routes import player_bp
+from routes.viewer_routes import viewer_bp
+from routes.admin_routes import admin_bp
 
-# Настройка логирования
+app.register_blueprint(index_bp)
+app.register_blueprint(common_bp, url_prefix='/common')
+app.register_blueprint(player_bp, url_prefix='/player')
+app.register_blueprint(viewer_bp, url_prefix='/viewer')
+app.register_blueprint(admin_bp, url_prefix='/admin')
+
+# Конфигурируем логирование
 configure_logging(app)
 
-# Регистрация Blueprint'ов
-app.register_blueprint(auth_bp)
-app.register_blueprint(main_bp)
+# Определяем обработчики ошибок
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template('404.html'), 404
 
-# Асинхронный маршрут для проведения боя
-@app.route('/organize_battle', methods=['POST'])
-async def organize_battle():
-    data = await request.get_json()
-    character1_id = data.get('character1_id')
-    character2_id = data.get('character2_id')
-    arena_id = data.get('arena_id')
-    
-    result = await battle_manager.organize_battle(character1_id, character2_id, arena_id)
-    
-    return jsonify({'status': 'success', 'result': result})
+@app.errorhandler(500)
+def internal_error(error):
+    db.session.rollback()
+    return render_template('500.html'), 500
 
-if __name__ == '__main__':
+# Основная точка входа
+if __name__ == "__main__":
     app.run(debug=True)

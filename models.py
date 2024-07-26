@@ -1,9 +1,5 @@
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
 from datetime import datetime
-
-db = SQLAlchemy()
-migrate = Migrate()
+from extensions import db  # Импортируем экземпляр SQLAlchemy из extensions.py
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)

@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch('/get_characters')
             .then(response => response.json())
             .then(data => {
+                console.log('Characters data fetched:', data);  // Логирование
                 const player1Name = document.getElementById('player1-name');
                 const player2Name = document.getElementById('player2-name');
                 const player1Image = document.getElementById('player1-image');
@@ -15,6 +16,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 const player1Description = document.getElementById('player1-description');
                 const player2Description = document.getElementById('player2-description');
                 const charactersList = document.getElementById('characters-list');
+
+                if (!player1Name || !player2Name || !player1Image || !player2Image || !player1Description || !player2Description || !charactersList) {
+                    console.error('One or more elements for characters are missing');
+                    return;
+                }
 
                 charactersList.innerHTML = '';
                 data.forEach((character, index) => {
@@ -58,6 +64,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 const player1Description = document.getElementById('player1-description');
                 const player2Description = document.getElementById('player2-description');
                 
+                if (!player1Name || !player2Name || !player1Image || !player2Image || !player1Description || !player2Description) {
+                    console.error('One or more elements for default characters are missing');
+                    return;
+                }
+
                 player1Name.textContent = 'Игрок 1';
                 player2Name.textContent = 'Игрок 2';
                 player1Image.src = '/static/images/default/player1.png';
@@ -71,7 +82,14 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch('/get_battle_updates')
             .then(response => response.json())
             .then(data => {
+                console.log('Battle updates fetched:', data);  // Логирование
                 const battleUpdates = document.getElementById('battle-updates');
+
+                if (!battleUpdates) {
+                    console.error('Element for battle updates is missing');
+                    return;
+                }
+
                 battleUpdates.innerHTML = '';
                 data.forEach(update => {
                     const updateElement = document.createElement('div');
@@ -90,7 +108,14 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch('/get_battle_images')
             .then(response => response.json())
             .then(data => {
+                console.log('Battle images fetched:', data);  // Логирование
                 const slidesContainer = document.getElementById('slides');
+
+                if (!slidesContainer) {
+                    console.error('Element for battle images is missing');
+                    return;
+                }
+
                 slidesContainer.innerHTML = '';
                 if (data.length > 0) {
                     data.forEach(image => {
@@ -117,6 +142,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Error fetching battle images:', error);
                 // В случае ошибки использовать изображения по умолчанию
                 const slidesContainer = document.getElementById('slides');
+
+                if (!slidesContainer) {
+                    console.error('Element for default battle images is missing');
+                    return;
+                }
+
                 slidesContainer.innerHTML = '';
                 const defaultImages = [
                     'battle1.png',
@@ -136,7 +167,14 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch('/get_messages')
             .then(response => response.json())
             .then(data => {
+                console.log('Chat messages fetched:', data);  // Логирование
                 const chatBox = document.getElementById('chat-box');
+
+                if (!chatBox) {
+                    console.error('Element for chat messages is missing');
+                    return;
+                }
+
                 chatBox.innerHTML = '';
                 data.forEach(message => {
                     const messageElement = document.createElement('div');
@@ -187,6 +225,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const slides = slidesContainer.getElementsByTagName('img');
         const prevSlide = document.getElementById('prev-slide');
         const nextSlide = document.getElementById('next-slide');
+
+        if (!prevSlide || !nextSlide || slides.length === 0) {
+            console.error('Elements for slideshow are missing or there are no slides');
+            return;
+        }
 
         function showSlide(index) {
             slideIndex = index;
