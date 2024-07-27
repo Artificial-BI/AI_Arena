@@ -1,4 +1,4 @@
-// static/js/player.js
+// --- static/js/player.js ---
 
 function selectCharacter(characterId) {
     fetch(`/player/select_character/${characterId}`, {
@@ -72,8 +72,14 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.status === 'Message sent') {
                 const messageElement = document.createElement('div');
                 messageElement.className = 'chat-message right';
-                messageElement.innerHTML = `<p>${data.message.content}</p><span class="timestamp">${data.message.timestamp}</span>`;
+                messageElement.innerHTML = `<p>${messageInput.value}</p><span class="timestamp">${new Date().toLocaleString()}</span>`;
                 chatBox.appendChild(messageElement);
+
+                const responseElement = document.createElement('div');
+                responseElement.className = 'chat-message left';
+                responseElement.innerHTML = `<p>${data.response}</p><span class="timestamp">${new Date().toLocaleString()}</span>`;
+                chatBox.appendChild(responseElement);
+
                 messageInput.value = '';
                 chatBox.scrollTop = chatBox.scrollHeight;
             }
@@ -94,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.status === 'General message sent') {
                 const messageElement = document.createElement('div');
                 messageElement.className = 'chat-message right';
-                messageElement.innerHTML = `<p>${data.message.content}</p><span class="timestamp">${data.message.timestamp}</span>`;
+                messageElement.innerHTML = `<p>${generalMessageInput.value}</p><span class="timestamp">${new Date().toLocaleString()}</span>`;
                 generalChatBox.appendChild(messageElement);
                 generalMessageInput.value = '';
                 generalChatBox.scrollTop = generalChatBox.scrollHeight;

@@ -1,3 +1,6 @@
+
+# --- core.py ---
+
 from datetime import datetime
 from models import db, Arena, Tournament, TournamentMatch, Fight, Role, Player
 from gemini import GeminiAssistant

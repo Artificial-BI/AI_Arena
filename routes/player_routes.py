@@ -1,34 +1,46 @@
-# routes/player_routes.py
-from flask import Blueprint, render_template, jsonify, request, redirect, url_for
+# --- routes/player_routes.py ---
+
+from flask import Blueprint, render_template, jsonify, request, redirect, url_for, current_app
 from extensions import db
-from models import Message, Character, User
+from models import Message, Character
 from datetime import datetime
+from gemini import GeminiAssistant
+import asyncio
+import logging
 
 player_bp = Blueprint('player_bp', __name__)
+
+# Настройка логирования
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Вспомогательные функции
 def fetch_messages():
     try:
         return Message.query.all()
     except Exception as e:
+        logger.error(f"Error fetching messages: {e}")
         return []
 
 def fetch_characters():
     try:
         return Character.query.all()
     except Exception as e:
+        logger.error(f"Error fetching characters: {e}")
         return []
 
 def get_selected_character():
     try:
         return Character.query.first()  # Замените на вашу логику выбора персонажа
     except Exception as e:
+        logger.error(f"Error fetching selected character: {e}")
         return None
 
 def fetch_general_messages():
     try:
         return Message.query.filter_by(general=True).all()
     except Exception as e:
+        logger.error(f"Error fetching general messages: {e}")
         return []
 
 # Пример преобразования строки в datetime
@@ -38,6 +50,7 @@ def convert_to_datetime(timestamp_str):
 # Маршруты
 @player_bp.route('/')
 def player():
+    logger.info("Fetching player data")
     messages = fetch_messages()
     characters = fetch_characters()
     selected_character = get_selected_character()
@@ -53,7 +66,9 @@ def select_character(character_id):
             "name": character.name,
             "description": character.description
         }
+        logger.info(f"Selected character: {selected_character}")
         return jsonify(selected_character)
+    logger.error(f"Character not found: {character_id}")
     return jsonify({"error": "Character not found"}), 404
 
 @player_bp.route('/delete_character/<int:character_id>', methods=['POST'])
@@ -62,8 +77,10 @@ def delete_character(character_id):
         character = Character.query.get(character_id)
         db.session.delete(character)
         db.session.commit()
+        logger.info(f"Deleted character: {character_id}")
         return redirect(url_for('player_bp.player'))
     except Exception as e:
+        logger.error(f"Error deleting character: {e}")
         return jsonify({"error": str(e)}), 500
 
 @player_bp.route('/create_character', methods=['POST'])
@@ -74,8 +91,10 @@ def create_character():
         new_character = Character(name=name, description=description, image_url='images/default/character.png', traits='{}')
         db.session.add(new_character)
         db.session.commit()
+        logger.info(f"Created new character: {name}")
         return redirect(url_for('player_bp.player'))
     except Exception as e:
+        logger.error(f"Error creating character: {e}")
         return jsonify({"error": str(e)}), 500
 
 @player_bp.route('/send_message', methods=['POST'])
@@ -83,11 +102,19 @@ def send_message():
     try:
         content = request.form['message']
         user_id = 1  # Замените на идентификатор текущего пользователя
-        message = Message(content=content, user_id=user_id)
-        db.session.add(message)
-        db.session.commit()
-        return jsonify({"status": "Message sent"})
+
+        # Создаем ассистента при каждом вызове
+        assistant = GeminiAssistant("role_characters.json")
+        
+        # Используем глобальный асинхронный цикл для выполнения асинхронной функции
+        loop = current_app.loop
+        logger.info(f"Sending message to assistant: {content}")
+        response = loop.run_until_complete(assistant.send_message(content))
+        logger.info(f"Received response from assistant: {response}")
+        
+        return jsonify({"status": "Message sent", "response": response})
     except Exception as e:
+        logger.error(f"Error sending message: {e}")
         return jsonify({"error": str(e)}), 500
 
 @player_bp.route('/send_general_message', methods=['POST'])
@@ -98,6 +125,8 @@ def send_general_message():
         message = Message(content=content, user_id=user_id, general=True)
         db.session.add(message)
         db.session.commit()
+        logger.info(f"Sent general message: {content}")
         return jsonify({"status": "General message sent"})
     except Exception as e:
+        logger.error(f"Error sending general message: {e}")
         return jsonify({"error": str(e)}), 500

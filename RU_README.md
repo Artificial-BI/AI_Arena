@@ -177,12 +177,12 @@
    - Дата и время матча
 
 ## Структура файлов проекта:
-
-
-## Структура файлов проекта:
 AI_Arena/
-│
-├── routes/
+|
+|-- images/
+|-- instance/
+|   |--aiarena.db
+│── routes/
 │   ├── __init__.py
 │   ├── viewer_routes.py
 │   ├── player_routes.py
@@ -191,6 +191,8 @@ AI_Arena/
 │   ├── common_routes.py
 │
 ├── templates/
+|   |-- base.html
+|   |-- login.html
 │   ├── viewer.html
 │   ├── player.html
 │   ├── admin.html
@@ -199,15 +201,33 @@ AI_Arena/
 |   |-- 500.html
 │
 ├── static/
+|   |-- css/
+|   |   |-- admin.css
+|   |   |-- base.css
+|   |   |-- player.css
+|   |   |-- viewer.css
+|   |   
 │   ├── js/
 │   │   ├── scripts.js
 │   │   ├── viewer.js
 │   │   ├── player.js
 │   │   ├── admin.js
 │   │   ├── index.js
-
+|   |   |-- game_mode.js
+|   |   |-- voice_input.js
+|   |-- videos/    
 │
 ├── __init__.py
 ├── app.py
+├── auth.py
 ├── config.py
+├── character_manager.py
+|-- core.py
+├── default.py
+├── exstension.py
+├── gemini.py
+├── inintialization.py
 ├── logging_config.py
+├── managers.py
+├── models.py
+├── webhook.py

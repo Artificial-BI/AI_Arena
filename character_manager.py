@@ -1,3 +1,6 @@
+# --- character_manager.py ---
+
+
 from models import db, Character, Role
 from gemini import GeminiAssistant
 import json

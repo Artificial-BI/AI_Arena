@@ -89,7 +89,7 @@
                 {% for message in general_messages %}
                 <div class="chat-message {{ 'right' if message.user_id == 1 else 'left' }}">
                     <p>{{ message.content }}</p>
-                    <span class="timestamp">{{ message.timestamp.strftime('%Y-%m-%d %H:%М:%С') }}</span>
+                    <span class="timestamp">{{ message.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</span>
                 </div>
                 {% endfor %}
             </div>
