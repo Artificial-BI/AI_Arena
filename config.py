@@ -1,6 +1,7 @@
 import os
-
+from dotenv import load_dotenv
 class Config:
+    load_dotenv()
     # Секретный ключ для защиты данных сессий
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
     
