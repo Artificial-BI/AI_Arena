@@ -9,22 +9,26 @@ document.addEventListener('DOMContentLoaded', function() {
         const chartData = {
             labels: Object.keys(traits),
             datasets: [{
-                label: 'Характеристики персонажа',
                 data: Object.values(traits),
-                fill: false,
-                borderColor: 'rgb(75, 192, 192)',
-                tension: 0.1
+                backgroundColor: 'rgba(34, 139, 34, 0.8)',  // Темно-зеленый цвет баров
+                borderColor: 'rgba(34, 139, 34, 1)',
+                borderWidth: 1
             }]
         };
-        
+
         if (characterChart) {
             characterChart.destroy();
         }
 
         characterChart = new Chart(ctx, {
-            type: 'line',
+            type: 'bar',
             data: chartData,
             options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
                 plugins: {
                     tooltip: {
                         callbacks: {
@@ -32,9 +36,27 @@ document.addEventListener('DOMContentLoaded', function() {
                                 return tooltipItem.label + ': ' + tooltipItem.raw;
                             }
                         }
+                    },
+                    legend: {
+                        display: false // Убираем заголовок гистограммы
                     }
                 }
-            }
+            },
+            plugins: [{
+                afterDatasetsDraw: function(chart) {
+                    const ctx = chart.ctx;
+                    ctx.font = '12px Arial';  // Уменьшаем размер текста до обычного
+                    ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+
+                    chart.data.datasets.forEach(function(dataset, i) {
+                        const meta = chart.getDatasetMeta(i);
+                        meta.data.forEach(function(bar, index) {
+                            const data = dataset.data[index];
+                            ctx.fillText(data, bar.x, bar.y - 5);
+                        });
+                    });
+                }
+            }]
         });
     }
 

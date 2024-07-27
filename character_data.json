@@ -1,15 +1,15 @@
 {
-    "name": "Aelarion",
-    "type": "Elf Warrior",
-    "strength": 85,
+    "name": "Alaric Nightshade",
+    "type": "Mage",
+    "strength": 15,
     "agility": null,
-    "intelligence": 70,
+    "intelligence": 85,
     "endurance": null,
-    "speed": 95,
-    "magic": 10,
-    "defense": 80,
-    "attack": 90,
-    "charisma": 75,
-    "luck": 70,
-    "description": "Aelarion is a seasoned elf warrior, known for his exceptional agility and lethal precision. He hails from a long line of renowned archers, his family having served as protectors of the Elvenwood for generations. Aelarion possesses a natural affinity for weaponry, particularly bows and daggers. He is quick, agile, and his arrows are known to find their mark with deadly accuracy.  He is a master of camouflage and stealth, often disappearing into the shadows before his enemies even realize he's there. Although not a powerful mage, Aelarion possesses a basic understanding of elven magic, allowing him to imbue his arrows with elemental energy for added potency. He is a noble and honorable warrior, fiercely loyal to his people and his oath to defend the Elvenwood. His calm demeanor and unwavering focus make him a formidable adversary, his reputation as a skilled warrior preceding him. He carries with him a legacy of courage, skill, and unwavering dedication to the protection of his people."
+    "speed": 25,
+    "magic": 95,
+    "defense": 20,
+    "attack": 60,
+    "charisma": 55,
+    "luck": 35,
+    "description": "Alaric Nightshade is a master of arcane arts, known for his potent spells and the imposing staff that he wields. His staff, crafted from ancient, gnarled wood, is infused with magical energies, enhancing his abilities and acting as a conduit for his spells.  He is a scholar of arcane lore, spending years studying the intricacies of magic in secluded libraries and forgotten ruins. Despite his mastery of magic, Alaric is reserved and introspective, preferring the company of his books to boisterous gatherings. He sees himself as a protector of knowledge and a champion of the weak, using his magical prowess to dispel darkness and fight against tyranny. He is an adept manipulator of elemental forces, capable of conjuring firestorms, ice storms, and lightning bolts, and can also weave powerful enchantments and illusions. His deep knowledge of arcane arts grants him the ability to manipulate time and space on a smaller scale, creating temporal distortions and teleportation portals."
 }
