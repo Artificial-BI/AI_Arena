@@ -5,7 +5,7 @@
 <nav>
     <ul class="nav-group">
         <li><a href="/">Главная</a></li>
-        <li><a href="/profile">Профиль</a></li>
+        <li><a href="/profile">Профиль</а></li>
         <li>До начала игры осталось: <span id="countdown">{{ tournament_countdown }}</span></li>
         <li><button id="participate-button">Участвовать</button></li>
         <li><a href="/logout">Выход</a></li>
@@ -25,9 +25,9 @@
             <!-- Изображение персонажа -->
             {% if selected_character %}
             <div class="selected-character">
-                <img src="{{ url_for('static', filename=selected_character.image_url.replace('\\', '/')) }}" alt="Character Image">
                 <h3 id="character-name">{{ selected_character.name }}</h3>
-                <p id="character-description">{{ selected_character.description }}</p>
+                <img src="{{ url_for('static', filename=selected_character.image_url.replace('\\', '/')) }}" alt="Character Image">
+                <!-- <p id="character-description">{{ selected_character.description }}</p> -->
             </div>
             {% endif %}
 
@@ -89,7 +89,7 @@
                 {% for message in general_messages %}
                 <div class="chat-message {{ 'right' if message.user_id == 1 else 'left' }}">
                     <p>{{ message.content }}</p>
-                    <span class="timestamp">{{ message.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                    <span class="timestamp">{{ message.timestamp.strftime('%Y-%m-%d %H:%М:%С') }}</span>
                 </div>
                 {% endfor %}
             </div>

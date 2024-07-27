@@ -23,6 +23,10 @@ app.register_blueprint(player_bp, url_prefix='/player')
 app.register_blueprint(viewer_bp, url_prefix='/viewer')
 app.register_blueprint(admin_bp, url_prefix='/admin')
 
+# Импортируем и регистрируем блюпринт для вебхуков
+from webhook import webhook_bp
+app.register_blueprint(webhook_bp)
+
 # Конфигурируем логирование
 configure_logging(app)
 
@@ -38,4 +42,4 @@ def internal_error(error):
 
 # Основная точка входа
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=5000)

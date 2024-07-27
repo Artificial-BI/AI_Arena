@@ -220,45 +220,45 @@ document.addEventListener('DOMContentLoaded', function() {
     let slideIndex = 0;
     let autoSlide;
 
-    function setUpSlideshow() {
-        const slidesContainer = document.getElementById('slides');
-        const slides = slidesContainer.getElementsByTagName('img');
-        const prevSlide = document.getElementById('prev-slide');
-        const nextSlide = document.getElementById('next-slide');
+    // function setUpSlideshow() {
+    //     const slidesContainer = document.getElementById('slides');
+    //     const slides = slidesContainer.getElementsByTagName('img');
+    //     const prevSlide = document.getElementById('prev-slide');
+    //     const nextSlide = document.getElementById('next-slide');
 
-        if (!prevSlide || !nextSlide || slides.length === 0) {
-            console.error('Elements for slideshow are missing or there are no slides');
-            return;
-        }
+    //     if (!prevSlide || !nextSlide || slides.length === 0) {
+    //         console.error('Elements for slideshow are missing or there are no slides');
+    //         return;
+    //     }
 
-        function showSlide(index) {
-            slideIndex = index;
-            const offset = -index * slides[0].clientWidth;
-            slidesContainer.style.transform = `translateX(${offset}px)`;
-        }
+    //     function showSlide(index) {
+    //         slideIndex = index;
+    //         const offset = -index * slides[0].clientWidth;
+    //         slidesContainer.style.transform = `translateX(${offset}px)`;
+    //     }
 
-        function next() {
-            slideIndex = (slideIndex + 1) % slides.length;
-            showSlide(slideIndex);
-        }
+    //     function next() {
+    //         slideIndex = (slideIndex + 1) % slides.length;
+    //         showSlide(slideIndex);
+    //     }
 
-        function prev() {
-            slideIndex = (slideIndex - 1 + slides.length) % slides.length;
-            showSlide(slideIndex);
-        }
+    //     function prev() {
+    //         slideIndex = (slideIndex - 1 + slides.length) % slides.length;
+    //         showSlide(slideIndex);
+    //     }
 
-        prevSlide.addEventListener('click', prev);
-        nextSlide.addEventListener('click', next);
+    //     prevSlide.addEventListener('click', prev);
+    //     nextSlide.addEventListener('click', next);
 
-        autoSlide = setInterval(next, 3000);
+    //     autoSlide = setInterval(next, 3000);
 
-        slidesContainer.addEventListener('mouseenter', () => clearInterval(autoSlide));
-        slidesContainer.addEventListener('mouseleave', () => {
-            autoSlide = setInterval(next, 3000);
-        });
+    //     slidesContainer.addEventListener('mouseenter', () => clearInterval(autoSlide));
+    //     slidesContainer.addEventListener('mouseleave', () => {
+    //         autoSlide = setInterval(next, 3000);
+    //     });
 
-        showSlide(slideIndex);
-    }
+    //     showSlide(slideIndex);
+    // }
 
     setInterval(fetchBattleUpdates, 5000); // Обновлять каждые 5 секунд
     setInterval(fetchBattleImages, 30000); // Обновлять каждые 30 секунд

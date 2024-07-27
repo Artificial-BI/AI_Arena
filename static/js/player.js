@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.status === 'Message sent') {
                 const messageElement = document.createElement('div');
                 messageElement.className = 'chat-message right';
-                messageElement.innerHTML = `<p>${messageInput.value}</p><span class="timestamp">${new Date().toLocaleString()}</span>`;
+                messageElement.innerHTML = `<p>${data.message.content}</p><span class="timestamp">${data.message.timestamp}</span>`;
                 chatBox.appendChild(messageElement);
                 messageInput.value = '';
                 chatBox.scrollTop = chatBox.scrollHeight;
@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.status === 'General message sent') {
                 const messageElement = document.createElement('div');
                 messageElement.className = 'chat-message right';
-                messageElement.innerHTML = `<p>${generalMessageInput.value}</p><span class="timestamp">${new Date().toLocaleString()}</span>`;
+                messageElement.innerHTML = `<p>${data.message.content}</p><span class="timestamp">${data.message.timestamp}</span>`;
                 generalChatBox.appendChild(messageElement);
                 generalMessageInput.value = '';
                 generalChatBox.scrollTop = generalChatBox.scrollHeight;

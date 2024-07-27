@@ -36,6 +36,7 @@ class Message(db.Model):
     def __repr__(self):
         return f'<Message {self.content[:15]}>'
 
+
 class RefereePrompt(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     prompt_text = db.Column(db.Text)
