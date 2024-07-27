@@ -1,4 +1,5 @@
 import re
+import json
 
 def parse_character(text):
     # Define regular expressions for each field
@@ -50,6 +51,14 @@ def parse_character(text):
 
     return character
 
+def save_to_json(character, filename='character_data.json'):
+    try:
+        with open(filename, 'w') as f:
+            json.dump(character, f, indent=4)
+        print(f"Character data saved to {filename}")
+    except Exception as e:
+        print(f"Error saving character data to JSON: {e}")
+
 # Example usage
 if __name__ == "__main__":
     character_text = """
@@ -69,4 +78,5 @@ if __name__ == "__main__":
     """
 
     parsed_character = parse_character(character_text)
-    print(parsed_character)
+    print('TEST CHARACTERS:',parsed_character)
+    save_to_json(parsed_character)

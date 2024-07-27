@@ -8,15 +8,10 @@ from extensions import db
 import subprocess
 import hmac
 import hashlib
-import asyncio
+
 
 app = Flask(__name__)
 app.config.from_object(Config)
-
-# Создаем глобальный асинхронный цикл
-loop = asyncio.new_event_loop()
-asyncio.set_event_loop(loop)
-app.loop = loop  # Передаем цикл в приложение
 
 # Инициализация расширений и базы данных
 init_extensions_and_db(app)
@@ -32,7 +27,7 @@ app.register_blueprint(index_bp)
 app.register_blueprint(common_bp, url_prefix='/common')
 app.register_blueprint(player_bp, url_prefix='/player')
 app.register_blueprint(viewer_bp, url_prefix='/viewer')
-app.register_blueprint(admin_bp)
+app.register_blueprint(admin_bp, url_prefix='/admin')
 
 # Импортируем и регистрируем блюпринт для вебхуков
 from webhook import webhook_bp
@@ -46,6 +41,7 @@ def update_ai_arena():
         abort(403)
     subprocess.run(['/home/xeon/AI_Arena/update.sh'])
     return 'Update triggered', 200
+
 
 # Конфигурируем логирование
 configure_logging(app)

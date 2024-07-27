@@ -1,12 +1,12 @@
-# --- routes/player_routes.py ---
-
+import re
+import asyncio
 from flask import Blueprint, render_template, jsonify, request, redirect, url_for, current_app
 from extensions import db
 from models import Message, Character
 from datetime import datetime
 from gemini import GeminiAssistant
-import asyncio
 import logging
+from utils import parse_character, save_to_json
 
 player_bp = Blueprint('player_bp', __name__)
 
@@ -106,11 +106,23 @@ def send_message():
         # Создаем ассистента при каждом вызове
         assistant = GeminiAssistant("role_characters.json")
         
-        # Используем глобальный асинхронный цикл для выполнения асинхронной функции
-        loop = current_app.loop
+        # Используем asyncio.run для выполнения асинхронной функции
         logger.info(f"Sending message to assistant: {content}")
-        response = loop.run_until_complete(assistant.send_message(content))
+        response = asyncio.run(assistant.send_message(content))
         logger.info(f"Received response from assistant: {response}")
+
+        # Сохраняем сообщение и ответ в базе данных
+        message = Message(content=content, user_id=user_id)
+        response_message = Message(content=response, user_id=0)
+        db.session.add(message)
+        db.session.add(response_message)
+        db.session.commit()
+
+        # Парсим ответ и возвращаем данные персонажа, если они есть
+        parsed_character = parse_character(response)
+        if parsed_character["name"]:
+            save_to_json(parsed_character)
+            return jsonify({"status": "Message sent", "response": response, "character": parsed_character})
         
         return jsonify({"status": "Message sent", "response": response})
     except Exception as e:
