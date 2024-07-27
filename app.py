@@ -3,6 +3,7 @@ from config import Config
 from logging_config import configure_logging
 from initialization import init_extensions_and_db  # Импортируем объединенную функцию инициализации
 from extensions import db
+import subprocess
 import hmac
 import hashlib
 
