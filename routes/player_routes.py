@@ -1,5 +1,5 @@
 #--- player_routers ---
-
+import json
 import re
 import asyncio
 from flask import Blueprint, render_template, jsonify, request, redirect, url_for, current_app
@@ -60,19 +60,6 @@ def player():
 
     return render_template('player.html', messages=messages, characters=characters, selected_character=selected_character, general_messages=general_messages)
 
-# @player_bp.route('/select_character/<int:character_id>', methods=['POST'])
-# def select_character(character_id):
-#     character = Character.query.get(character_id)
-#     if character:
-#         selected_character = {
-#             "name": character.name,
-#             "description": character.description
-#         }
-#         logger.info(f"Selected character: {selected_character}")
-#         return jsonify(selected_character)
-#     logger.error(f"Character not found: {character_id}")
-#     return jsonify({"error": "Character not found"}), 404
-
 @player_bp.route('/select_character/<int:character_id>', methods=['POST'])
 def select_character(character_id):
     character = Character.query.get(character_id)
@@ -119,10 +106,6 @@ def send_message():
         logger.error(f"Error sending message: {e}")
         return jsonify({"error": str(e)}), 500
 
-
-
-
-
 @player_bp.route('/delete_character/<int:character_id>', methods=['POST'])
 def delete_character(character_id):
     try:
@@ -140,7 +123,21 @@ def create_character():
     try:
         name = request.form['name']
         description = request.form['description']
-        new_character = Character(name=name, description=description, image_url='images/default/character.png', traits='{}')
+        traits_string = request.form['extraInput']
+        
+        # Преобразуем строку характеристик в словарь
+        traits = {}
+        for item in traits_string.split(', '):
+            key, value = item.split(':')
+            try:
+                traits[key] = int(value)
+            except ValueError:
+                traits[key] = 0  # или любое другое значение по умолчанию для невалидных данных
+        
+        # Преобразуем словарь в JSON строку с кодировкой Unicode
+        traits_json = json.dumps(traits, ensure_ascii=False)
+        
+        new_character = Character(name=name, description=description, image_url='images/default/character.png', traits=traits_json)
         db.session.add(new_character)
         db.session.commit()
         logger.info(f"Created new character: {name}")
@@ -149,37 +146,9 @@ def create_character():
         logger.error(f"Error creating character: {e}")
         return jsonify({"error": str(e)}), 500
 
-# @player_bp.route('/send_message', methods=['POST'])
-# def send_message():
-#     try:
-#         content = request.form['message']
-#         user_id = 1  # Замените на идентификатор текущего пользователя
 
-#         # Создаем ассистента при каждом вызове
-#         assistant = GeminiAssistant("role_characters.json")
-        
-#         # Используем asyncio.run для выполнения асинхронной функции
-#         logger.info(f"Sending message to assistant: {content}")
-#         response = asyncio.run(assistant.send_message(content))
-#         logger.info(f"Received response from assistant: {response}")
 
-#         # Сохраняем сообщение и ответ в базе данных
-#         message = Message(content=content, user_id=user_id)
-#         response_message = Message(content=response, user_id=0)
-#         db.session.add(message)
-#         db.session.add(response_message)
-#         db.session.commit()
 
-#         # Парсим ответ и возвращаем данные персонажа, если они есть
-#         parsed_character = parse_character(response)
-#         if parsed_character["name"]:
-#             save_to_json(parsed_character)
-#             return jsonify({"status": "Message sent", "response": response, "character": parsed_character})
-        
-#         return jsonify({"status": "Message sent", "response": response})
-#     except Exception as e:
-#         logger.error(f"Error sending message: {e}")
-#         return jsonify({"error": str(e)}), 500
 
 @player_bp.route('/send_general_message', methods=['POST'])
 def send_general_message():

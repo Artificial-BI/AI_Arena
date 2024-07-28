@@ -2,6 +2,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const chatForm = document.getElementById('chat-form');
     const chatBox = document.getElementById('chat-box');
     const extraInput = document.getElementById('extraInput');
+    const createCharacterForm = document.getElementById('create-character-form');
+    const nameField = createCharacterForm.querySelector('#name');
+    const descriptionField = createCharacterForm.querySelector('#description');
+    const characterButtons = document.querySelectorAll('#character-list .character-item button[data-name]');
 
     let characterChart;
 
@@ -10,6 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const chartData = {
             labels: Object.keys(traits),
             datasets: [{
+                label: 'Характеристики',
                 data: Object.values(traits),
                 backgroundColor: 'rgba(34, 139, 34, 0.8)',  // Темно-зеленый цвет баров
                 borderColor: 'rgba(34, 139, 34, 1)',
@@ -26,8 +31,19 @@ document.addEventListener('DOMContentLoaded', function() {
             data: chartData,
             options: {
                 scales: {
+                    x: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Характеристики'
+                        }
+                    },
                     y: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Значения'
+                        }
                     }
                 },
                 plugins: {
@@ -65,6 +81,24 @@ document.addEventListener('DOMContentLoaded', function() {
         extraInput.value = traitsString;
     }
 
+    function selectCharacter(characterId) {
+        const button = document.querySelector(`#character-list .character-item button[data-id='${characterId}']`);
+        if (button) {
+            nameField.value = button.dataset.name;
+            descriptionField.value = button.dataset.description;
+
+            // Обновление характеристик персонажа в поле extraInput
+            const traits = JSON.parse(button.dataset.traits);
+            displayCharacterStats(traits);
+        }
+    }
+
+    characterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            selectCharacter(this.dataset.id);
+        });
+    });
+
     chatForm.addEventListener('submit', function(event) {
         event.preventDefault();
         const messageInput = document.getElementById('message');
@@ -99,16 +133,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     if (data.character.strength !== undefined) {
                         const traits = {
-                            Strength: data.character.strength,
-                            Agility: data.character.agility,
-                            Intelligence: data.character.intelligence,
-                            Endurance: data.character.endurance,
-                            Speed: data.character.speed,
-                            Magic: data.character.magic,
-                            Defense: data.character.defense,
-                            Attack: data.character.attack,
-                            Charisma: data.character.charisma,
-                            Luck: data.character.luck
+                            "Здоровье": data.character.health,
+                            "Интеллект": data.character.intelligence,
+                            "Сила": data.character.strength,
+                            "Магия": data.character.magic,
+                            "Атака": data.character.attack,
+                            "Защита": data.character.defense,
+                            "Скорость": data.character.speed,
+                            "Ловкость": data.character.agility,
+                            "Выносливость": data.character.endurance,
+                            "Удача": data.character.luck
                         };
                         displayCharacterStats(traits);
                     }

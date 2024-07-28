@@ -45,7 +45,7 @@
                 <ul id="character-list">
                     {% for character in characters %}
                     <li class="character-item">
-                        <button type="button" onclick="selectCharacter({{ character.id }})">{{ character.name }}</button>
+                        <button type="button" data-id="{{ character.id }}" data-name="{{ character.name }}" data-description="{{ character.description }}" data-traits="{{ character.traits }}">{{ character.name }}</button>
                         <form method="post" action="{{ url_for('player_bp.delete_character', character_id=character.id) }}" class="delete-form">
                             <button type="submit">Удалить</button>
                         </form>
@@ -53,7 +53,6 @@
                     {% endfor %}
                 </ul>
             </div>
-
             <!-- Создание персонажа -->
             <div class="create-character">
                 <form id="create-character-form" method="post" action="{{ url_for('player_bp.create_character') }}">
@@ -68,8 +67,8 @@
                     </div>
                 </form>
             </div>
-
         </div>
+        
 
         <!-- Чат с нейросетью -->
         <div class="chat-section">
