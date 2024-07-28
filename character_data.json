@@ -1,15 +1,15 @@
 {
-    "name": "Ursus the Brutal",
-    "type": "Bear Warrior ",
-    "strength": 95,
+    "name": "Squeaky",
+    "type": "Hamster Warrior",
+    "strength": 10,
     "agility": null,
-    "intelligence": 30,
+    "intelligence": 50,
     "endurance": null,
-    "speed": 70,
+    "speed": 80,
     "magic": 0,
-    "defense": 85,
-    "attack": 90,
-    "charisma": 10,
-    "luck": 40,
-    "description": "Ursus is a towering, battle-hardened bear, a sentient creature of immense strength and ferocity.  His thick fur and tough hide offer natural armor, making him incredibly durable. He moves with surprising agility despite his size, capable of surprising speed and bursts of power. Ursus is a skilled fighter, his claws and teeth honed by years of battling both beasts and men. He is a creature of instinct and raw power, rarely relying on strategy or cunning. Ursus has no magical abilities, but his sheer physical prowess makes him a formidable opponent.  His history is shrouded in mystery, but rumors spread of him being a lone survivor of a forgotten tribe of sentient bears, driven to wander the wilderness, fighting for survival.  He is a solitary creature, rarely interacting with other beings, but has a fierce loyalty to those he deems worthy. He is a force of nature, a living weapon, a legend whispered in the hushed tones of those who survive encounters with him."
+    "defense": 20,
+    "attack": 40,
+    "charisma": 15,
+    "luck": 60,
+    "description": "Squeaky is a brave little hamster with a big heart and an even bigger appetite for adventure. He may not be the strongest fighter, but he's incredibly quick and agile, able to dart around enemies with surprising speed. Squeaky's greatest weapon is his wheel, which he uses to launch himself at his foes, knocking them off their feet. He's also a master of the 'hamster roll,' a technique where he curls up into a ball and rolls at high speeds to break through enemy lines.  Squeaky comes from a long line of hamsters who lived in a small village nestled between sunflower fields.  He was always a curious and adventurous hamster, often venturing out on his own to explore the world beyond his home.  One day, he stumbled upon a group of traveling warriors who were training in the fields.  Intrigued by their strength and skill, Squeaky approached them, eager to learn their ways.  The warriors were surprised to see a tiny hamster wanting to join their ranks, but they were impressed by his courage and determination.  They took him under their wing, teaching him the art of combat and turning him into a formidable warrior, despite his small size."
 }

@@ -81,7 +81,7 @@ def send_message():
         user_id = 1  # Замените на идентификатор текущего пользователя
 
         # Создаем ассистента при каждом вызове
-        assistant = GeminiAssistant("role_characters.json")
+        assistant = GeminiAssistant("character_generator")
         
         # Используем asyncio.run для выполнения асинхронной функции
         logger.info(f"Sending message to assistant: {content}")

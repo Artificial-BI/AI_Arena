@@ -50,10 +50,12 @@ document.addEventListener('DOMContentLoaded', function() {
     chatForm.addEventListener('submit', function(event) {
         event.preventDefault();
         const messageInput = document.getElementById('message');
+        const formData = new FormData(chatForm);
+        formData.append('role', roleSelect.value);
 
         fetch(chatForm.action, {
             method: 'POST',
-            body: new FormData(chatForm),
+            body: formData
         })
         .then(response => response.json())
         .then(data => {
