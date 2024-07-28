@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const chatForm = document.getElementById('chat-form');
     const chatBox = document.getElementById('chat-box');
+    const extraInput = document.getElementById('extraInput');
 
     let characterChart;
 
@@ -45,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
             plugins: [{
                 afterDatasetsDraw: function(chart) {
                     const ctx = chart.ctx;
-                    ctx.font = '12px Arial';  // Уменьшаем размер текста до обычного
+                    ctx.font = '8px Arial';  // Уменьшаем размер текста до обычного
                     ctx.fillStyle = 'rgba(0, 0, 0, 1)';
 
                     chart.data.datasets.forEach(function(dataset, i) {
@@ -58,6 +59,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }]
         });
+
+        // Преобразование характеристик в строку и вставка в поле
+        const traitsString = Object.entries(traits).map(([key, value]) => `${key}:${value}`).join(', ');
+        extraInput.value = traitsString;
     }
 
     chatForm.addEventListener('submit', function(event) {

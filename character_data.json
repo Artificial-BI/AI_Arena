@@ -1,15 +1,15 @@
 {
-    "name": "Alaric Nightshade",
-    "type": "Mage",
-    "strength": 15,
+    "name": "Shadowfang",
+    "type": "Assassin",
+    "strength": 35,
     "agility": null,
-    "intelligence": 85,
+    "intelligence": 65,
     "endurance": null,
-    "speed": 25,
-    "magic": 95,
+    "speed": 80,
+    "magic": 0,
     "defense": 20,
-    "attack": 60,
-    "charisma": 55,
-    "luck": 35,
-    "description": "Alaric Nightshade is a master of arcane arts, known for his potent spells and the imposing staff that he wields. His staff, crafted from ancient, gnarled wood, is infused with magical energies, enhancing his abilities and acting as a conduit for his spells.  He is a scholar of arcane lore, spending years studying the intricacies of magic in secluded libraries and forgotten ruins. Despite his mastery of magic, Alaric is reserved and introspective, preferring the company of his books to boisterous gatherings. He sees himself as a protector of knowledge and a champion of the weak, using his magical prowess to dispel darkness and fight against tyranny. He is an adept manipulator of elemental forces, capable of conjuring firestorms, ice storms, and lightning bolts, and can also weave powerful enchantments and illusions. His deep knowledge of arcane arts grants him the ability to manipulate time and space on a smaller scale, creating temporal distortions and teleportation portals."
+    "attack": 90,
+    "charisma": 10,
+    "luck": 70,
+    "description": "Shadowfang is a master of stealth and silent death.  He was orphaned at a young age and raised on the streets, learning the art of deception and combat from the shadows.  He honed his skills with knives to a razor's edge, becoming a deadly assassin feared throughout the land. He prefers to work alone, striking from the darkness and leaving no trace.  His speed and accuracy are unmatched, and he is able to blend into any environment, making him virtually invisible to his enemies.  He carries a collection of specially crafted knives, each designed for a different purpose, from throwing to close combat. Shadowfang's ruthlessness and cunning make him a formidable opponent."
 }

@@ -1,5 +1,5 @@
+!-- templates/player.html -->
 
-<!-- templates/player.html -->
 {% extends 'base.html' %}
 
 {% block nav %}
@@ -61,9 +61,14 @@
                     <input type="text" id="name" name="name" required>
                     <label for="description">Описание персонажа:</label>
                     <textarea id="description" name="description" rows="6" required></textarea>
-                    <button type="submit">Создать персонажа</button>
+                    <!-- Контейнер для поля и кнопки -->
+                    <div class="extra-input-container">
+                        <input type="text" id="extraInput" name="extraInput" class="extra-input" placeholder="" readonly>
+                        <button type="submit">Создать персонажа</button>
+                    </div>
                 </form>
             </div>
+
         </div>
 
         <!-- Чат с нейросетью -->

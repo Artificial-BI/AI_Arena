@@ -72,7 +72,6 @@ header nav ul li button:active {
     background-color: var(--button-active-bg-color);
 }
 
-
 .characters-section,
 .create-character,
 .selected-character,
@@ -140,7 +139,6 @@ header nav ul li button:active {
     color: var(--message-text-color); /* Черный цвет текста */
 }
 
-
 .chat-message.right {
     background-color: #d3d3d3; /* Светло-серый фон для сообщений пользователя */
     color: #000; /* Черный цвет текста */
@@ -151,7 +149,6 @@ header nav ul li button:active {
     background-color: #f0f0f0; /* Другой оттенок серого для сообщений нейросети */
     color: #000; /* Черный цвет текста */
 }
-
 
 .timestamp {
     font-size: 0.8em;
@@ -221,6 +218,19 @@ header nav ul li button:active {
 
 .create-character input[type="text"] {
     width: 100%;
+}
+
+/* Новый стиль для уменьшения высоты поля и контейнера */
+.extra-input-container {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.extra-input {
+    height: 40px;
+    width: 10px;/*calc(100% / 10%); /* Уменьшаем ширину в 3 раза */
+    margin-right: 10px;
 }
 
 /* Адаптивные стили */

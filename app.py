@@ -1,14 +1,8 @@
-# --- app.py ---
-
 from flask import Flask, render_template, request, abort
 from config import Config
 from logging_config import configure_logging
 from initialization import init_extensions_and_db  # Импортируем объединенную функцию инициализации
 from extensions import db
-import subprocess
-import hmac
-import hashlib
-
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -32,16 +26,6 @@ app.register_blueprint(admin_bp, url_prefix='/admin')
 # Импортируем и регистрируем блюпринт для вебхуков
 from webhook import webhook_bp
 app.register_blueprint(webhook_bp)
-
-@app.route('/hooks/update-ai-arena', methods=['POST'])
-def update_ai_arena():
-    secret = 'mysecretkey'
-    signature = 'sha1=' + hmac.new(secret.encode(), request.data, hashlib.sha1).hexdigest()
-    if not hmac.compare_digest(signature, request.headers.get('X-Hub-Signature')):
-        abort(403)
-    subprocess.run(['/home/xeon/AI_Arena/update.sh'])
-    return 'Update triggered', 200
-
 
 # Конфигурируем логирование
 configure_logging(app)
