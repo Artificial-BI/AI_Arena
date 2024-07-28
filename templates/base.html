@@ -1,3 +1,6 @@
+
+<!-- base.html -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,50 +12,17 @@
 </head>
 <body>
     <header>
-        {% block nav %}{% endblock %}
+        <nav>
+            <ul class="nav-group">
+                <li><a href="/">Главная</a></li>
+                <li><a href="/profile">Профиль</a></li>
+                <li><a href="/viewer">Зритель</a></li>
+                <li><a href="/player">Игрок</a></li>
+                <li><a href="/admin">Админ</a></li> <!-- Добавляем эту строку для кнопки "Админ" -->
+                <li><a href="/logout">Выход</a></li>
+            </ul>
+        </nav>
     </header>
-
-    <div class="content">
-        {% block content %}
-        {% endblock %}
-    </div>
-
-    <footer>
-        <div class="footer-content">
-            <p>Контактная информация: <a href="mailto:xeon3@mail.com">xeon3@mail.com</a></p>
-            <p><a href="/privacy">Политика конфиденциальности</a> | <a href="/terms">Условия использования</a> | <a href="/about">О нас</a> | <a href="/contacts">Контакты</a></p>
-            <p>© 2024 AI Arena. Все права защищены.</p>
-            <div class="social-links">
-                <a href="https://facebook.com">Facebook</a>
-                <a href="https://twitter.com">Twitter</a>
-                <a href="https://instagram.com">Instagram</a>
-            </div>
-        </div>
-    </footer>
-
-    <!-- <script src="{{ url_for('static', filename='js/scripts.js') }}"></script> -->
-    <!-- <script src="{{ url_for('static', filename='js/game_mode.js') }}"></script> -->
-    <!-- <script src="{{ url_for('static', filename='js/viewer.js') }}"></script> -->
-    <!-- <script src="{{ url_for('static', filename='js/voice_input.js') }}"></script> -->
-   <!--  <script>
-        // Открытие модального окна регистрации
-        var modal = document.getElementById("register-modal");
-        var btn = document.getElementById("register-btn");
-        var span = document.getElementsByClassName("close")[0];
-
-        btn.onclick = function() {
-            modal.style.display = "block";
-        }
-
-        span.onclick = function() {
-            modal.style.display = "none";
-        }
-
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
-        }
-    </script>  -->
+    {% block content %}{% endblock %}
 </body>
 </html>

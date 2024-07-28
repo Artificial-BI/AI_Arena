@@ -11,3 +11,7 @@ def index():
     tournaments = []
     top_players = []
     return render_template('index.html', tournaments=tournaments, top_players=top_players)
+
+@index_bp.route('/admin')
+def admin():
+    return render_template('admin.html')

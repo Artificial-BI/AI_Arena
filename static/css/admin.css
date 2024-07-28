@@ -1,18 +1,136 @@
-.battle-image img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 10px;
+/* admin.css */
+
+:root {
+    --bg-color: #f4f4f4;
+    --text-color: #333;
+    --nav-bg-color: #013908;
+    --nav-text-color: #fff;
+    --button-bg-color: #013908;
+    --button-text-color: #fff;
+    --button-hover-bg-color: #0a5603;
+    --button-active-bg-color: #15a9df;
+    --button-border-color: #013206;
+    --input-border-color: #0a0a0a;
+    --input-focus-border-color: #46a8f8;
+    --input-focus-shadow-color: rgba(19, 199, 240, 0.6);
+    --message-bg-color: #e0e0e0; /* Светло-серый фон для сообщений */
+    --message-text-color: #000000; /* Черный цвет текста для сообщений */
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 0;
+}
+
+.role-selection {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
     margin-bottom: 20px;
 }
 
-#arena-chat {
+.role-selection label {
+    margin-bottom: 5px;
+    font-size: 18px; /* Размер шрифта для заголовка */
+}
+
+.role-select-container {
+    display: flex;
+    width: 100%;
+}
+
+.role-select-container select {
+    flex: 1;
+    margin-right: 10px;
+}
+
+.save-button {
+    background-color: var(--button-bg-color);
+    color: var(--button-text-color);
+    padding: 10px 20px;
+    border: 2px solid var(--button-border-color);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.save-button:hover {
+    background-color: var(--button-hover-bg-color);
+    border-color: var(--button-border-color);
+}
+
+.save-button:active {
+    background-color: var(--button-active-bg-color);
+    border-color: var(--button-border-color);
+}
+
+.instructions-section {
+    width: 100%;
     margin-bottom: 20px;
 }
 
-#chat-box {
-    border: 1px solid var(--chat-box-border-color);
-    background-color: var(--chat-box-bg-color);
-    color: var(--chat-box-text-color);
+.instructions-section label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    font-size: 18px; /* Размер шрифта для заголовка */
+}
+
+.instructions-section textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid var(--input-border-color);
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 16px;
+}
+
+.chat-section h2,
+.network-settings h2 {
+    font-size: 18px; /* Размер шрифта для заголовка */
+}
+
+.chat-section .chat-form {
+    display: flex;
+    width: 100%;
+}
+
+.chat-section .chat-form input[type="text"] {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid var(--input-border-color);
+    border-radius: 4px 0 0 4px;
+    box-sizing: border-box;
+}
+
+.chat-section .chat-form button {
+    background-color: var(--button-bg-color);
+    color: var(--button-text-color);
+    padding: 10px 20px;
+    border: none;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+}
+
+.chat-section .chat-form button:hover {
+    background-color: var(--button-hover-bg-color);
+}
+
+.chat-section,
+.general-chat {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+#chat-box,
+#general-chat-box {
+    border: 1px solid var(--input-border-color);
+    background-color: #fff;
     padding: 10px;
     height: 200px;
     overflow-y: scroll;
@@ -23,48 +141,54 @@
     border-radius: 10px;
     margin-bottom: 10px;
     max-width: 70%;
+    background-color: var(--message-bg-color); /* Светло-серый фон */
+    color: var(--message-text-color); /* Черный цвет текста */
 }
 
-.chat-message p {
-    margin: 0;
+.chat-message.right {
+    background-color: #d3d3d3; /* Светло-серый фон для сообщений пользователя */
+    color: #000; /* Черный цвет текста */
+    margin-left: auto;
 }
 
-.chat-message .timestamp {
+.chat-message.left {
+    background-color: #f0f0f0; /* Другой оттенок серого для сообщений нейросети */
+    color: #000; /* Черный цвет текста */
+}
+
+.timestamp {
     font-size: 0.8em;
     color: #888;
     display: block;
     margin-top: 5px;
 }
 
-#manage-chat table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
+#chat-form,
+#general-chat-form {
+    display: flex;
+    margin-top: 10px;
 }
 
-#manage-chat th,
-#manage-chat td {
-    border: 1px solid #ccc;
-    padding: 8px;
-    text-align: left;
+#chat-form input[type="text"],
+#general-chat-form input[type="text"] {
+    flex: 1;
+    margin-right: 10px;
 }
 
-#network-settings {
-    margin-bottom: 20px;
+#chat-form button,
+#general-chat-form button {
+    padding: 8px 20px;
 }
 
 .settings-row {
     display: flex;
     justify-content: space-between;
+    margin-bottom: 20px;
 }
 
 .settings-col {
     flex: 1;
     margin-right: 10px;
-}
-
-.settings-col:last-child {
-    margin-right: 0;
 }
 
 .settings-col label {
@@ -80,52 +204,4 @@
     border: 1px solid var(--input-border-color);
     border-radius: 4px;
     box-sizing: border-box;
-    font-size: 16px;
-}
-
-#user-management table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
-}
-
-#user-management th,
-#user-management td {
-    border: 1px solid #ccc;
-    padding: 8px;
-    text-align: left;
-}
-
-#additional-settings {
-    margin-bottom: 20px;
-}
-
-#additional-settings form {
-    margin-bottom: 20px;
-}
-
-#additional-settings label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-}
-
-#additional-settings textarea {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid var(--input-border-color);
-    border-radius: 4px;
-    box-sizing: border-box;
-    font-size: 16px;
-}
-
-#additional-settings select {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid var(--input-border-color);
-    border-radius: 4px;
-    box-sizing: border-box;
-    font-size: 16px;
 }

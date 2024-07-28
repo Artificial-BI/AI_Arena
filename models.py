@@ -1,3 +1,6 @@
+
+# models.py
+
 from datetime import datetime
 from extensions import db  # Импортируем экземпляр SQLAlchemy из extensions.py
 

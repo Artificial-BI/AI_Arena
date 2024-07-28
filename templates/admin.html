@@ -1,62 +1,57 @@
+<!-- admin.html -->
+
 {% extends 'base.html' %}
 
 {% block head %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 {% endblock %}
 
 {% block content %}
-<h1>Интерфейс администратора</h1>
-
-<!-- Изображение боя -->
-<div class="battle-image">
-    <h2>Изображение боя</h2>
-    <img src="{{ url_for('static', filename='images/default/battle.png') }}" alt="Battle Image">
-</div>
-
-<!-- Чат арены -->
-<div id="arena-chat">
-    <h2>Чат арены</h2>
-    <div id="chat-box">
-        {% for message in messages %}
-            <div class="chat-message">
-                <p>{{ message.content }}</p>
-                <span class="timestamp">{{ message.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</span>
-            </div>
-        {% endfor %}
+<div class="role-selection">
+    <label for="role-select">Роли:</label>
+    <div class="role-select-container">
+        <select id="role-select" name="role-select">
+            <option value="character_generator">Генератор персонажей</option>
+            <option value="arena_generator">Генератор арен</option>
+            <option value="tactician">Тактик</option>
+            <option value="referee">Рефери</option>
+            <option value="security">Безопасник</option>
+            <option value="translator_moderator">Переводчик-модератор</option>
+            <option value="commentator">Комментатор</option>
+        </select>
+        <button type="button" id="save-role" class="save-button">Сохранить</button>
     </div>
 </div>
 
-<!-- Управление чатом -->
-<div id="manage-chat">
-    <h2>Управление чатом</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Сообщение</th>
-                <th>Удалить</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for message in messages %}
-                <tr>
-                    <td>{{ message.id }}</td>
-                    <td>{{ message.content }}</td>
-                    <td>
-                        <form method="post" action="{{ url_for('main.delete_message', message_id=message.id) }}">
-                            <button type="submit">Удалить</button>
-                        </form>
-                    </td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<!-- Инструкции -->
+<div class="instructions-section">
+    <label for="instructions">Инструкции:</label>
+    <textarea id="instructions" name="instructions" rows="4" placeholder="Введите инструкции..."></textarea>
+</div>
+
+<!-- Чат с нейросетью -->
+<div class="chat-section">
+    <h2>Чат с нейросетью</h2>
+    <div id="chat-box">
+        {% for message in messages %}
+        <div class="chat-message {{ 'right' if message.user_id == 1 else 'left' }}">
+            <p>{{ message.content }}</p>
+            <span class="timestamp">{{ message.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    <form id="chat-form" method="post" action="{{ url_for('admin.send_message') }}" class="chat-form">
+        <input type="text" id="message" name="message" placeholder="Введите сообщение...">
+        <button type="submit" class="send-button">Отправить</button>
+    </form>
 </div>
 
 <!-- Настройки нейросетей -->
 <div id="network-settings">
     <h2>Настройки нейросетей</h2>
-    <form method="post" action="{{ url_for('main.update_settings') }}">
+    <form method="post" action="{{ url_for('admin.update_settings') }}">
         <div class="settings-row">
             <div class="settings-col">
                 <label for="temperature">Температура:</label>
@@ -71,66 +66,7 @@
                 <input type="number" id="top_k" name="top_k" value="50">
             </div>
         </div>
-        <button type="submit">Обновить настройки</button>
+        <button type="submit" class="save-button">Обновить настройки</button>
     </form>
 </div>
-
-<!-- Управление пользователями -->
-<div id="user-management">
-    <h2>Управление пользователями</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Имя пользователя</th>
-                <th>Роль</th>
-                <th>Действия</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Здесь будет динамически загружаться список пользователей -->
-        </tbody>
-    </table>
-</div>
-
-<!-- Настройки дополнительных параметров -->
-<div id="additional-settings">
-    <h2>Настройки дополнительных параметров</h2>
-    <!-- Поле для ввода промта для нейросети рефери -->
-    <form method="post" action="{{ url_for('main.add_referee_prompt') }}">
-        <label for="referee_prompt">Промт для нейросети рефери:</label>
-        <textarea id="referee_prompt" name="referee_prompt" required></textarea>
-        <button type="submit">Сохранить промт</button>
-    </form>
-
-    <!-- Выпадающий список с имеющимися промтами -->
-    <h3>Выбрать существующий промт:</h3>
-    <form method="post" action="{{ url_for('main.select_referee_prompt') }}">
-        <select id="existing_prompts" name="existing_prompts">
-            {% for prompt in referee_prompts %}
-                <option value="{{ prompt.id }}">{{ prompt.prompt_text }}</option>
-            {% endfor %}
-        </select>
-        <button type="submit">Выбрать промт</button>
-    </form>
-
-    <!-- Поле для ввода промта для нейросети комментатора -->
-    <form method="post" action="{{ url_for('main.add_commentator_prompt') }}">
-        <label for="commentator_prompt">Промт для нейросети комментатора:</label>
-        <textarea id="commentator_prompt" name="commentator_prompt" required></textarea>
-        <button type="submit">Сохранить промт</button>
-    </form>
-
-    <!-- Выпадающий список с имеющимися промтами для комментатора -->
-    <h3>Выбрать существующий промт:</h3>
-    <form method="post" action="{{ url_for('main.select_commentator_prompt') }}">
-        <select id="existing_commentator_prompts" name="existing_commentator_prompts">
-            {% for prompt in commentator_prompts %}
-                <option value="{{ prompt.id }}">{{ prompt.prompt_text }}</option>
-            {% endfor %}
-        </select>
-        <button type="submit">Выбрать промт</button>
-    </form>
-</div>
-
 {% endblock %}
