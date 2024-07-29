@@ -1,6 +1,7 @@
-from flask import Blueprint, render_template, redirect, url_for, request, flash, session
+from flask import Blueprint, render_template, redirect, url_for, request, flash, session, make_response
 from models import db, User
 from werkzeug.security import generate_password_hash, check_password_hash
+import uuid
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -34,8 +35,13 @@ def login():
         if user and check_password_hash(user.password, password):
             session['user_id'] = user.id
             session['username'] = user.username
+            if not user.cookie_id:
+                user.cookie_id = str(uuid.uuid4())
+                db.session.commit()
+            response = make_response(redirect(url_for('main.index')))
+            response.set_cookie('user_id', user.cookie_id, max_age=60*60*24*365)  # Кука на год
             flash('Вход в систему выполнен успешно!', 'success')
-            return redirect(url_for('main.index'))
+            return response
         else:
             flash('Неверный логин или пароль.', 'danger')
             return redirect(url_for('auth.login'))
@@ -45,5 +51,7 @@ def login():
 def logout():
     session.pop('user_id', None)
     session.pop('username', None)
+    response = make_response(redirect(url_for('main.index')))
+    response.set_cookie('user_id', '', expires=0)  # Удалить куку
     flash('Вы вышли из системы.', 'success')
-    return redirect(url_for('main.index'))
+    return response

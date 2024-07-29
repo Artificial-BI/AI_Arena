@@ -1,9 +1,6 @@
-
-# --- admin_routes ---
-
 import json
 import asyncio
-from flask import Blueprint, request, jsonify, render_template
+from flask import Blueprint, request, jsonify, render_template, g
 from extensions import db
 from models import Message, Role
 from gemini import GeminiAssistant
@@ -27,7 +24,7 @@ def send_message():
     try:
         content = request.form['message']
         role_name = request.form['role']  # Получаем имя роли из формы
-        user_id = 1  # Замените на идентификатор текущего пользователя
+        user_id = g.user.id  # Используем идентификатор текущего пользователя
 
         # Создаем ассистента с использованием выбранной роли
         assistant = GeminiAssistant(role_name)

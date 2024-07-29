@@ -32,8 +32,18 @@ class GeminiAssistant:
             role_instructions = {f"system_instruction: {role.instructions}"}
             logger.info(f"Loaded instructions for role: {role_name}")
         else:
-            role_instructions = ''
-            logger.warning(f"No instructions found for role: {role_name}")
+            # Если роли нет в базе данных, загружаем из JSON файла
+            try:
+                with open('default_role.json', 'r', encoding='utf-8') as file:
+                    role_data = json.load(file)
+                    role_instructions = role_data.get(role_name, '')
+                    if role_instructions:
+                        logger.info(f"Loaded instructions for role from JSON file: {role_name}")
+                    else:
+                        logger.warning(f"No instructions found for role in JSON file: {role_name}")
+            except FileNotFoundError:
+                role_instructions = ''
+                logger.error(f"JSON file not found: default_role.json")
 
         conf = Config()
         genai.configure(api_key=conf.GEMINI_API_TOKEN)
@@ -42,7 +52,7 @@ class GeminiAssistant:
             system_instruction=role_instructions
         )
         self.chat = self.model.start_chat(history=[])
-        logger.info("GeminiAssistant initialized with instructions from database")
+        logger.info("GeminiAssistant initialized with instructions from database or JSON file")
 
     async def send_message(self, msg):
         logger.info(f"Sending message: {msg}")
@@ -56,5 +66,3 @@ class GeminiAssistant:
         else:
             logger.error("No response received")
             return "Sorry, I couldn't understand your message."
-        
-

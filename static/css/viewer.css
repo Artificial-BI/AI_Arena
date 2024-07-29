@@ -30,6 +30,7 @@ nav ul {
     padding: 10px;
     margin: 0;
     display: flex;
+    justify-content: space-between;
 }
 
 nav ul li {
@@ -50,6 +51,11 @@ nav ul li a:hover {
 
 .container {
     padding: 20px;
+}
+
+.user-id {
+    margin-left: auto;
+    font-weight: bold;
 }
 
 /* Styles for viewer interface */
@@ -166,7 +172,7 @@ nav ul li a:hover {
 
 .general-chat-message.center {
     background-color: var(--chat-box-bg-color);
-    color: var(--text-color);
+    color: var (--text-color);
     text-align: center;
     margin-left: auto;
     margin-right: auto;
@@ -209,55 +215,4 @@ nav ul li a:hover {
     color: #888;
     display: block;
     margin-top: 5px;
-}
-
-/* Стили для шапки и подвала */
-header {
-    background-color: var(--nav-bg-color);
-    color: var(--nav-text-color);
-    padding: 10px 0;
-    text-align: center;
-}
-
-header .logo h1 {
-    margin: 0;
-}
-
-nav ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    justify-content: center;
-}
-
-nav ul li {
-    margin: 0 15px;
-}
-
-nav ul li a {
-    color: var(--nav-text-color);
-    text-decoration: none;
-}
-
-footer {
-    background-color: var(--nav-bg-color);
-    color: var(--nav-text-color);
-    padding: 20px 0;
-    text-align: center;
-}
-
-footer .footer-content {
-    max-width: 800px;
-    margin: 0 auto;
-}
-
-footer .social-links a {
-    margin: 0 10px;
-    color: var(--nav-text-color);
-    text-decoration: none;
-}
-
-footer .social-links a:hover {
-    text-decoration: underline;
 }

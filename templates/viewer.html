@@ -59,5 +59,8 @@
     <button type="submit">Send</button>
 </form>
 
+<script>
+    const user_id = "{{ user_id }}";  // Передаем идентификатор пользователя в JavaScript
+</script>
 <script src="{{ url_for('static', filename='js/viewer.js') }}"></script>  <!-- Подключение viewer.js -->
 {% endblock %}

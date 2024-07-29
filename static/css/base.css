@@ -292,3 +292,20 @@ footer .social-links a:hover {
     font-size: 16px;
     text-align: center;
 }
+
+.nav-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-group li {
+    list-style: none;
+    display: inline;
+    margin-right: 15px;
+}
+
+.user-id {
+    margin-left: auto;
+    font-weight: bold;
+}

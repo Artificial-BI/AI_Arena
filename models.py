@@ -10,6 +10,7 @@ class User(db.Model):
     name = db.Column(db.String(64))  # Добавляем поле name
     email = db.Column(db.String(120), unique=True)  # Добавляем поле email
     password = db.Column(db.String(128))  # Добавляем поле password
+    cookie_id = db.Column(db.String(36), unique=True, nullable=True)  # Поле для cookie_id
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -38,6 +39,7 @@ class Message(db.Model):
 
 class ArenaChatMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     content = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     sender = db.Column(db.String(64), nullable=False)  # 'player1', 'player2', 'referee'
@@ -47,12 +49,23 @@ class ArenaChatMessage(db.Model):
 
 class GeneralChatMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     content = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     sender = db.Column(db.String(64), nullable=False)  # 'player', 'viewer', 'referee'
 
     def __repr__(self):
         return f'<GeneralChatMessage {self.content[:15]}>'
+
+class TacticsChatMessage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    content = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    sender = db.Column(db.String(64), nullable=False)  # 'player', 'viewer', 'referee'
+
+    def __repr__(self):
+        return f'<TacticsChatMessage {self.content[:15]}>'
 
 class RefereePrompt(db.Model):
     id = db.Column(db.Integer, primary_key=True)

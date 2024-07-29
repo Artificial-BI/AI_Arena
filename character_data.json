@@ -1,15 +1,15 @@
 {
-    "name": "Squeaky",
-    "type": "Hamster Warrior",
-    "strength": 10,
+    "name": "Sir Gideon the Steadfast",
+    "type": "Knight",
+    "strength": 90,
     "agility": null,
-    "intelligence": 50,
+    "intelligence": 60,
     "endurance": null,
-    "speed": 80,
-    "magic": 0,
-    "defense": 20,
-    "attack": 40,
-    "charisma": 15,
-    "luck": 60,
-    "description": "Squeaky is a brave little hamster with a big heart and an even bigger appetite for adventure. He may not be the strongest fighter, but he's incredibly quick and agile, able to dart around enemies with surprising speed. Squeaky's greatest weapon is his wheel, which he uses to launch himself at his foes, knocking them off their feet. He's also a master of the 'hamster roll,' a technique where he curls up into a ball and rolls at high speeds to break through enemy lines.  Squeaky comes from a long line of hamsters who lived in a small village nestled between sunflower fields.  He was always a curious and adventurous hamster, often venturing out on his own to explore the world beyond his home.  One day, he stumbled upon a group of traveling warriors who were training in the fields.  Intrigued by their strength and skill, Squeaky approached them, eager to learn their ways.  The warriors were surprised to see a tiny hamster wanting to join their ranks, but they were impressed by his courage and determination.  They took him under their wing, teaching him the art of combat and turning him into a formidable warrior, despite his small size."
+    "speed": 70,
+    "magic": 10,
+    "defense": 95,
+    "attack": 80,
+    "charisma": 80,
+    "luck": 65,
+    "description": "Sir Gideon is a towering figure, clad in gleaming plate armor that bears the coat of arms of his noble house - a silver griffin against a field of azure. His years of dedicated training have forged him into a formidable warrior, known for his unwavering courage and unwavering loyalty to his oaths. His strength is legendary, allowing him to wield his greatsword with devastating force, while his exceptional defense makes him nearly impervious to most attacks. He is a master of strategy and tactics, honed through years of campaigns and battles, and his calm demeanor under pressure inspires confidence in his fellow knights. \n\nSir Gideon hails from a lineage of renowned knights, serving the King for generations. He was knighted at a young age for his bravery in a fierce battle against a band of marauding goblins. His unwavering sense of honor and justice has led him to become a beacon of hope for the realm, a symbol of the unwavering courage of the knightly order. He is a fierce defender of the weak and a formidable foe to those who would threaten the peace. He is renowned for his unwavering sense of duty, always placing the needs of the realm above his own."
 }

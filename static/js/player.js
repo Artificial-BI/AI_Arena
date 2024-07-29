@@ -89,6 +89,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function selectCharacter(characterId) {
         const button = document.querySelector(`#character-list .character-item button[data-id='${characterId}']`);
         if (button) {
+            const user_id = button.dataset.user_id;
             nameField.value = button.dataset.name;
             descriptionField.value = button.dataset.description;
 
@@ -108,6 +109,12 @@ document.addEventListener('DOMContentLoaded', function() {
     chatForm.addEventListener('submit', function(event) {
         event.preventDefault();
         const messageInput = document.getElementById('message');
+        const message = messageInput.value.trim();
+
+        if (!message) {
+            alert('Введите сообщение перед отправкой.');
+            return; // Проверка на пустое сообщение
+        }
 
         fetch(chatForm.action, {
             method: 'POST',
@@ -118,7 +125,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.status === 'Message sent') {
                 const messageElement = document.createElement('div');
                 messageElement.className = 'chat-message right';
-                messageElement.innerHTML = `<p>${messageInput.value}</p><span class="timestamp">${new Date().toLocaleString()}</span>`;
+                messageElement.innerHTML = `<p>${message}</p><span class="timestamp">${new Date().toLocaleString()}</span>`;
                 chatBox.appendChild(messageElement);
 
                 const responseElement = document.createElement('div');

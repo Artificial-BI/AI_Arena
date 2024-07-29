@@ -43,11 +43,21 @@
     </div>
 </div>
 
-<!-- Чат -->
+<!-- Чат "Арена" -->
 <h2>Чат "Арена"</h2>
 <div id="arena-chat-box">
     <!-- Сообщения чата будут добавляться сюда с помощью JavaScript -->
 </div>
+
+<!-- Чат с нейросетью тактик -->
+<h2>Чат с нейросетью тактик</h2>
+<div id="tactics-chat-box">
+    <!-- Сообщения чата будут добавляться сюда с помощью JavaScript -->
+</div>
+<form id="tactics-chat-form">
+    <input type="text" id="tactics-chat-input" placeholder="Введите сообщение...">
+    <button type="submit">Send</button>
+</form>
 
 <!-- Новый чат для общения игроков, зрителей и нейросети -->
 <h2>Общий чат</h2>
@@ -59,5 +69,5 @@
     <button type="submit">Send</button>
 </form>
 
-<script src="{{ url_for('static', filename='js/arena.js') }}"></script>  <!-- Подключение arena.js -->
+<script src="{{ url_for('static', filename='js/arena.js') }}"></script>
 {% endblock %}

@@ -100,6 +100,7 @@ nav ul li a:hover {
 }
 
 #arena-chat-box,
+#tactics-chat-box,
 #general-chat-box {
     border: 1px solid var(--chat-box-border-color);
     background-color: var(--chat-box-bg-color);
@@ -110,12 +111,14 @@ nav ul li a:hover {
     overflow-y: scroll;
 }
 
-#general-chat-form {
+#general-chat-form,
+#tactics-chat-form {
     margin-top: 10px;
     display: flex;
 }
 
-#general-chat-form input[type="text"] {
+#general-chat-form input[type="text"],
+#tactics-chat-form input[type="text"] {
     flex: 1;
     padding: 10px;
     border: 1px solid var(--input-border-color);
@@ -124,7 +127,8 @@ nav ul li a:hover {
     font-size: 16px;
 }
 
-#general-chat-form button {
+#general-chat-form button,
+#tactics-chat-form button {
     background-color: var(--button-bg-color);
     color: var(--button-text-color);
     padding: 10px 20px;
@@ -135,15 +139,18 @@ nav ul li a:hover {
     transition: background-color 0.3s ease;
 }
 
-#general-chat-form button:hover {
+#general-chat-form button:hover,
+#tactics-chat-form button:hover {
     background-color: var(--button-hover-color);
 }
 
-#general-chat-form button:active {
+#general-chat-form button:active,
+#tactics-chat-form button:active {
     background-color: var(--button-active-color);
 }
 
 .arena-chat-message,
+.tactics-chat-message,
 .general-chat-message {
     padding: 10px;
     border-radius: 10px;
@@ -152,12 +159,14 @@ nav ul li a:hover {
 }
 
 .arena-chat-message.left,
+.tactics-chat-message.left,
 .general-chat-message.left {
     background-color: var(--button-inactive-bg-color);
     color: var(--text-color);
 }
 
 .arena-chat-message.right,
+.tactics-chat-message.right,
 .general-chat-message.right {
     background-color: var(--button-bg-color);
     color: var(--button-text-color);
@@ -165,6 +174,7 @@ nav ul li a:hover {
 }
 
 .arena-chat-message.center,
+.tactics-chat-message.center,
 .general-chat-message.center {
     background-color: var(--nav-bg-color);
     color: var(--nav-text-color);
@@ -210,7 +220,7 @@ nav ul li a {
 
 footer {
     background-color: var(--nav-bg-color);
-    color: var(--nav-text-color);
+    color: var (--nav-text-color);
     padding: 20px 0;
     text-align: center;
 }
