@@ -95,61 +95,8 @@ nav ul li a:hover {
     font-size: 1em;
 }
 
-#battle-box {
-    margin-top: 20px;
-}
-
-/* Styles for battle slideshow */
-#battle-slideshow {
-    margin-top: 20px;
-    text-align: center;
-}
-
-#slideshow-container {
-    position: relative;
-    max-width: 100%;
-    margin: auto;
-    overflow: hidden;
-}
-
-.slides {
-    display: flex;
-    transition: transform 0.5s ease-in-out;
-}
-
-.slides img {
-    width: 100%;
-    border-radius: 10px;
-}
-
-#prev-slide,
-#next-slide {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background-color: rgba(0, 0, 0, 0.5);
-    color: white;
-    border: none;
-    padding: 10px;
-    cursor: pointer;
-    border-radius: 50%;
-}
-
-#prev-slide {
-    left: 10px;
-}
-
-#next-slide {
-    right: 10px;
-}
-
-#prev-slide:hover,
-#next-slide:hover {
-    background-color: rgba(0, 0, 0, 0.7);
-}
-
-/* Styles for viewer chat */
-#chat-box {
+/* Styles for arena chat */
+#arena-chat-box {
     border: 1px solid var(--chat-box-border-color);
     background-color: var(--chat-box-bg-color);
     color: var(--chat-box-text-color);
@@ -159,56 +106,32 @@ nav ul li a:hover {
     overflow-y: scroll;
 }
 
-#chat-form {
-    margin-top: 10px;
-    display: flex;
-}
-
-#chat-form input[type="text"] {
-    flex: 1;
-    padding: 10px;
-    border: 1px solid var(--input-border-color);
-    border-radius: 4px;
-    margin-right: 10px;
-    font-size: 16px;
-}
-
-#chat-form button {
-    background-color: var(--button-bg-color);
-    color: var(--button-text-color);
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s ease;
-}
-
-#chat-form button:hover {
-    background-color: var(--button-hover-color);
-}
-
-#chat-form button:active {
-    background-color: var(--button-active-color);
-}
-
-/* Chat message styles */
-.chat-message {
+.arena-chat-message {
     padding: 10px;
     border-radius: 10px;
     margin-bottom: 10px;
     max-width: 70%;
 }
 
-.chat-message.right {
+.arena-chat-message.left {
+    background-color: var(--button-inactive-bg-color);
+    color: var(--text-color);
+    margin-right: auto;
+}
+
+.arena-chat-message.right {
     background-color: var(--button-bg-color);
     color: var(--button-text-color);
     margin-left: auto;
 }
 
-.chat-message.left {
-    background-color: var(--button-inactive-bg-color);
+.arena-chat-message.center {
+    background-color: var(--chat-box-bg-color);
     color: var(--text-color);
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
 }
 
 .timestamp {

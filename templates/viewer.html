@@ -25,7 +25,7 @@
 <div class="character-section">
     <div class="character">
         <img src="{{ url_for('static', filename='images/default/player1.png') }}" alt="Player 1 Image" id="player1-image">
-        <p id="player1-description">{{ characters[0].description if characters|length > 0 else 'Описание персонажа 1' }}</p>
+        <p id="player1-description">{{ characters[0].description if characters|length > 0 else 'Player 1 description' }}</p>
         <!-- График характеристик персонажа -->
         <div class="character-stats">
             <h2>Характеристики персонажа</h2>
@@ -34,7 +34,7 @@
     </div>
     <div class="character">
         <img src="{{ url_for('static', filename='images/default/player2.png') }}" alt="Player 2 Image" id="player2-image">
-        <p id="player2-description">{{ characters[1].description if characters|length > 1 else 'Описание персонажа 2' }}</p>
+        <p id="player2-description">{{ characters[1].description if characters|length > 1 else 'Player 2 description' }}</p>
         <!-- График характеристик персонажа -->
         <div class="character-stats">
             <h2>Характеристики персонажа</h2>
@@ -44,19 +44,10 @@
 </div>
 
 <!-- Чат -->
-<h2>Чат</h2>
-<div id="chat-box">
-    {% for message in messages %}
-        <div class="chat-message {{ 'right' if message.user_id == 1 else 'left' }}">
-            <p>{{ message.content }}</p>
-            <span class="timestamp">{{ message.timestamp.strftime('%Y-%м-%д %H:%М:%S') }}</span>
-        </div>
-    {% endfor %}
+<h2>Чат "Арена"</h2>
+<div id="arena-chat-box">
+    <!-- Сообщения чата будут добавляться сюда с помощью JavaScript -->
 </div>
-<form id="chat-form" method="post" action="{{ url_for('admin.send_message') }}">
-    <input type="text" id="message" name="message" placeholder="Введите сообщение...">
-    <button type="submit">Отправить</button>
-</form>
 
 <script src="{{ url_for('static', filename='js/viewer.js') }}"></script>  <!-- Подключение viewer.js -->
 {% endblock %}

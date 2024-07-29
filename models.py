@@ -1,6 +1,3 @@
-
-# --- models.py ---
-
 from datetime import datetime
 from extensions import db  # Импортируем экземпляр SQLAlchemy из extensions.py
 
@@ -39,6 +36,14 @@ class Message(db.Model):
     def __repr__(self):
         return f'<Message {self.content[:15]}>'
 
+class ArenaChatMessage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    sender = db.Column(db.String(64), nullable=False)  # 'player1', 'player2', 'referee'
+
+    def __repr__(self):
+        return f'<ArenaChatMessage {self.content[:15]}>'
 
 class RefereePrompt(db.Model):
     id = db.Column(db.Integer, primary_key=True)

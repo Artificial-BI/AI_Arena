@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     fetchCharacters();
+    fetchArenaChatMessages();
 
     function fetchCharacters() {
         fetch('/viewer/get_characters')
@@ -145,8 +146,75 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Удаляем или комментируем несуществующие функции
-    // setInterval(fetchBattleUpdates, 5000); // Обновлять каждые 5 секунд
-    // setInterval(fetchBattleImages, 30000); // Обновлять каждые 30 секунд
-    // setInterval(fetchChatMessages, 5000); // Обновлять сообщения чата каждые 5 секунд
+    // Функция для добавления сообщений в чат "Арена"
+    function addMessageToArenaChat(message, sender) {
+        const chatBox = document.getElementById('arena-chat-box');
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('arena-chat-message');
+        const timestamp = new Date().toLocaleTimeString();
+        messageElement.innerHTML = `<p>${message}</p><span class="timestamp">${timestamp}</span>`;
+
+        if (sender === 'player1') {
+            messageElement.classList.add('left');
+        } else if (sender === 'player2') {
+            messageElement.classList.add('right');
+        } else if (sender === 'referee') {
+            messageElement.classList.add('center');
+        }
+
+        chatBox.appendChild(messageElement);
+        chatBox.scrollTop = chatBox.scrollHeight; // Прокрутка вниз
+    }
+
+    // Функция для получения сообщений чата "Арена" из базы данных
+    function fetchArenaChatMessages() {
+        fetch('/viewer/get_arena_chat')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Arena chat data fetched:', data);  // Логирование всех данных
+                const chatBox = document.getElementById('arena-chat-box');
+                chatBox.innerHTML = '';  // Очистка перед добавлением новых сообщений
+
+                data.forEach(msg => {
+                    addMessageToArenaChat(msg.content, msg.sender);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching arena chat messages:', error);
+            });
+    }
+
+    // Функция для отправки сообщений в чат "Арена"
+    function sendArenaChatMessage(content, sender) {
+        fetch('/viewer/send_arena_chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ content, sender })
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Message sent:', data);
+                fetchArenaChatMessages();  // Обновить чат после отправки сообщения
+            })
+            .catch(error => {
+                console.error('Error sending arena chat message:', error);
+            });
+    }
+
+    // Пример добавления сообщений в чат и отправки в базу данных
+    sendArenaChatMessage('Welcome to the Arena!', 'referee');
+    sendArenaChatMessage('Prepare yourself!', 'player1');
+    sendArenaChatMessage('I am ready.', 'player2');
 });
