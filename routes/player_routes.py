@@ -87,9 +87,9 @@ def player():
 
     return render_template('player.html', messages=messages, characters=characters, selected_character=selected_character, general_messages=general_messages, last_character_id=last_character_id)
 
-
-
-
+@player_bp.route('/arena')
+def arena():
+    return render_template('arena.html')
 
 @player_bp.route('/select_character/<int:character_id>', methods=['POST'])
 def select_character(character_id):
@@ -190,3 +190,5 @@ def send_general_message():
     except Exception as e:
         logger.error(f"Error sending general message: {e}")
         return jsonify({"error": str(e)}), 500
+    
+    

@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/arena.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<h1>Интерфейс арены</h1>
+
+<!-- Название арены -->
+<h2>Магическая арена</h2>
+<!-- Имена персонажей -->
+<div id="players-names">
+    <div class="player-name" id="player1-name">
+        <h3>{{ characters[0].name if characters|length > 0 else 'Player 1' }}</h3>
+    </div>
+    <div class="player-name" id="player2-name">
+        <h3>{{ characters[1].name if characters|length > 1 else 'Player 2' }}</h3>
+    </div>
+</div>
+
+<!-- Изображения персонажей и их характеристики -->
+<div class="character-section">
+    <div class="character">
+        <img src="{{ url_for('static', filename='images/default/player1.png') }}" alt="Player 1 Image" id="player1-image">
+        <p id="player1-description">{{ characters[0].description if characters|length > 0 else 'Player 1 description' }}</p>
+        <!-- График характеристик персонажа -->
+        <div class="character-stats">
+            <h2>Характеристики персонажа</h2>
+            <canvas id="player1-stats"></canvas>
+        </div>
+    </div>
+    <div class="character">
+        <img src="{{ url_for('static', filename='images/default/player2.png') }}" alt="Player 2 Image" id="player2-image">
+        <p id="player2-description">{{ characters[1].description if characters|length > 1 else 'Player 2 description' }}</p>
+        <!-- График характеристик персонажа -->
+        <div class="character-stats">
+            <h2>Характеристики персонажа</h2>
+            <canvas id="player2-stats"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Чат -->
+<h2>Чат "Арена"</h2>
+<div id="arena-chat-box">
+    <!-- Сообщения чата будут добавляться сюда с помощью JavaScript -->
+</div>
+
+<!-- Новый чат для общения игроков, зрителей и нейросети -->
+<h2>Общий чат</h2>
+<div id="general-chat-box">
+    <!-- Сообщения чата будут добавляться сюда с помощью JavaScript -->
+</div>
+<form id="general-chat-form">
+    <input type="text" id="general-chat-input" placeholder="Введите сообщение...">
+    <button type="submit">Send</button>
+</form>
+
+<script src="{{ url_for('static', filename='js/arena.js') }}"></script>  <!-- Подключение arena.js -->
+{% endblock %}

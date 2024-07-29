@@ -16,12 +16,14 @@ from routes.common_routes import common_bp
 from routes.player_routes import player_bp
 from routes.viewer_routes import viewer_bp
 from routes.admin_routes import admin_bp
+from routes.arena_routes import arena_bp  # Импортируем новый маршрут
 
 app.register_blueprint(index_bp)
 app.register_blueprint(common_bp, url_prefix='/common')
 app.register_blueprint(player_bp, url_prefix='/player')
 app.register_blueprint(viewer_bp, url_prefix='/viewer')
 app.register_blueprint(admin_bp, url_prefix='/admin')
+app.register_blueprint(arena_bp, url_prefix='/arena')  # Регистрация нового маршрута
 
 # Импортируем и регистрируем блюпринт для вебхуков
 from webhook import webhook_bp
