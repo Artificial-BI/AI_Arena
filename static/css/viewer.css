@@ -134,6 +134,76 @@ nav ul li a:hover {
     width: 100%;
 }
 
+/* Styles for general chat */
+#general-chat-box {
+    border: 1px solid var(--chat-box-border-color);
+    background-color: var(--chat-box-bg-color);
+    color: var(--chat-box-text-color);
+    padding: 10px;
+    margin-top: 10px;
+    height: 200px;
+    overflow-y: scroll;
+}
+
+.general-chat-message {
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    max-width: 70%;
+}
+
+.general-chat-message.left {
+    background-color: var(--button-inactive-bg-color);
+    color: var(--text-color);
+    margin-right: auto;
+}
+
+.general-chat-message.right {
+    background-color: var(--button-bg-color);
+    color: var(--button-text-color);
+    margin-left: auto;
+}
+
+.general-chat-message.center {
+    background-color: var(--chat-box-bg-color);
+    color: var(--text-color);
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+}
+
+#general-chat-form {
+    display: flex;
+    margin-top: 10px;
+}
+
+#general-chat-input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid var(--input-border-color);
+    border-radius: 4px;
+    margin-right: 10px;
+}
+
+#general-chat-form button {
+    background-color: var(--button-bg-color);
+    color: var(--button-text-color);
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#general-chat-form button:hover {
+    background-color: var(--button-hover-color);
+}
+
+#general-chat-form button:active {
+    background-color: var(--button-active-color);
+}
+
 .timestamp {
     font-size: 0.8em;
     color: #888;

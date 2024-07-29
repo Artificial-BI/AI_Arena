@@ -49,5 +49,15 @@
     <!-- Сообщения чата будут добавляться сюда с помощью JavaScript -->
 </div>
 
+<!-- Новый чат для общения игроков, зрителей и нейросети -->
+<h2>Общий чат</h2>
+<div id="general-chat-box">
+    <!-- Сообщения чата будут добавляться сюда с помощью JavaScript -->
+</div>
+<form id="general-chat-form">
+    <input type="text" id="general-chat-input" placeholder="Введите сообщение...">
+    <button type="submit">Send</button>
+</form>
+
 <script src="{{ url_for('static', filename='js/viewer.js') }}"></script>  <!-- Подключение viewer.js -->
 {% endblock %}

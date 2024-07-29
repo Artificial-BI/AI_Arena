@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     fetchCharacters();
     fetchArenaChatMessages();
+    fetchGeneralChatMessages();
 
     function fetchCharacters() {
         fetch('/viewer/get_characters')
@@ -217,4 +218,87 @@ document.addEventListener('DOMContentLoaded', function() {
     sendArenaChatMessage('Welcome to the Arena!', 'referee');
     sendArenaChatMessage('Prepare yourself!', 'player1');
     sendArenaChatMessage('I am ready.', 'player2');
+
+    // Функция для добавления сообщений в общий чат
+    function addMessageToGeneralChat(message, sender) {
+        const chatBox = document.getElementById('general-chat-box');
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('general-chat-message');
+        const timestamp = new Date().toLocaleTimeString();
+        messageElement.innerHTML = `<p>${message}</p><span class="timestamp">${timestamp}</span>`;
+
+        if (sender === 'viewer') {
+            messageElement.classList.add('right');
+        } else if (sender === 'player') {
+            messageElement.classList.add('left');
+        } else if (sender === 'referee') {
+            messageElement.classList.add('center');
+        }
+
+        chatBox.appendChild(messageElement);
+        chatBox.scrollTop = chatBox.scrollHeight; // Прокрутка вниз
+    }
+
+    // Функция для получения сообщений общего чата из базы данных
+    function fetchGeneralChatMessages() {
+        fetch('/viewer/get_general_chat')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('General chat data fetched:', data);  // Логирование всех данных
+                const chatBox = document.getElementById('general-chat-box');
+                chatBox.innerHTML = '';  // Очистка перед добавлением новых сообщений
+
+                data.forEach(msg => {
+                    addMessageToGeneralChat(msg.content, msg.sender);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching general chat messages:', error);
+            });
+    }
+
+    // Функция для отправки сообщений в общий чат
+    function sendGeneralChatMessage(content, sender) {
+        fetch('/viewer/send_general_chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ content, sender })
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Message sent:', data);
+                fetchGeneralChatMessages();  // Обновить чат после отправки сообщения
+            })
+            .catch(error => {
+                console.error('Error sending general chat message:', error);
+            });
+    }
+
+    // Обработка отправки формы для общего чата
+    const generalChatForm = document.getElementById('general-chat-form');
+    generalChatForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        const generalChatInput = document.getElementById('general-chat-input');
+        const message = generalChatInput.value;
+        const sender = 'viewer';  // Здесь можно указать текущего пользователя
+
+        if (message.trim() !== '') {
+            sendGeneralChatMessage(message, sender);
+            generalChatInput.value = '';  // Очистка поля ввода после отправки сообщения
+        }
+    });
+
+    fetchGeneralChatMessages();  // Загрузка сообщений общего чата при загрузке страницы
 });

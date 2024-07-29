@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, jsonify, request
-from models import Character, ArenaChatMessage  # Учитываем, что models находится в корне проекта
+from models import Character, ArenaChatMessage, GeneralChatMessage  # Учитываем, что models находится в корне проекта
 import logging
 import json
 from extensions import db
@@ -68,4 +68,31 @@ def send_arena_chat():
         return jsonify({"status": "Message sent"}), 200
     except Exception as e:
         logging.error(f"Error saving arena chat message: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
+@viewer_bp.route('/get_general_chat')
+def get_general_chat():
+    try:
+        messages = GeneralChatMessage.query.order_by(GeneralChatMessage.timestamp.asc()).all()
+        chat_data = [{'content': msg.content, 'timestamp': msg.timestamp, 'sender': msg.sender} for msg in messages]
+        return jsonify(chat_data)
+    except Exception as e:
+        logging.error(f"Error fetching general chat messages: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
+@viewer_bp.route('/send_general_chat', methods=['POST'])
+def send_general_chat():
+    try:
+        data = request.get_json()
+        content = data.get('content')
+        sender = data.get('sender')
+        if not content or not sender:
+            return jsonify({"error": "Invalid data"}), 400
+
+        message = GeneralChatMessage(content=content, sender=sender)
+        db.session.add(message)
+        db.session.commit()
+        return jsonify({"status": "Message sent"}), 200
+    except Exception as e:
+        logging.error(f"Error saving general chat message: {e}")
         return jsonify({"error": "Internal server error"}), 500

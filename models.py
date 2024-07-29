@@ -45,6 +45,15 @@ class ArenaChatMessage(db.Model):
     def __repr__(self):
         return f'<ArenaChatMessage {self.content[:15]}>'
 
+class GeneralChatMessage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    sender = db.Column(db.String(64), nullable=False)  # 'player', 'viewer', 'referee'
+
+    def __repr__(self):
+        return f'<GeneralChatMessage {self.content[:15]}>'
+
 class RefereePrompt(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     prompt_text = db.Column(db.Text)
