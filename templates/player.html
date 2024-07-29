@@ -106,9 +106,14 @@
     </main>
 </div>
 
-<script>
+<!-- <script>
     const selectedCharacterTraits = {% if selected_character %}{{ selected_character.traits | tojson }}{% else %}null{% endif %};
+</script> -->
+<script>
+    const selectedCharacterTraits = {% if selected_character %}{{ selected_character.traits | tojson | safe }}{% else %}null{% endif %};
+    const lastCharacterId = {{ last_character_id if last_character_id else 'null' }};
 </script>
+
 
 <script src="{{ url_for('static', filename='js/player.js') }}"></script>
 {% endblock %}

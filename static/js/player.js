@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let characterChart;
 
     function displayCharacterStats(traits) {
+        console.log('Received traits:', traits); // Логирование данных характеристик
+
         const ctx = document.getElementById('character-chart').getContext('2d');
         const chartData = {
             labels: Object.keys(traits),
@@ -30,6 +32,7 @@ document.addEventListener('DOMContentLoaded', function() {
             type: 'bar',
             data: chartData,
             options: {
+                responsive: true,
                 scales: {
                     x: {
                         beginAtZero: true,
@@ -69,7 +72,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         const meta = chart.getDatasetMeta(i);
                         meta.data.forEach(function(bar, index) {
                             const data = dataset.data[index];
-                            ctx.fillText(data, bar.x, bar.y - 5);
+                            if (data !== 0) { // Отображать только ненулевые значения
+                                ctx.fillText(data, bar.x, bar.y - 5);
+                            }
                         });
                     });
                 }
@@ -89,6 +94,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Обновление характеристик персонажа в поле extraInput
             const traits = JSON.parse(button.dataset.traits);
+            console.log('Selected character traits:', traits); // Логирование данных выбранного персонажа
             displayCharacterStats(traits);
         }
     }
@@ -144,6 +150,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             "Выносливость": data.character.endurance,
                             "Удача": data.character.luck
                         };
+                        console.log('Updated character traits:', traits); // Логирование данных обновленного персонажа
                         displayCharacterStats(traits);
                     }
                 }
@@ -153,7 +160,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Проверка, есть ли выбранный персонаж и его характеристики
-    if (selectedCharacterTraits) {
+    if (lastCharacterId !== null) {
+        selectCharacter(lastCharacterId);
+    } else if (selectedCharacterTraits) {
+        console.log('Initial selected character traits:', selectedCharacterTraits); // Логирование данных первоначально выбранного персонажа
         displayCharacterStats(selectedCharacterTraits);
     }
 });

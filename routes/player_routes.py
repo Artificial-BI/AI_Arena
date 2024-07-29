@@ -3,6 +3,7 @@ import json
 import re
 import asyncio
 from flask import Blueprint, render_template, jsonify, request, redirect, url_for, current_app
+from sqlalchemy import desc
 from extensions import db
 from models import Message, Character
 from datetime import datetime
@@ -33,7 +34,8 @@ def fetch_characters():
 
 def get_selected_character():
     try:
-        return Character.query.first()  # Замените на вашу логику выбора персонажа
+        #return Character.query.first()  # Замените на вашу логику выбора персонажа
+        return Character.query.order_by(desc(Character.id)).first()
     except Exception as e:
         logger.error(f"Error fetching selected character: {e}")
         return None
@@ -49,7 +51,31 @@ def fetch_general_messages():
 def convert_to_datetime(timestamp_str):
     return datetime.strptime(timestamp_str, '%Y-%m-%d %H:%M:%S')
 
+def get_last_character_id():
+    try:
+        last_character = Character.query.order_by(desc(Character.id)).first()
+        return last_character.id if last_character else None
+    except Exception as e:
+        logger.error(f"Error fetching last character: {e}")
+        return None
+
+
+
+
 # Маршруты
+# @player_bp.route('/')
+# def player():
+#     logger.info("Fetching player data")
+#     messages = fetch_messages()
+#     characters = fetch_characters()
+#     selected_character = get_selected_character()
+#     general_messages = fetch_general_messages()
+
+#     return render_template('player.html', messages=messages, characters=characters, selected_character=selected_character, general_messages=general_messages)
+
+
+
+
 @player_bp.route('/')
 def player():
     logger.info("Fetching player data")
@@ -57,8 +83,13 @@ def player():
     characters = fetch_characters()
     selected_character = get_selected_character()
     general_messages = fetch_general_messages()
+    last_character_id = get_last_character_id()
 
-    return render_template('player.html', messages=messages, characters=characters, selected_character=selected_character, general_messages=general_messages)
+    return render_template('player.html', messages=messages, characters=characters, selected_character=selected_character, general_messages=general_messages, last_character_id=last_character_id)
+
+
+
+
 
 @player_bp.route('/select_character/<int:character_id>', methods=['POST'])
 def select_character(character_id):
@@ -145,10 +176,6 @@ def create_character():
     except Exception as e:
         logger.error(f"Error creating character: {e}")
         return jsonify({"error": str(e)}), 500
-
-
-
-
 
 @player_bp.route('/send_general_message', methods=['POST'])
 def send_general_message():
