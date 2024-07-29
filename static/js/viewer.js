@@ -1,14 +1,16 @@
 document.addEventListener('DOMContentLoaded', function() {
     fetchCharacters();
-    fetchBattleUpdates();
-    fetchBattleImages();
-    fetchChatMessages();
 
     function fetchCharacters() {
-        fetch('/get_characters')
-            .then(response => response.json())
+        fetch('/viewer/get_characters')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.json();
+            })
             .then(data => {
-                console.log('Characters data fetched:', data);  // Логирование
+                console.log('Characters data fetched:', data);  // Логирование всех данных
                 const player1Name = document.getElementById('player1-name');
                 const player2Name = document.getElementById('player2-name');
                 const player1Image = document.getElementById('player1-image');
@@ -22,27 +24,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 if (data.length > 0) {
+                    console.log('Player 1 data:', data[0]);  // Логирование данных первого игрока
                     player1Name.textContent = data[0].name;
                     player1Image.src = `/static/${data[0].image_url}`;
                     player1Description.textContent = data[0].description;
                     createChart('player1-stats', data[0].stats);
+                } else {
+                    console.log('No data for Player 1');
                 }
 
                 if (data.length > 1) {
+                    console.log('Player 2 data:', data[1]);  // Логирование данных второго игрока
                     player2Name.textContent = data[1].name;
                     player2Image.src = `/static/${data[1].image_url}`;
                     player2Description.textContent = data[1].description;
                     createChart('player2-stats', data[1].stats);
+                } else {
+                    console.log('No data for Player 2');
                 }
 
                 // Если данных нет, использовать изображения по умолчанию
                 if (data.length === 0) {
-                    player1Name.textContent = 'Игрок 1';
-                    player2Name.textContent = 'Игрок 2';
+                    console.log('No data available, using default images');
+                    player1Name.textContent = 'Player 1';
+                    player2Name.textContent = 'Player 2';
                     player1Image.src = '/static/images/default/player1.png';
                     player2Image.src = '/static/images/default/player2.png';
-                    player1Description.textContent = 'Описание игрока 1';
-                    player2Description.textContent = 'Описание игрока 2';
+                    player1Description.textContent = 'Player 1 description';
+                    player2Description.textContent = 'Player 2 description';
                 }
             })
             .catch(error => {
@@ -60,23 +69,25 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
 
-                player1Name.textContent = 'Игрок 1';
-                player2Name.textContent = 'Игрок 2';
+                console.log('Error fetching data, using default images');
+                player1Name.textContent = 'Player 1';
+                player2Name.textContent = 'Player 2';
                 player1Image.src = '/static/images/default/player1.png';
                 player2Image.src = '/static/images/default/player2.png';
-                player1Description.textContent = 'Описание игрока 1';
-                player2Description.textContent = 'Описание игрока 2';
+                player1Description.textContent = 'Player 1 description';
+                player2Description.textContent = 'Player 2 description';
             });
     }
 
     function createChart(canvasId, stats) {
+        console.log(`Creating chart for canvas ${canvasId} with stats:`, stats);  // Логирование данных для графика
         const ctx = document.getElementById(canvasId).getContext('2d');
         new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: Object.keys(stats),
                 datasets: [{
-                    label: 'Характеристики',
+                    label: 'Attributes',
                     data: Object.values(stats),
                     backgroundColor: 'rgba(34, 139, 34, 0.8)',  // Темно-зеленый цвет баров
                     borderColor: 'rgba(34, 139, 34, 1)',
@@ -90,14 +101,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: 'Характеристики'
+                            text: 'Attributes'
                         }
                     },
                     y: {
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: 'Значения'
+                            text: 'Values'
                         }
                     }
                 },
@@ -134,9 +145,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Остальные функции fetchBattleUpdates, fetchBattleImages, fetchChatMessages остаются без изменений
-
-    setInterval(fetchBattleUpdates, 5000); // Обновлять каждые 5 секунд
-    setInterval(fetchBattleImages, 30000); // Обновлять каждые 30 секунд
-    setInterval(fetchChatMessages, 5000); // Обновлять сообщения чата каждые 5 секунд
+    // Удаляем или комментируем несуществующие функции
+    // setInterval(fetchBattleUpdates, 5000); // Обновлять каждые 5 секунд
+    // setInterval(fetchBattleImages, 30000); // Обновлять каждые 30 секунд
+    // setInterval(fetchChatMessages, 5000); // Обновлять сообщения чата каждые 5 секунд
 });

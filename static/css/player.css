@@ -81,7 +81,7 @@ header nav ul li button:active {
 .chat-section,
 .general-chat,
 .character-stats {
-    background-color: #fff;
+    background-color: #ffffff;
     padding: 20px;
     border-radius: 4px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);

@@ -2,6 +2,7 @@
 
 {% block head %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/viewer.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}
 
@@ -48,7 +49,7 @@
     {% for message in messages %}
         <div class="chat-message {{ 'right' if message.user_id == 1 else 'left' }}">
             <p>{{ message.content }}</p>
-            <span class="timestamp">{{ message.timestamp.strftime('%Y-%м-%д %H:%M:%S') }}</span>
+            <span class="timestamp">{{ message.timestamp.strftime('%Y-%м-%д %H:%М:%S') }}</span>
         </div>
     {% endfor %}
 </div>
@@ -57,4 +58,5 @@
     <button type="submit">Отправить</button>
 </form>
 
+<script src="{{ url_for('static', filename='js/viewer.js') }}"></script>  <!-- Подключение viewer.js -->
 {% endblock %}
