@@ -5,7 +5,7 @@ index_bp = Blueprint('index_bp', __name__)
 
 @index_bp.route('/')
 def index():
-    # Комментируем запросы к базе данных
+    # Commenting out database queries
     # tournaments = Tournament.query.all()
     # top_players = Player.query.order_by(Player.score.desc()).limit(10).all()
     tournaments = []

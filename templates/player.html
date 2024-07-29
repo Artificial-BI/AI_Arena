@@ -3,11 +3,11 @@
 {% block nav %}
 <nav>
     <ul class="nav-group">
-        <li><a href="/">Главная</a></li>
-       <!-- <li><a href="/profile">Профиль</а></li> -->
-       <!-- <li>До начала игры осталось: <span id="countdown">{{ tournament_countdown }}</span></li> -->
+        <li><a href="/">Home</a></li>
+       <!-- <li><a href="/profile">Profile</a></li> -->
+       <!-- <li>Time left until the game starts: <span id="countdown">{{ tournament_countdown }}</span></li> -->
         <li><a href="/arena">Arena</a></li>
-        <li><a href="/logout">Выход</a></li>
+        <li><a href="/logout">Logout</a></li>
     </ul>
 </nav>
 {% endblock %}
@@ -21,7 +21,7 @@
 <div class="player-container">
     <main>
         <div class="character-info">
-            <!-- Изображение персонажа -->
+            <!-- Character Image -->
             {% if selected_character %}
             <div class="selected-character">
                 <h3 id="character-name">{{ selected_character.name }}</h3>
@@ -30,46 +30,45 @@
             </div>
             {% endif %}
 
-            <!-- График характеристик персонажа -->
+            <!-- Character Stats Chart -->
             <div class="character-stats">
-                <h2>Характеристики персонажа</h2>
+                <h2>Character Stats</h2>
                 <canvas id="character-chart"></canvas>
             </div>
         </div>
 
         <div class="character-management">
-            <!-- Список персонажей -->
+            <!-- Character List -->
             <div class="characters-section">
                 <ul id="character-list">
                     {% for character in characters %}
                     <li class="character-item">
                         <button type="button" data-id="{{ character.id }}" data-name="{{ character.name }}" data-description="{{ character.description }}" data-traits="{{ character.traits }}">{{ character.name }}</button>
                         <form method="post" action="{{ url_for('player_bp.delete_character', character_id=character.id) }}" class="delete-form">
-                            <button type="submit">Удалить</button>
+                            <button type="submit">Delete</button>
                         </form>
                     {% endfor %}
                 </ul>
             </div>
-            <!-- Создание персонажа -->
+            <!-- Create Character -->
             <div class="create-character">
                 <form id="create-character-form" method="post" action="{{ url_for('player_bp.create_character') }}">
-                    <label for="name">Имя персонажа:</label>
+                    <label for="name">Character Name:</label>
                     <input type="text" id="name" name="name" required>
-                    <label for="description">Описание персонажа:</label>
+                    <label for="description">Character Description:</label>
                     <textarea id="description" name="description" rows="6" required></textarea>
-                    <!-- Контейнер для поля и кнопки -->
+                    <!-- Container for field and button -->
                     <div class="extra-input-container">
                         <input type="text" id="extraInput" name="extraInput" class="extra-input" placeholder="" readonly>
-                        <button type="submit">Создать персонажа</button>
+                        <button type="submit">Create Character</button>
                     </div>
                 </form>
             </div>
         </div>
-        
 
-        <!-- Чат с нейросетью -->
+        <!-- Chat with AI -->
         <div class="chat-section">
-            <h2>Чат с нейросетью</h2>
+            <h2>Chat with AI</h2>
             <div id="chat-box">
                 {% for message in messages %}
                 <div class="chat-message {{ 'right' if message.user_id == g.user.id else 'left' }}">
@@ -79,14 +78,14 @@
                 {% endfor %}
             </div>
             <form id="chat-form" method="post" action="{{ url_for('player_bp.send_message') }}">
-                <input type="text" id="message" name="message" placeholder="Введите сообщение...">
-                <button type="submit">Отправить</button>
+                <input type="text" id="message" name="message" placeholder="Enter your message...">
+                <button type="submit">Send</button>
             </form>
         </div>
 
-        <!-- Общий чат с другими игроками -->
+        <!-- General Chat with other players -->
         <div class="general-chat">
-            <h2>Общий чат</h2>
+            <h2>General Chat</h2>
             <div id="general-chat-box">
                 {% for message in general_messages %}
                 <div class="chat-message {{ 'right' if message.user_id == g.user.id else 'left' }}">
@@ -96,8 +95,8 @@
                 {% endfor %}
             </div>
             <form id="general-chat-form" method="post" action="{{ url_for('player_bp.send_general_message') }}">
-                <input type="text" name="message" id="general-message" placeholder="Введите сообщение...">
-                <button type="submit">Отправить</button>
+                <input type="text" name="message" id="general-message" placeholder="Enter your message...">
+                <button type="submit">Send</button>
             </form>
         </div>
     </main>

@@ -12,11 +12,11 @@ from utils import parse_character, save_to_json
 
 player_bp = Blueprint('player_bp', __name__)
 
-# Настройка логирования
+# Logging setup
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Вспомогательные функции
+# Helper functions
 def fetch_messages():
     try:
         return Message.query.all()
@@ -46,7 +46,7 @@ def get_last_character_id():
         logger.error(f"Error fetching last character: {e}")
         return None
 
-# Маршруты
+# Routes
 @player_bp.route('/')
 def player():
     logger.info("Fetching player data")
@@ -83,23 +83,23 @@ def send_message():
         if not content:
             raise ValueError("Invalid input: 'content' argument must not be empty. Please provide a non-empty value.")
 
-        user_id = g.user.id  # Используем идентификатор текущего пользователя
+        user_id = g.user.id  # Use the current user's ID
 
-        # Создаем ассистента при каждом вызове
+        # Create assistant on each call
         assistant = GeminiAssistant("character_generator")
-        # Используем asyncio.run для выполнения асинхронной функции
+        # Use asyncio.run to execute the async function
         logger.info(f"Sending message to assistant: {content}")
         response = asyncio.run(assistant.send_message(content))
         logger.info(f"Received response from assistant: {response}")
 
-        # Сохраняем сообщение и ответ в базе данных
+        # Save message and response to the database
         message = Message(content=content, user_id=user_id)
         response_message = Message(content=response, user_id=0)
         db.session.add(message)
         db.session.add(response_message)
         db.session.commit()
 
-        # Парсим ответ и возвращаем данные персонажа, если они есть
+        # Parse response and return character data if present
         parsed_character = parse_character(response)
         if parsed_character["name"]:
             save_to_json(parsed_character)
@@ -109,7 +109,7 @@ def send_message():
     except Exception as e:
         logger.error(f"Error sending message: {e}")
         return jsonify({"error": str(e)}), 500
-    
+
 @player_bp.route('/delete_character/<int:character_id>', methods=['POST'])
 def delete_character(character_id):
     try:
@@ -129,16 +129,16 @@ def create_character():
         description = request.form['description']
         traits_string = request.form['extraInput']
         
-        # Преобразуем строку характеристик в словарь
+        # Convert traits string to dictionary
         traits = {}
         for item in traits_string.split(', '):
             key, value = item.split(':')
             try:
                 traits[key] = int(value)
             except ValueError:
-                traits[key] = 0  # или любое другое значение по умолчанию для невалидных данных
+                traits[key] = 0  # or any other default value for invalid data
         
-        # Преобразуем словарь в JSON строку с кодировкой Unicode
+        # Convert dictionary to JSON string with Unicode encoding
         traits_json = json.dumps(traits, ensure_ascii=False)
         
         new_character = Character(name=name, description=description, image_url='images/default/character.png', traits=traits_json)
@@ -157,7 +157,7 @@ def send_general_message():
         if not content:
             raise ValueError("Invalid input: 'content' argument must not be empty. Please provide a non-empty value.")
             
-        user_id = g.user.id  # Используем идентификатор текущего пользователя
+        user_id = g.user.id  # Use the current user's ID
         message = Message(content=content, user_id=user_id)
         db.session.add(message)
         db.session.commit()

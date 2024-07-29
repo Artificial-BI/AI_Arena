@@ -10,15 +10,15 @@ document.addEventListener('DOMContentLoaded', function() {
     let characterChart;
 
     function displayCharacterStats(traits) {
-        console.log('Received traits:', traits); // Логирование данных характеристик
+        console.log('Received traits:', traits); // Logging traits data
 
         const ctx = document.getElementById('character-chart').getContext('2d');
         const chartData = {
             labels: Object.keys(traits),
             datasets: [{
-                label: 'Характеристики',
+                label: 'Attributes',
                 data: Object.values(traits),
-                backgroundColor: 'rgba(34, 139, 34, 0.8)',  // Темно-зеленый цвет баров
+                backgroundColor: 'rgba(34, 139, 34, 0.8)',  // Dark green bars
                 borderColor: 'rgba(34, 139, 34, 1)',
                 borderWidth: 1
             }]
@@ -38,14 +38,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: 'Характеристики'
+                            text: 'Attributes'
                         }
                     },
                     y: {
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: 'Значения'
+                            text: 'Values'
                         }
                     }
                 },
@@ -58,21 +58,21 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     },
                     legend: {
-                        display: false // Убираем заголовок гистограммы
+                        display: false // Remove the chart title
                     }
                 }
             },
             plugins: [{
                 afterDatasetsDraw: function(chart) {
                     const ctx = chart.ctx;
-                    ctx.font = '8px Arial';  // Уменьшаем размер текста до обычного
+                    ctx.font = '8px Arial';  // Reduce text size to normal
                     ctx.fillStyle = 'rgba(0, 0, 0, 1)';
 
                     chart.data.datasets.forEach(function(dataset, i) {
                         const meta = chart.getDatasetMeta(i);
                         meta.data.forEach(function(bar, index) {
                             const data = dataset.data[index];
-                            if (data !== 0) { // Отображать только ненулевые значения
+                            if (data !== 0) { // Display only non-zero values
                                 ctx.fillText(data, bar.x, bar.y - 5);
                             }
                         });
@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }]
         });
 
-        // Преобразование характеристик в строку и вставка в поле
+        // Convert traits to a string and insert into the field
         const traitsString = Object.entries(traits).map(([key, value]) => `${key}:${value}`).join(', ');
         extraInput.value = traitsString;
     }
@@ -93,9 +93,9 @@ document.addEventListener('DOMContentLoaded', function() {
             nameField.value = button.dataset.name;
             descriptionField.value = button.dataset.description;
 
-            // Обновление характеристик персонажа в поле extraInput
+            // Update character traits in the extraInput field
             const traits = JSON.parse(button.dataset.traits);
-            console.log('Selected character traits:', traits); // Логирование данных выбранного персонажа
+            console.log('Selected character traits:', traits); // Logging selected character data
             displayCharacterStats(traits);
         }
     }
@@ -112,8 +112,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const message = messageInput.value.trim();
 
         if (!message) {
-            alert('Введите сообщение перед отправкой.');
-            return; // Проверка на пустое сообщение
+            alert('Enter a message before sending.');
+            return; // Check for empty message
         }
 
         fetch(chatForm.action, {
@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 messageInput.value = '';
                 chatBox.scrollTop = chatBox.scrollHeight;
 
-                // Обновление имени, описания и характеристик персонажа, если они были распарсены
+                // Update character name, description, and traits if they were parsed
                 if (data.character) {
                     if (data.character.name) {
                         document.getElementById('name').value = data.character.name;
@@ -146,18 +146,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     if (data.character.strength !== undefined) {
                         const traits = {
-                            "Здоровье": data.character.health,
-                            "Интеллект": data.character.intelligence,
-                            "Сила": data.character.strength,
-                            "Магия": data.character.magic,
-                            "Атака": data.character.attack,
-                            "Защита": data.character.defense,
-                            "Скорость": data.character.speed,
-                            "Ловкость": data.character.agility,
-                            "Выносливость": data.character.endurance,
-                            "Удача": data.character.luck
+                            "Health": data.character.health,
+                            "Intelligence": data.character.intelligence,
+                            "Strength": data.character.strength,
+                            "Magic": data.character.magic,
+                            "Attack": data.character.attack,
+                            "Defense": data.character.defense,
+                            "Speed": data.character.speed,
+                            "Agility": data.character.agility,
+                            "Endurance": data.character.endurance,
+                            "Luck": data.character.luck
                         };
-                        console.log('Updated character traits:', traits); // Логирование данных обновленного персонажа
+                        console.log('Updated character traits:', traits); // Logging updated character data
                         displayCharacterStats(traits);
                     }
                 }
@@ -166,11 +166,11 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => console.error('Error:', error));
     });
 
-    // Проверка, есть ли выбранный персонаж и его характеристики
+    // Check if a character is selected and their traits
     if (lastCharacterId !== null) {
         selectCharacter(lastCharacterId);
     } else if (selectedCharacterTraits) {
-        console.log('Initial selected character traits:', selectedCharacterTraits); // Логирование данных первоначально выбранного персонажа
+        console.log('Initial selected character traits:', selectedCharacterTraits); // Logging initial selected character data
         displayCharacterStats(selectedCharacterTraits);
     }
 });

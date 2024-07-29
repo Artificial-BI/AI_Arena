@@ -1,15 +1,15 @@
 {
-    "name": "Sir Gideon the Steadfast",
-    "type": "Knight",
-    "strength": 90,
+    "name": "Aethelred the Wise",
+    "type": "Mage",
+    "strength": 15,
     "agility": null,
-    "intelligence": 60,
+    "intelligence": 90,
     "endurance": null,
-    "speed": 70,
-    "magic": 10,
-    "defense": 95,
-    "attack": 80,
-    "charisma": 80,
-    "luck": 65,
-    "description": "Sir Gideon is a towering figure, clad in gleaming plate armor that bears the coat of arms of his noble house - a silver griffin against a field of azure. His years of dedicated training have forged him into a formidable warrior, known for his unwavering courage and unwavering loyalty to his oaths. His strength is legendary, allowing him to wield his greatsword with devastating force, while his exceptional defense makes him nearly impervious to most attacks. He is a master of strategy and tactics, honed through years of campaigns and battles, and his calm demeanor under pressure inspires confidence in his fellow knights. \n\nSir Gideon hails from a lineage of renowned knights, serving the King for generations. He was knighted at a young age for his bravery in a fierce battle against a band of marauding goblins. His unwavering sense of honor and justice has led him to become a beacon of hope for the realm, a symbol of the unwavering courage of the knightly order. He is a fierce defender of the weak and a formidable foe to those who would threaten the peace. He is renowned for his unwavering sense of duty, always placing the needs of the realm above his own."
+    "speed": 25,
+    "magic": 95,
+    "defense": 10,
+    "attack": 45,
+    "charisma": 60,
+    "luck": 40,
+    "description": "Aethelred is a wizened mage of immense arcane knowledge and power. His years of study have gifted him with a mastery of elemental magic, particularly fire and ice. He wields a staff crafted from ancient oak, imbued with potent runes that amplify his spells. Though physically frail, Aethelred's intellect and magical prowess make him a formidable opponent. He is often seen as a recluse, preferring the company of his books and scrolls to that of other people. However, he is known to possess a keen mind and a sharp wit, capable of seeing through deception and manipulating situations to his advantage. His loyalty lies with those who seek knowledge and truth, and he will defend them with the full force of his magic."
 }

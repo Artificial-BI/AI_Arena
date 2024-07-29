@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, jsonify, request, g
-from models import Character, ArenaChatMessage, GeneralChatMessage  # Учитываем, что models находится в корне проекта
+from models import Character, ArenaChatMessage, GeneralChatMessage  # Considering that models is in the root of the project
 import logging
 import json
 from extensions import db
@@ -43,8 +43,6 @@ def get_characters():
         logging.error(f"Error fetching characters: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
-
-    
 @viewer_bp.route('/get_arena_chat')
 def get_arena_chat():
     try:

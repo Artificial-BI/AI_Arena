@@ -8,7 +8,7 @@ import logging
 
 admin_bp = Blueprint('admin', __name__)
 
-# Настройка логирования
+# Logging setup
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -23,18 +23,18 @@ def update_settings():
 def send_message():
     try:
         content = request.form['message']
-        role_name = request.form['role']  # Получаем имя роли из формы
-        user_id = g.user.id  # Используем идентификатор текущего пользователя
+        role_name = request.form['role']  # Get role name from the form
+        user_id = g.user.id  # Use the current user's ID
 
-        # Создаем ассистента с использованием выбранной роли
+        # Create an assistant using the selected role
         assistant = GeminiAssistant(role_name)
         
-        # Используем asyncio.run для выполнения асинхронной функции
+        # Use asyncio.run to execute the asynchronous function
         logger.info(f"Sending message to assistant: {content}")
         response = asyncio.run(assistant.send_message(content))
         logger.info(f"Received response from assistant: {response}")
 
-        # Сохраняем сообщение и ответ в базе данных
+        # Save the message and response to the database
         message = Message(content=content, user_id=user_id)
         response_message = Message(content=response, user_id=0)
         db.session.add(message)
