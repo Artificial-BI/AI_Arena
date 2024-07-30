@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from config import Config
 from logging_config import configure_logging
 from initialization import init_extensions_and_db  # Import the unified initialization function
@@ -7,6 +7,10 @@ from load_user import initialize_user  # Import the new decorator
 
 app = Flask(__name__)
 app.config.from_object(Config)
+
+
+if not app.debug:
+    configure_logging(app)
 
 # Initialize extensions and the database
 init_extensions_and_db(app)
@@ -48,6 +52,7 @@ def not_found_error(error):
 @app.errorhandler(500)
 def internal_error(error):
     db.session.rollback()
+    app.logger.error(f'Server Error: {error}, route: {request.url}')
     #return render_template('500.html'), 500
     return render_template('500.html', error=error), 500 # from debug
 
