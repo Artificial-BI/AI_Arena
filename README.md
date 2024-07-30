@@ -132,3 +132,9 @@ How it works:
 1. The model selects the k most likely options (e.g., k = 10).
 2. From these k options, the model randomly selects one for the response.
 Top-k limits the model's choice to a fixed number of the most likely options, making the responses more predictable yet still diverse.
+
+
+
+======================================
+del logging from requirements
+del dotenv from requirements
