@@ -1,15 +1,43 @@
-<!-- templates/500.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Page Not Found</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <title>Internal Server Error</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            text-align: center;
+            padding: 50px;
+        }
+        .error {
+            font-size: 72px;
+            color: #e74c3c;
+        }
+        .message {
+            font-size: 24px;
+        }
+        .details {
+            margin-top: 20px;
+            color: #333;
+        }
+    </style>
 </head>
 <body>
-    <h1>------------</h1>
-    <p>-----------------.</p>
-    <a href="/">Go to Home</a>
+    <div class="container">
+        <div class="error">500</div>
+        <div class="message">Internal Server Error</div>
+        <p>Sorry, something went wrong on our end. Please try again later.</p>
+        {% if error %}
+        <div class="details">
+            <strong>Error Details:</strong>
+            <pre>{{ error }}</pre>
+        </div>
+        {% endif %}
+    </div>
 </body>
 </html>

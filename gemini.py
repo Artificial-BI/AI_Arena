@@ -225,33 +225,33 @@ class GeminiDesigner:
 
 
 # Route to test image generation
-@image_bp.route('/generate_image', methods=['POST'])
-def generate_image():
-    try:
-        # data = request.get_json()
-        # description = data.get('description')
-        # filename = data.get('filename')
+# @image_bp.route('/generate_image', methods=['POST'])
+# def generate_image():
+#     try:
+#         # data = request.get_json()
+#         # description = data.get('description')
+#         # filename = data.get('filename')
         
-        description = "Aethelred is a wizened mage of immense arcane knowledge and power. His years of study have gifted him with a mastery of elemental magic, particularly fire and ice. He wields a staff crafted from ancient oak, imbued with potent runes that amplify his spells. Though physically frail, Aethelred's intellect and magical prowess make him a formidable opponent. He is often seen as a recluse, preferring the company of his books and scrolls to that of other people. However, he is known to possess a keen mind and a sharp wit, capable of seeing through deception and manipulating situations to his advantage. His loyalty lies with those who seek knowledge and truth, and he will defend them with the full force of his magic."
-        filename = 'test_img.png'
-        return_type = 'url'
-        #return_type = data.get('return_type', 'url')
+#         description = "Aethelred is a wizened mage of immense arcane knowledge and power. His years of study have gifted him with a mastery of elemental magic, particularly fire and ice. He wields a staff crafted from ancient oak, imbued with potent runes that amplify his spells. Though physically frail, Aethelred's intellect and magical prowess make him a formidable opponent. He is often seen as a recluse, preferring the company of his books and scrolls to that of other people. However, he is known to possess a keen mind and a sharp wit, capable of seeing through deception and manipulating situations to his advantage. His loyalty lies with those who seek knowledge and truth, and he will defend them with the full force of his magic."
+#         filename = 'test_img.png'
+#         return_type = 'url'
+#         #return_type = data.get('return_type', 'url')
 
-        if not description or not filename:
-            return jsonify({"error": "Description and filename are required"}), 400
+#         if not description or not filename:
+#             return jsonify({"error": "Description and filename are required"}), 400
 
-        designer = GeminiDesigner()
-        image_link = asyncio.run(designer.generate_and_save_image(description, filename, return_type))
+#         designer = GeminiDesigner()
+#         image_link = asyncio.run(designer.generate_and_save_image(description, filename, return_type))
 
-        return image_link
+#         return image_link
 
-        if image_link:
-            return jsonify({"status": "success", "image_link": image_link}), 200
-        else:
-            return jsonify({"error": "Image generation failed"}), 500
-    except Exception as e:
-        logger.error(f"Error generating image: {e}")
-        return jsonify({"error": str(e)}), 500
+#         if image_link:
+#             return jsonify({"status": "success", "image_link": image_link}), 200
+#         else:
+#             return jsonify({"error": "Image generation failed"}), 500
+#     except Exception as e:
+#         logger.error(f"Error generating image: {e}")
+#         return jsonify({"error": str(e)}), 500
 
 
 #print(generate_image())

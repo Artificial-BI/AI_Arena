@@ -37,6 +37,7 @@ configure_logging(app)
 @app.before_request
 @initialize_user
 def before_request():
+    print(' Use the decorator for all routes')
     pass
 
 # Define error handlers
@@ -47,7 +48,8 @@ def not_found_error(error):
 @app.errorhandler(500)
 def internal_error(error):
     db.session.rollback()
-    return render_template('500.html'), 500
+    #return render_template('500.html'), 500
+    return render_template('500.html', error=error), 500 # from debug
 
 # Main entry point
 if __name__ == "__main__":
