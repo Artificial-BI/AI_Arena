@@ -25,6 +25,13 @@
             margin-top: 20px;
             color: #333;
         }
+        pre {
+            text-align: left;
+            background: #eee;
+            padding: 10px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
     </style>
 </head>
 <body>
@@ -36,6 +43,12 @@
         <div class="details">
             <strong>Error Details:</strong>
             <pre>{{ error }}</pre>
+        </div>
+        {% endif %}
+        {% if error_trace %}
+        <div class="details">
+            <strong>Error Traceback:</strong>
+            <pre>{{ error_trace }}</pre>
         </div>
         {% endif %}
     </div>
