@@ -19,4 +19,9 @@ def index():
     if top_players and not isinstance(top_players, list):
         top_players = [player.to_dict() for player in top_players]
 
+    # Отладочный вывод данных
+    print(f"Tournaments: {tournaments}")
+    print(f"Top Players: {top_players}")
+
+    # Возвращаем рендеринг шаблона с данными
     return render_template('index.html', tournaments=tournaments, top_players=top_players)

@@ -15,7 +15,7 @@ def initialize_user(f):
             db.session.add(new_user)
             db.session.commit()
             response = make_response(f(*args, **kwargs))
-            response.set_cookie('user_id', user_id, max_age=60*60*24*365) 
+            response.set_cookie('user_id', user_id, max_age=60*60*24*365)
             return response
 
         g.user = User.query.filter_by(cookie_id=user_id).first()
@@ -24,7 +24,10 @@ def initialize_user(f):
             db.session.add(new_user)
             db.session.commit()
             g.user = new_user
-        return f(*args, **kwargs)
+        
+        response = make_response(f(*args, **kwargs))
+        return response
+
     return decorated_function
 
 # @app.route('/')
