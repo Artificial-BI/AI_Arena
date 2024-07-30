@@ -1,4 +1,4 @@
-from flask import g, request, jsonify, make_response, Flask
+from flask import g, request, jsonify, make_response, Flask, current_app
 from functools import wraps
 from models import db, User
 import uuid
@@ -24,16 +24,9 @@ def initialize_user(f):
             db.session.add(new_user)
             db.session.commit()
             g.user = new_user
-        
+
+        # Обертываем ответ в make_response
         response = make_response(f(*args, **kwargs))
         return response
 
     return decorated_function
-
-# @app.route('/')
-# @initialize_user
-# def index():
-#     return jsonify({'message': 'Hello, your user ID is set.', 'user_id': g.user.cookie_id})
-
-# if __name__ == '__main__':
-#     app.run(debug=True)
