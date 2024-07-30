@@ -83,3 +83,4 @@ def save_instructions():
 def admin():
     messages = Message.query.all()
     return render_template('admin.html', messages=messages)
+

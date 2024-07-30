@@ -1,6 +1,61 @@
+# default.py
+
 import json
 from extensions import db
 from models import User, Role, Character
+
+# Данные по умолчанию для турниров и топ-игроков
+default_tournaments = [
+    {
+        'id': 1,
+        'name': 'Default Tournament 1',
+        'format': 'Single Elimination',
+        'start_date': '2024-01-01',
+        'end_date': '2024-01-10',
+        'current_stage': 'Quarter Finals'
+    },
+    {
+        'id': 2,
+        'name': 'Default Tournament 2',
+        'format': 'Round Robin',
+        'start_date': '2024-02-01',
+        'end_date': None,  # TBD
+        'current_stage': 'Group Stage'
+    }
+]
+
+default_top_players = [
+    {
+        'name': 'Player1',
+        'character_name': 'Mage',
+        'weekly_wins': 5,
+        'weekly_losses': 3
+    },
+    {
+        'name': 'Player2',
+        'character_name': 'Warrior',
+        'weekly_wins': 7,
+        'weekly_losses': 2
+    },
+    {
+        'name': 'Player3',
+        'character_name': 'Archer',
+        'weekly_wins': 4,
+        'weekly_losses': 6
+    },
+    {
+        'name': 'Player4',
+        'character_name': 'Rogue',
+        'weekly_wins': 8,
+        'weekly_losses': 1
+    },
+    {
+        'name': 'Player5',
+        'character_name': 'Priest',
+        'weekly_wins': 3,
+        'weekly_losses': 5
+    }
+]
 
 def add_default_values():
     # Adding the character_creator role

@@ -39,7 +39,7 @@ app.register_blueprint(webhook_bp)
 @app.before_request
 @initialize_user
 def before_request():
-    print(' Use the decorator for all routes')
+    #print(' Use the decorator for all routes')
     pass
 
 # Define error handlers
