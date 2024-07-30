@@ -31,8 +31,8 @@ app.register_blueprint(admin_bp, url_prefix='/admin')
 app.register_blueprint(arena_bp, url_prefix='/arena')
 
 # Import and register the webhook blueprint
-from webhook import webhook_bp
-app.register_blueprint(webhook_bp)
+# from webhook import webhook_bp
+# app.register_blueprint(webhook_bp)
 
 # Use the decorator for all routes
 @app.before_request
