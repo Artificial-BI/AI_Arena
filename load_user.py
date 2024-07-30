@@ -27,10 +27,10 @@ def initialize_user(f):
         return f(*args, **kwargs)
     return decorated_function
 
-@app.route('/')
-@initialize_user
-def index():
-    return jsonify({'message': 'Hello, your user ID is set.', 'user_id': g.user.cookie_id})
+# @app.route('/')
+# @initialize_user
+# def index():
+#     return jsonify({'message': 'Hello, your user ID is set.', 'user_id': g.user.cookie_id})
 
-if __name__ == '__main__':
-    app.run(debug=True)
+# if __name__ == '__main__':
+#     app.run(debug=True)
