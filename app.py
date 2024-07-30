@@ -35,10 +35,10 @@ app.register_blueprint(arena_bp, url_prefix='/arena')
 # app.register_blueprint(webhook_bp)
 
 # Use the decorator for all routes
-# @app.before_request
-# @initialize_user
-# def before_request():
-#     pass
+@app.before_request
+@initialize_user
+def before_request():
+    pass
 
 # Define error handlers
 @app.errorhandler(404)
