@@ -4,6 +4,7 @@ from logging_config import configure_logging
 from initialization import init_extensions_and_db  # Import the unified initialization function
 from extensions import db
 from load_user import initialize_user  # Import the new decorator
+import traceback
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -34,9 +35,6 @@ app.register_blueprint(arena_bp, url_prefix='/arena')
 from webhook import webhook_bp
 app.register_blueprint(webhook_bp)
 
-# Configure logging
-configure_logging(app)
-
 # Use the decorator for all routes
 @app.before_request
 @initialize_user
@@ -52,9 +50,14 @@ def not_found_error(error):
 @app.errorhandler(500)
 def internal_error(error):
     db.session.rollback()
+    
+    error_trace = traceback.format_exc()
+    
     app.logger.error(f'Server Error: {error}, route: {request.url}')
+    
     #return render_template('500.html'), 500
-    return render_template('500.html', error=error), 500 # from debug
+    #return render_template('500.html', error=error), 500 # from debug
+    return render_template('500.html', error=error, error_trace=error_trace), 500
 
 # Main entry point
 if __name__ == "__main__":
