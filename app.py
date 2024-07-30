@@ -9,7 +9,6 @@ import traceback
 app = Flask(__name__)
 app.config.from_object(Config)
 
-
 if not app.debug:
     configure_logging(app)
 
@@ -39,7 +38,6 @@ app.register_blueprint(webhook_bp)
 @app.before_request
 @initialize_user
 def before_request():
-    #print(' Use the decorator for all routes')
     pass
 
 # Define error handlers
@@ -55,8 +53,6 @@ def internal_error(error):
     
     app.logger.error(f'Server Error: {error}, route: {request.url}')
     
-    #return render_template('500.html'), 500
-    #return render_template('500.html', error=error), 500 # from debug
     return render_template('500.html', error=error, error_trace=error_trace), 500
 
 # Main entry point
