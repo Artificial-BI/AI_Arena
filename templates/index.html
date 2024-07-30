@@ -1,4 +1,3 @@
-
 <!-- index.html -->
 
 {% extends 'base.html' %}
@@ -6,9 +5,9 @@
 {% block nav %}
     <nav>
         <ul>
-            <li><a href="/viewer">Зритель</a></li>
-            <li><a href="/player">Игрок</a></li>
-            <li><a href="/login">Вход</a></li>
+            <li><a href="/viewer">Viewer</a></li>
+            <li><a href="/player">Player</a></li>
+            <li><a href="/login">Login</a></li>
         </ul>
     </nav>
 {% endblock %}
@@ -16,21 +15,21 @@
 {% block content %}
 <div class="container">
     <section class="description">
-        <h2>Добро пожаловать на AI Arena</h2>
-        <p>Уникальная платформа для виртуальных боёв нейросетевых персонажей. Создавайте своих персонажей, наблюдайте за их боями на арене и участвуйте в захватывающих турнирах. Присоединяйтесь к нам и погружайтесь в мир интеллектуальных сражений!</p>
+        <h2>Welcome to AI Arena</h2>
+        <p>A unique platform for virtual battles of neural network characters. Create your characters, watch their battles in the arena, and participate in exciting tournaments. Join us and dive into the world of intellectual battles!</p>
     </section>
 
     <section class="tournament-table">
-        <h3>Турнирная таблица</h3>
+        <h3>Tournament Table</h3>
         <table>
             <thead>
                 <tr>
-                    <th>ID турнира</th>
-                    <th>Название турнира</th>
-                    <th>Формат</th>
-                    <th>Дата начала</th>
-                    <th>Дата окончания</th>
-                    <th>Текущий этап</th>
+                    <th>Tournament ID</th>
+                    <th>Tournament Name</th>
+                    <th>Format</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Current Stage</th>
                 </tr>
             </thead>
             <tbody>
@@ -49,7 +48,7 @@
     </section>
 
     <section class="top-players">
-        <h3>10 лучших игроков</h3>
+        <h3>Top 10 Players</h3>
         <div class="top-players-list">
             <ul>
                 {% for player in top_players %}
@@ -60,7 +59,7 @@
     </section>
 
     <section class="charts">
-        <h3>График побед-поражений за неделю</h3>
+        <h3>Wins-Losses Chart for the Week</h3>
         <div id="chart_div" style="width: 100%; height: 500px;"></div>
     </section>
     
@@ -71,16 +70,16 @@
     
       function drawChart() {
         var data = google.visualization.arrayToDataTable([
-          ['Игрок', 'Победы', 'Поражения'],
+          ['Player', 'Wins', 'Losses'],
           {% for player in top_players %}
             ['{{ player.name }}', {{ player.weekly_wins }}, {{ player.weekly_losses }}],
           {% endfor %}
         ]);
     
         var options = {
-          title: 'Победы и поражения за неделю',
-          hAxis: {title: 'Игроки'},
-          vAxis: {title: 'Количество'},
+          title: 'Wins and Losses for the Week',
+          hAxis: {title: 'Players'},
+          vAxis: {title: 'Count'},
           seriesType: 'bars',
           series: {5: {type: 'line'}}
         };
@@ -93,8 +92,8 @@
     <section class="sliders">
         <div class="slider-container">
             <div class="slider" id="arena-slider">
-                <h3>Арены</h3>
-                <!-- Изображения арен -->
+                <h3>Arenas</h3>
+                <!-- Arena Images -->
                 <img src="{{ url_for('static', filename='images/default/arena1.png') }}" alt="Fantasy Arena">
                 <img src="{{ url_for('static', filename='images/default/arena2.png') }}" alt="Futuristic Arena">
                 <img src="{{ url_for('static', filename='images/default/arena3.png') }}" alt="Ancient Arena">
@@ -102,16 +101,16 @@
             </div>
 
             <div class="slider" id="character-slider">
-                <h3>Персонажи</h3>
-                <!-- Изображения персонажей -->
+                <h3>Characters</h3>
+                <!-- Character Images -->
                 <img src="{{ url_for('static', filename='images/default/player1.png') }}" alt="Cyber Warrior">
                 <img src="{{ url_for('static', filename='images/default/player2.png') }}" alt="Magic Mage">
                 <!-- Add more images as needed -->
             </div>
 
             <div class="slider" id="video-slider">
-                <h3>Видео боёв</h3>
-                <!-- Видео боёв -->
+                <h3>Battle Videos</h3>
+                <!-- Battle Videos -->
                 <video src="{{ url_for('static', filename='videos/default/battle1.mp4') }}" controls></video>
                 <video src="{{ url_for('static', filename='videos/default/battle2.mp4') }}" controls></video>
             </div>
@@ -119,9 +118,9 @@
     </section>
 
     <section class="gifs">
-        <h3>Гиф-изображения боёв</h3>
+        <h3>Battle GIFs</h3>
         <div class="gif-container">
-            <!-- Гифки боёв -->
+            <!-- Battle GIFs -->
             <img src="{{ url_for('static', filename='images/default/gif/battle1.gif') }}" alt="Battle GIF 1">
             <img src="{{ url_for('static', filename='images/default/gif/battle2.gif') }}" alt="Battle GIF 2">
         </div>

@@ -14,7 +14,7 @@ def register():
         password = request.form['password']
         
         if User.query.filter_by(username=username).first() or User.query.filter_by(email=email).first():
-            flash('Пользователь с таким именем или email уже существует.', 'danger')
+            flash('A user with this username or email already exists.', 'danger')
             return redirect(url_for('auth.register'))
         
         hashed_password = generate_password_hash(password)
@@ -22,7 +22,7 @@ def register():
         db.session.add(new_user)
         db.session.commit()
 
-        flash('Регистрация прошла успешно! Теперь вы можете войти в систему.', 'success')
+        flash('Registration successful! You can now log in.', 'success')
         return redirect(url_for('auth.login'))
     return render_template('register.html')
 
@@ -39,11 +39,11 @@ def login():
                 user.cookie_id = str(uuid.uuid4())
                 db.session.commit()
             response = make_response(redirect(url_for('main.index')))
-            response.set_cookie('user_id', user.cookie_id, max_age=60*60*24*365)  # Кука на год
-            flash('Вход в систему выполнен успешно!', 'success')
+            response.set_cookie('user_id', user.cookie_id, max_age=60*60*24*365)  # Cookie for one year
+            flash('Login successful!', 'success')
             return response
         else:
-            flash('Неверный логин или пароль.', 'danger')
+            flash('Invalid username or password.', 'danger')
             return redirect(url_for('auth.login'))
     return render_template('login.html')
 
@@ -52,6 +52,6 @@ def logout():
     session.pop('user_id', None)
     session.pop('username', None)
     response = make_response(redirect(url_for('main.index')))
-    response.set_cookie('user_id', '', expires=0)  # Удалить куку
-    flash('Вы вышли из системы.', 'success')
+    response.set_cookie('user_id', '', expires=0)  # Delete cookie
+    flash('You have been logged out.', 'success')
     return response

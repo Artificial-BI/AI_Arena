@@ -11,7 +11,7 @@ document.getElementById('general-chat-form').addEventListener('submit', function
         },
         body: JSON.stringify({
             content: message,
-            sender: 'player', // или другой логин
+            sender: 'player', // or another username
             user_id: userId,
         }),
     })
@@ -19,7 +19,7 @@ document.getElementById('general-chat-form').addEventListener('submit', function
     .then(data => {
         if (data.status === 'Message sent') {
             messageInput.value = '';
-            loadGeneralChat(); // Обновить чат
+            loadGeneralChat(); // Refresh the chat
         } else {
             console.error('Error:', data.error);
         }
@@ -28,7 +28,6 @@ document.getElementById('general-chat-form').addEventListener('submit', function
         console.error('Error:', error);
     });
 });
-
 
 function loadGeneralChat() {
     fetch('/arena/get_general_chat')
@@ -47,10 +46,9 @@ function loadGeneralChat() {
         });
 }
 
-
-// Добавление автоматического обновления чата каждые 5 секунд
+// Add automatic chat refresh every 5 seconds
 setInterval(loadGeneralChat, 5000);
-// Загрузка чатов при загрузке страницы
+// Load chats when the page loads
 document.addEventListener('DOMContentLoaded', function () {
     loadGeneralChat();
 });

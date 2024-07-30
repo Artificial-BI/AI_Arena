@@ -10,30 +10,30 @@
 
 {% block content %}
 <div class="role-selection">
-    <label for="role-select">Роли:</label>
+    <label for="role-select">Roles:</label>
     <div class="role-select-container">
         <select id="role-select" name="role-select">
-            <option value="character_generator">Генератор персонажей</option>
-            <option value="arena_generator">Генератор арен</option>
-            <option value="tactician">Тактик</option>
-            <option value="referee">Рефери</option>
-            <option value="security">Безопасник</option>
-            <option value="translator_moderator">Переводчик-модератор</option>
-            <option value="commentator">Комментатор</option>
+            <option value="character_generator">Character Generator</option>
+            <option value="arena_generator">Arena Generator</option>
+            <option value="tactician">Tactician</option>
+            <option value="referee">Referee</option>
+            <option value="security">Security</option>
+            <option value="translator_moderator">Translator-Moderator</option>
+            <option value="commentator">Commentator</option>
         </select>
-        <button type="button" id="save-role" class="save-button">Сохранить</button>
+        <button type="button" id="save-role" class="save-button">Save</button>
     </div>
 </div>
 
-<!-- Инструкции -->
+<!-- Instructions -->
 <div class="instructions-section">
-    <label for="instructions">Инструкции:</label>
-    <textarea id="instructions" name="instructions" rows="4" placeholder="Введите инструкции..."></textarea>
+    <label for="instructions">Instructions:</label>
+    <textarea id="instructions" name="instructions" rows="4" placeholder="Enter instructions..."></textarea>
 </div>
 
-<!-- Чат с нейросетью -->
+<!-- AI Chat -->
 <div class="chat-section">
-    <h2>Чат с нейросетью</h2>
+    <h2>AI Chat</h2>
     <div id="chat-box">
         {% for message in messages %}
         <div class="chat-message {{ 'right' if message.user_id == 1 else 'left' }}">
@@ -43,30 +43,30 @@
         {% endfor %}
     </div>
     <form id="chat-form" method="post" action="{{ url_for('admin.send_message') }}" class="chat-form">
-        <input type="text" id="message" name="message" placeholder="Введите сообщение...">
-        <button type="submit" class="send-button">Отправить</button>
+        <input type="text" id="message" name="message" placeholder="Enter your message...">
+        <button type="submit" class="send-button">Send</button>
     </form>
 </div>
 
-<!-- Настройки нейросетей -->
+<!-- Neural Network Settings -->
 <div id="network-settings">
-    <h2>Настройки нейросетей</h2>
+    <h2>Neural Network Settings</h2>
     <form method="post" action="{{ url_for('admin.update_settings') }}">
         <div class="settings-row">
             <div class="settings-col">
-                <label for="temperature">Температура:</label>
+                <label for="temperature">Temperature:</label>
                 <input type="number" id="temperature" name="temperature" step="0.01" value="1.0">
             </div>
             <div class="settings-col">
-                <label for="top_p">Топ-p:</label>
+                <label for="top_p">Top-p:</label>
                 <input type="number" id="top_p" name="top_p" step="0.01" value="0.9">
             </div>
             <div class="settings-col">
-                <label for="top_k">Топ-k:</label>
+                <label for="top_k">Top-k:</label>
                 <input type="number" id="top_k" name="top_k" value="50">
             </div>
         </div>
-        <button type="submit" class="save-button">Обновить настройки</button>
+        <button type="submit" class="save-button">Update Settings</button>
     </form>
 </div>
 {% endblock %}

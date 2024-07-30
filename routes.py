@@ -174,7 +174,7 @@ def send_message():
 @app.route('/get_characters')
 def get_characters():
     try:
-        characters = fetch_characters_from_db()  # Ваша функция для получения данных персонажей
+        characters = fetch_characters_from_db()  
         app.logger.info(f"Characters fetched: {characters}")
         return jsonify(characters)
     except Exception as e:

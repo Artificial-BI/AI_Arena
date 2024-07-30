@@ -13,8 +13,8 @@
     --input-border-color: #0a0a0a;
     --input-focus-border-color: #46a8f8;
     --input-focus-shadow-color: rgba(19, 199, 240, 0.6);
-    --message-bg-color: #e0e0e0; /* Светло-серый фон для сообщений */
-    --message-text-color: #000000; /* Черный цвет текста для сообщений */
+    --message-bg-color: #e0e0e0; /* Light gray background for messages */
+    --message-text-color: #000000; /* Black text color for messages */
 }
 
 body {
@@ -34,7 +34,7 @@ body {
 
 .role-selection label {
     margin-bottom: 5px;
-    font-size: 18px; /* Размер шрифта для заголовка */
+    font-size: 18px; /* Font size for the label */
 }
 
 .role-select-container {
@@ -77,7 +77,7 @@ body {
     display: block;
     margin-bottom: 5px;
     font-weight: bold;
-    font-size: 18px; /* Размер шрифта для заголовка */
+    font-size: 18px; /* Font size for the label */
 }
 
 .instructions-section textarea {
@@ -92,7 +92,7 @@ body {
 
 .chat-section h2,
 .network-settings h2 {
-    font-size: 18px; /* Размер шрифта для заголовка */
+    font-size: 18px; /* Font size for the heading */
 }
 
 .chat-section .chat-form {
@@ -141,19 +141,19 @@ body {
     border-radius: 10px;
     margin-bottom: 10px;
     max-width: 70%;
-    background-color: var(--message-bg-color); /* Светло-серый фон */
-    color: var(--message-text-color); /* Черный цвет текста */
+    background-color: var(--message-bg-color); /* Light gray background */
+    color: var(--message-text-color); /* Black text color */
 }
 
 .chat-message.right {
-    background-color: #d3d3d3; /* Светло-серый фон для сообщений пользователя */
-    color: #000; /* Черный цвет текста */
+    background-color: #d3d3d3; /* Light gray background for user messages */
+    color: #000; /* Black text color */
     margin-left: auto;
 }
 
 .chat-message.left {
-    background-color: #f0f0f0; /* Другой оттенок серого для сообщений нейросети */
-    color: #000; /* Черный цвет текста */
+    background-color: #f0f0f0; /* Different shade of gray for AI messages */
+    color: #000; /* Black text color */
 }
 
 .timestamp {

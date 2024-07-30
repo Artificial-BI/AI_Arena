@@ -99,7 +99,7 @@ form button:active {
     border-color: var(--button-border-color);
 }
 
-/* Стили для шапки и подвала */
+/* Header and Footer Styles */
 header {
     background-color: var(--nav-bg-color);
     color: var(--nav-text-color);
@@ -185,7 +185,7 @@ footer .social-links a:hover {
     margin-right: 10px;
 }
 
-/* Стили для таблицы турниров */
+/* Styles for tournament table */
 .tournament-table table {
     width: 100%;
     border-collapse: collapse;
@@ -201,7 +201,7 @@ footer .social-links a:hover {
     background-color: #f2f2f2;
 }
 
-/* Стили для списка топ-игроков */
+/* Styles for the list of top players*/
 .top-players-list {
     border: 1px solid #000;
     padding: 10px;
@@ -217,7 +217,7 @@ footer .social-links a:hover {
     margin: 5px 0;
 }
 
-/* Стили для GIF контейнера */
+/* GIF container styles*/
 .gif-container {
     display: flex;
     justify-content: space-between;
@@ -232,7 +232,7 @@ footer .social-links a:hover {
     flex: 1;
 }
 
-/* Стили для модального окна регистрации */
+/* Styles for the registration modal window */
 .modal {
     display: none;
     position: fixed;

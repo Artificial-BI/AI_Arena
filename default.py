@@ -3,7 +3,7 @@ from extensions import db
 from models import User, Role, Character
 
 def add_default_values():
-    # Добавление роли character_creator
+    # Adding the character_creator role
     if not Role.query.filter_by(name='character_creator').first():
         character_creator_instructions = """
         Your instructions for the character creator role.
@@ -12,54 +12,54 @@ def add_default_values():
         db.session.add(new_role)
         db.session.commit()
     
-    # Добавление пользователя по умолчанию
+    # Adding a default user
     if not User.query.filter_by(username='default_user').first():
         default_user = User(username='default_user', name='Default User', email='default@example.com', password='password')
         db.session.add(default_user)
         db.session.commit()
 
-    # Добавление персонажей по умолчанию
+    # Adding default characters
     default_user = User.query.filter_by(username='default_user').first()
-    if not Character.query.filter_by(name='Маг').first():
+    if not Character.query.filter_by(name='Mage').first():
         mage_traits = {
-            "Здоровье": 50,
-            "Интеллект": 80,
-            "Сила": 30,
-            "Магия": 90,
-            "Атака": 40,
-            "Защита": 50,
-            "Скорость": 60,
-            "Ловкость": 70,
-            "Выносливость": 40,
-            "Удача": 50
+            "Health": 50,
+            "Intelligence": 80,
+            "Strength": 30,
+            "Magic": 90,
+            "Attack": 40,
+            "Defense": 50,
+            "Speed": 60,
+            "Agility": 70,
+            "Endurance": 40,
+            "Luck": 50
         }
         mage = Character(
             user_id=default_user.id,
-            name='Маг',
-            description='Мастер магии с высоким интеллектом и магической силой.',
+            name='Mage',
+            description='A master of magic with high intelligence and magical power.',
             image_url='images/default/mage.png',
             traits=json.dumps(mage_traits)
         )
         db.session.add(mage)
         db.session.commit()
 
-    if not Character.query.filter_by(name='Воин').first():
+    if not Character.query.filter_by(name='Warrior').first():
         warrior_traits = {
-            "Здоровье": 80,
-            "Интеллект": 40,
-            "Сила": 90,
-            "Магия": 20,
-            "Атака": 70,
-            "Защита": 60,
-            "Скорость": 50,
-            "Ловкость": 40,
-            "Выносливость": 70,
-            "Удача": 50
+            "Health": 80,
+            "Intelligence": 40,
+            "Strength": 90,
+            "Magic": 20,
+            "Attack": 70,
+            "Defense": 60,
+            "Speed": 50,
+            "Agility": 40,
+            "Endurance": 70,
+            "Luck": 50
         }
         warrior = Character(
             user_id=default_user.id,
-            name='Воин',
-            description='Сильный и выносливый воин с мощной атакой.',
+            name='Warrior',
+            description='A strong and enduring warrior with powerful attacks.',
             image_url='images/default/warrior.png',
             traits=json.dumps(warrior_traits)
         )
@@ -67,7 +67,7 @@ def add_default_values():
         db.session.commit()
 
 def remove_default_values():
-    # Функция для удаления значений по умолчанию
+    # Function to remove default values
     User.query.filter_by(username='default_user').delete()
     Role.query.filter_by(name='character_creator').delete()
     Character.query.filter_by(user_id=None).delete()

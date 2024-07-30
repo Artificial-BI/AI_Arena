@@ -1,6 +1,5 @@
 # --- character_manager.py ---
 
-
 from models import db, Character, Role
 from gemini import GeminiAssistant
 import json
@@ -19,16 +18,16 @@ class CharacterManager:
         return role.instructions
 
     async def generate_character(self, description):
-        # Генерация характеристик персонажа на основе описания
+        # Generate character traits based on the description
         message = f"Create a character based on the following description: {description}"
         response = await self.assistant.send_message(message)
         
-        # Парсинг ответа
+        # Parse the response
         character_data = self.parse_character_response(response)
         character_data['description'] = description
         
-        # Генерация изображения персонажа
-        character_data['image_url'] = self.generate_character_image(description)
+        # Generate character image
+        character_data['image_url'] = await self.generate_character_image(description)
         
         return character_data
 
@@ -36,14 +35,14 @@ class CharacterManager:
         character_data = {}
         character_data['traits'] = {}
         
-        # Парсинг текста ответа
+        # Parse the response text
         traits = re.findall(r"(\w+)\s*=\s*([\d.]+)%", response)
         for trait in traits:
             character_data['traits'][trait[0]] = float(trait[1])
         
-        # Добавление базовых характеристик
-        character_data['traits']['health'] = 1000  # Пример базовой характеристики
-        character_data['traits']['mana'] = 500     # Пример базовой характеристики
+        # Add basic traits
+        character_data['traits']['health'] = 1000  # Example basic trait
+        character_data['traits']['mana'] = 500     # Example basic trait
         
         return character_data
 
@@ -51,7 +50,10 @@ class CharacterManager:
         response = await self.assistant.send_message(message)
         return response
 
-    def generate_character_image(self, description):
-        # Логика для генерации ссылки на изображение персонажа
-        # Это место можно заменить на реальную логику генерации изображений
-        return "images/default/character.png"
+    async def generate_character_image(self, description):
+        try:
+            image_url = await self.assistant.generate_image(description)
+            return image_url
+        except Exception as e:
+            logging.error(f"Error generating character image: {e}")
+            return "images/default/character.png"

@@ -14,16 +14,16 @@ class BattleManager:
         self.referee_assistant = None
 
     async def organize_battle(self, character1_id, character2_id, arena_id):
-        # Инициализация ассистента при необходимости
+        # Initialize the assistant if necessary
         if self.referee_assistant is None:
             self.referee_assistant = GeminiAssistant(self.get_role_instructions('referee'))
         
-        # Логика проведения боя
+        # Logic of the fight
         result = await self.evaluate_battle(character1_id, character2_id)
         await self.save_battle(character1_id, character2_id, arena_id, result)
 
     async def evaluate_battle(self, character1_id, character2_id):
-        # Логика оценки боя
+        # Logic of battle evaluation
         message = f"Evaluate the battle between character {character1_id} and character {character2_id}."
         result = await self.referee_assistant.send_message(message)
         return result

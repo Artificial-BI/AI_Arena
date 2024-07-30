@@ -1,5 +1,5 @@
 from datetime import datetime
-from extensions import db  # Импортируем экземпляр SQLAlchemy из extensions.py
+from extensions import db  # Import an instance of SQLAlchemy from extensions.py
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -7,10 +7,10 @@ class User(db.Model):
     role = db.Column(db.String(64))  # 'player', 'admin', 'viewer'
     characters = db.relationship('Character', backref='owner', lazy='dynamic')
     messages = db.relationship('Message', backref='author', lazy='dynamic')
-    name = db.Column(db.String(64))  # Добавляем поле name
-    email = db.Column(db.String(120), unique=True)  # Добавляем поле email
-    password = db.Column(db.String(128))  # Добавляем поле password
-    cookie_id = db.Column(db.String(36), unique=True, nullable=True)  # Поле для cookie_id
+    name = db.Column(db.String(64))  # Add the name field
+    email = db.Column(db.String(120), unique=True)  # Adding an email field
+    password = db.Column(db.String(128))  # Add the password field
+    cookie_id = db.Column(db.String(36), unique=True, nullable=True)  # Field for cookie_id
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -19,11 +19,11 @@ class Character(db.Model):
     __tablename__ = 'character'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    player_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=True)  # Добавляем внешний ключ
+    player_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=True)  # Adding a foreign key
     name = db.Column(db.String(64))
     description = db.Column(db.Text, nullable=False)
     image_url = db.Column(db.String(256))
-    traits = db.Column(db.Text, nullable=False)  # Список характеристик в формате JSON
+    traits = db.Column(db.Text, nullable=False)  # List of features in JSON format
 
     def __repr__(self):
         return f'<Character {self.name}>'

@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.instructions) {
                 instructionsField.value = data.instructions;
             } else {
-                instructionsField.value = 'Инструкции не найдены для выбранной роли.';
+                instructionsField.value = 'Instructions not found for the selected role.';
             }
         })
         .catch(error => console.error('Error:', error));
@@ -39,9 +39,9 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
-                alert('Инструкции сохранены');
+                alert('Instructions saved');
             } else {
-                alert('Ошибка при сохранении инструкций');
+                alert('Error saving instructions');
             }
         })
         .catch(error => console.error('Error:', error));

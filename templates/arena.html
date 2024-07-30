@@ -7,11 +7,11 @@
 {% endblock %}
 
 {% block content %}
-<h1>Интерфейс арены</h1>
+<h1>Arena Interface</h1>
 
-<!-- Название арены -->
-<h2>Магическая арена</h2>
-<!-- Имена персонажей -->
+<!-- Arena Name -->
+<h2>Magic Arena</h2>
+<!-- Player Names -->
 <div id="players-names">
     <div class="player-name" id="player1-name">
         <h3>{{ characters[0].name if characters|length > 0 else 'Player 1' }}</h3>
@@ -21,51 +21,51 @@
     </div>
 </div>
 
-<!-- Изображения персонажей и их характеристики -->
+<!-- Player Images and Attributes -->
 <div class="character-section">
     <div class="character">
         <img src="{{ url_for('static', filename='images/default/player1.png') }}" alt="Player 1 Image" id="player1-image">
         <p id="player1-description">{{ characters[0].description if characters|length > 0 else 'Player 1 description' }}</p>
-        <!-- График характеристик персонажа -->
+        <!-- Character Attributes Chart -->
         <div class="character-stats">
-            <h2>Характеристики персонажа</h2>
+            <h2>Character Attributes</h2>
             <canvas id="player1-stats"></canvas>
         </div>
     </div>
     <div class="character">
         <img src="{{ url_for('static', filename='images/default/player2.png') }}" alt="Player 2 Image" id="player2-image">
         <p id="player2-description">{{ characters[1].description if characters|length > 1 else 'Player 2 description' }}</p>
-        <!-- График характеристик персонажа -->
+        <!-- Character Attributes Chart -->
         <div class="character-stats">
-            <h2>Характеристики персонажа</h2>
+            <h2>Character Attributes</h2>
             <canvas id="player2-stats"></canvas>
         </div>
     </div>
 </div>
 
-<!-- Чат "Арена" -->
-<h2>Чат "Арена"</h2>
+<!-- Arena Chat -->
+<h2>Arena Chat</h2>
 <div id="arena-chat-box">
-    <!-- Сообщения чата будут добавляться сюда с помощью JavaScript -->
+    <!-- Chat messages will be added here using JavaScript -->
 </div>
 
-<!-- Чат с нейросетью тактик -->
-<h2>Чат с нейросетью тактик</h2>
+<!-- Tactics AI Chat -->
+<h2>Tactics AI Chat</h2>
 <div id="tactics-chat-box">
-    <!-- Сообщения чата будут добавляться сюда с помощью JavaScript -->
+    <!-- Chat messages will be added here using JavaScript -->
 </div>
 <form id="tactics-chat-form">
-    <input type="text" id="tactics-chat-input" placeholder="Введите сообщение...">
+    <input type="text" id="tactics-chat-input" placeholder="Enter message...">
     <button type="submit">Send</button>
 </form>
 
-<!-- Новый чат для общения игроков, зрителей и нейросети -->
-<h2>Общий чат</h2>
+<!-- General Chat for Players, Spectators, and AI -->
+<h2>General Chat</h2>
 <div id="general-chat-box">
-    <!-- Сообщения чата будут добавляться сюда с помощью JavaScript -->
+    <!-- Chat messages will be added here using JavaScript -->
 </div>
 <form id="general-chat-form">
-    <input type="text" id="general-chat-input" placeholder="Введите сообщение...">
+    <input type="text" id="general-chat-input" placeholder="Enter message...">
     <button type="submit">Send</button>
 </form>
 

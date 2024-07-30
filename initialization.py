@@ -1,18 +1,18 @@
-from extensions import db, migrate  # Импортируем расширения из extensions.py
-from default import add_default_values, remove_default_values  # Импортируем функции для добавления и удаления значений по умолчанию
+from extensions import db, migrate  # Import extensions from extensions.py
+from default import add_default_values, remove_default_values  # Import functions to add and remove default values
 
 def init_extensions_and_db(app):
     """
-    Функция для инициализации расширений Flask и базы данных.
+    Function to initialize Flask extensions and the database.
 
     Args:
-        app (Flask): Экземпляр приложения Flask.
+        app (Flask): An instance of the Flask application.
     """
-    db.init_app(app)  # Инициализация SQLAlchemy с экземпляром Flask приложения
-    migrate.init_app(app, db)  # Инициализация Flask-Migrate с экземпляром Flask приложения и SQLAlchemy
+    db.init_app(app)  # Initialize SQLAlchemy with the Flask application instance
+    migrate.init_app(app, db)  # Initialize Flask-Migrate with the Flask application instance and SQLAlchemy
     
-    # Создаем контекст приложения для выполнения операций с базой данных
+    # Create an application context to perform database operations
     with app.app_context():
-        db.create_all()  # Создаем все таблицы в базе данных, которые определены в моделях
-        #add_default_values()  # Добавляем значения по умолчанию в базу данных
-        # remove_default_values()  # Раскомментируйте, чтобы удалить значения по умолчанию
+        db.create_all()  # Create all tables in the database that are defined in the models
+        # add_default_values()  # Uncomment to add default values to the database
+        # remove_default_values()  # Uncomment to remove default values

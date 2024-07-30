@@ -189,7 +189,7 @@ nav ul li a:hover {
     margin-top: 5px;
 }
 
-/* Стили для шапки и подвала */
+/* Header and Footer Styles */
 header {
     background-color: var(--nav-bg-color);
     color: var(--nav-text-color);

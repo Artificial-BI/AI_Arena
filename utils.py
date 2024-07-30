@@ -1,5 +1,16 @@
 import re
 import json
+import hashlib
+
+
+def convert_hash_mini(original_code):
+    # Generate a hash using SHA1
+    hash_object = hashlib.sha1(original_code.encode())
+    hash_code = hash_object.hexdigest()
+    # Trim to desired length (e.g. 8 characters)
+    short_code = hash_code[:8]
+    return short_code
+
 
 def parse_character(text):
     # Define regular expressions for each field
