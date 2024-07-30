@@ -17,7 +17,7 @@ def get_characters():
         characters = Character.query.order_by(Character.id.desc()).limit(2).all()
         characters_data = []
         for character in characters:
-            logging.info(f"Character: {character.name}, Traits: {character.traits}")
+            #logging.info(f"Character: {character.name}, Traits: {character.traits}")
             traits = json.loads(character.traits)
             characters_data.append({
                 'name': character.name,
@@ -37,7 +37,7 @@ def get_characters():
                     'Charisma': traits.get('Charisma', 0)
                 }
             })
-        logging.info(f"Characters data: {characters_data}")
+       # logging.info(f"Characters data: {characters_data}")
         return jsonify(characters_data)
     except Exception as e:
         logging.error(f"Error fetching characters: {e}")

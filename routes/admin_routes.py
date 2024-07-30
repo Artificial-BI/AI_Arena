@@ -12,6 +12,12 @@ admin_bp = Blueprint('admin', __name__)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+@admin_bp.route('/')
+def arena():
+    return render_template('arena.html')
+
+
+
 @admin_bp.route('/update_settings', methods=['POST'])
 def update_settings():
     temperature = request.form.get('temperature')
@@ -30,9 +36,9 @@ def send_message():
         assistant = GeminiAssistant(role_name)
         
         # Use asyncio.run to execute the asynchronous function
-        logger.info(f"Sending message to assistant: {content}")
+        #logger.info(f"Sending message to assistant: {content}")
         response = asyncio.run(assistant.send_message(content))
-        logger.info(f"Received response from assistant: {response}")
+        #logger.info(f"Received response from assistant: {response}")
 
         # Save the message and response to the database
         message = Message(content=content, user_id=user_id)

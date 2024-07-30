@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, g
 from config import Config
 from logging_config import configure_logging
 from initialization import init_extensions_and_db  # Import the unified initialization function
@@ -31,14 +31,21 @@ app.register_blueprint(admin_bp, url_prefix='/admin')
 app.register_blueprint(arena_bp, url_prefix='/arena')
 
 # Import and register the webhook blueprint
-# from webhook import webhook_bp
-# app.register_blueprint(webhook_bp)
+from webhook import webhook_bp
+app.register_blueprint(webhook_bp)
 
 # Use the decorator for all routes
 @app.before_request
 @initialize_user
 def before_request():
-    pass
+    if not hasattr(g, 'user'):
+        g.user = type('User', (object,), {'cookie_id': 'guest'})()
+# def before_request():
+#     pass
+
+
+
+
 
 # Define error handlers
 @app.errorhandler(404)
