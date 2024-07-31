@@ -4,6 +4,19 @@ document.addEventListener('DOMContentLoaded', function() {
     fetchTacticsChatMessages();
     fetchGeneralChatMessages();
 
+    document.getElementById('start-test-battle').addEventListener('click', function() {
+        fetch('/arena/start_test_battle', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Test battle started:', data);
+                alert('Test battle started successfully!');
+            })
+            .catch(error => {
+                console.error('Error starting test battle:', error);
+                alert('Failed to start test battle.');
+            });
+    });
+
     function fetchCharacters() {
         fetch('/arena/get_characters')
             .then(response => {

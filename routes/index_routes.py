@@ -3,6 +3,7 @@ from models import Tournament, TopPlayer, User
 from default import default_tournaments, default_top_players
 import uuid
 from extensions import db
+import traceback
 
 index_bp = Blueprint('index_bp', __name__)
 
@@ -43,3 +44,11 @@ def index():
         current_app.logger.error(f"Error in index view: {e}")
         current_app.logger.error(f"Stack trace: {traceback.format_exc()}")
         return render_template('500.html', error=str(e), error_trace=traceback.format_exc()), 500
+
+@index_bp.route('/about')
+def about():
+    return render_template('about.html')
+
+@index_bp.route('/contact')
+def contact():
+    return render_template('contact.html')

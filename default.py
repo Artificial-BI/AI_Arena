@@ -1,10 +1,16 @@
-# default.py
-
 import json
 from extensions import db
 from models import User, Role, Character
 
-# Данные по умолчанию для турниров и топ-игроков
+default_roles = [
+    {'name': 'referee', 'instructions': 'Evaluate the battles and assign points.'},
+    {'name': 'arena', 'instructions': 'Generate the arena based on characters\' characteristics.'},
+    {'name': 'tactician', 'instructions': 'Read arena and character data, and provide move recommendations.'},
+    {'name': 'fighter', 'instructions': 'Generate moves based on tactician recommendations and arena situation.'},
+    {'name': 'commentator', 'instructions': 'Generate comments on the battle based on the actions.'},
+    {'name': 'artist', 'instructions': 'Generate images based on the best battle episodes.'}
+]
+
 default_tournaments = [
     {
         'id': 1,
@@ -58,22 +64,17 @@ default_top_players = [
 ]
 
 def add_default_values():
-    # Adding the character_creator role
-    if not Role.query.filter_by(name='character_creator').first():
-        character_creator_instructions = """
-        Your instructions for the character creator role.
-        """
-        new_role = Role(name='character_creator', instructions=character_creator_instructions)
-        db.session.add(new_role)
-        db.session.commit()
-    
-    # Adding a default user
+    for role_data in default_roles:
+        if not Role.query.filter_by(name=role_data['name']).first():
+            new_role = Role(name=role_data['name'], instructions=role_data['instructions'])
+            db.session.add(new_role)
+    db.session.commit()
+
     if not User.query.filter_by(username='default_user').first():
         default_user = User(username='default_user', name='Default User', email='default@example.com', password='password')
         db.session.add(default_user)
         db.session.commit()
 
-    # Adding default characters
     default_user = User.query.filter_by(username='default_user').first()
     if not Character.query.filter_by(name='Mage').first():
         mage_traits = {
@@ -122,7 +123,6 @@ def add_default_values():
         db.session.commit()
 
 def remove_default_values():
-    # Function to remove default values
     User.query.filter_by(username='default_user').delete()
     Role.query.filter_by(name='character_creator').delete()
     Character.query.filter_by(user_id=None).delete()

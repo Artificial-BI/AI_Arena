@@ -1,3 +1,5 @@
+# --- models.py ---
+
 from datetime import datetime
 from extensions import db  # Import an instance of SQLAlchemy from extensions.py
 
@@ -36,16 +38,17 @@ class Message(db.Model):
 
     def __repr__(self):
         return f'<Message {self.content[:15]}>'
-
 class ArenaChatMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     content = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     sender = db.Column(db.String(64), nullable=False)  # 'player1', 'player2', 'referee'
+    arena_id = db.Column(db.Integer, db.ForeignKey('arena.id'), nullable=True)  # Add this line
 
     def __repr__(self):
         return f'<ArenaChatMessage {self.content[:15]}>'
+
 
 class GeneralChatMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -77,8 +80,7 @@ class CommentatorPrompt(db.Model):
 
 class Fight(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    character1_id = db.Column(db.Integer)
-    character2_id = db.Column(db.Integer)
+    character_id = db.Column(db.Integer)  # Fixed typo here
     arena_id = db.Column(db.Integer)
     result = db.Column(db.String(64))
     fight_date = db.Column(db.DateTime, default=datetime.utcnow)
@@ -87,6 +89,7 @@ class Arena(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String(256))
     parameters = db.Column(db.Text)
+    date_created = db.Column(db.DateTime, default=datetime.utcnow)  # Add this line
 
 class Tournament(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -143,4 +146,4 @@ class Player(db.Model):
     characters = db.relationship('Character', backref='player', lazy=True)
 
     def __repr__(self):
-        return f'<TopPlayer {self.name}>'
+        return f'<Player {self.name}>'

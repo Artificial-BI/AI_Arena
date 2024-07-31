@@ -1,8 +1,5 @@
-
-# --- core.py ---
-
 from datetime import datetime
-from models import db, Arena, Tournament, TournamentMatch, Fight, Role, Player
+from models import db, Arena, Tournament, TournamentMatch, Fight, Role, Player, ArenaChatMessage, Character
 from gemini import GeminiAssistant
 from character_manager import CharacterManager
 import asyncio
@@ -10,34 +7,34 @@ from flask import current_app
 
 class BattleManager:
     def __init__(self):
-        print('BattleManager')
         self.referee_assistant = None
 
-    async def organize_battle(self, character1_id, character2_id, arena_id):
-        # Initialize the assistant if necessary
+    async def organize_battle(self, character_ids, arena_id):
         if self.referee_assistant is None:
             self.referee_assistant = GeminiAssistant(self.get_role_instructions('referee'))
-        
-        # Logic of the fight
-        result = await self.evaluate_battle(character1_id, character2_id)
-        await self.save_battle(character1_id, character2_id, arena_id, result)
 
-    async def evaluate_battle(self, character1_id, character2_id):
-        # Logic of battle evaluation
-        message = f"Evaluate the battle between character {character1_id} and character {character2_id}."
+        results = []
+        for character_id in character_ids:
+            result = await self.evaluate_battle(character_id, arena_id)
+            results.append(result)
+
+        await self.save_battle(character_ids, arena_id, results)
+
+    async def evaluate_battle(self, character_id, arena_id):
+        message = f"Evaluate the battle for character {character_id} in arena {arena_id}."
         result = await self.referee_assistant.send_message(message)
         return result
 
-    async def save_battle(self, character1_id, character2_id, arena_id, result):
+    async def save_battle(self, character_ids, arena_id, results):
         with current_app.app_context():
-            fight = Fight(
-                character1_id=character1_id,
-                character2_id=character2_id,
-                arena_id=arena_id,
-                result=result,
-                fight_date=datetime.now()
-            )
-            db.session.add(fight)
+            for character_id, result in zip(character_ids, results):
+                fight = Fight(
+                    character_id=character_id,
+                    arena_id=arena_id,
+                    result=result,
+                    fight_date=datetime.now()
+                )
+                db.session.add(fight)
             db.session.commit()
 
     def get_role_instructions(self, role_name):
@@ -47,22 +44,60 @@ class BattleManager:
                 raise ValueError(f"Role '{role_name}' not found in the database")
             return role.instructions
 
-class ArenaManager:
-    def __init__(self):
-        print('ArenaManager')
+    async def start_test_battle(self):
+        # Создание заглушек для арены и персонажей
+        arena_id = await self.create_test_arena()
+        character_ids = await self.create_test_characters()
 
-    async def create_arena(self, description, parameters):
+        # Организация тестового боя
+        await self.organize_battle(character_ids, arena_id)
+
+    async def create_test_arena(self):
+        # Создание заглушки для арены
+        description = "Test Arena"
+        parameters = '{"obstacles": "low", "weather": "clear"}'
         with current_app.app_context():
             arena = Arena(description=description, parameters=parameters)
             db.session.add(arena)
             db.session.commit()
+        return arena.id
 
-    async def configure_arena(self, arena_id, parameters):
+    async def create_test_characters(self):
+        # Создание заглушек для персонажей
         with current_app.app_context():
-            arena = Arena.query.get(arena_id)
-            if arena:
-                arena.parameters = parameters
-                db.session.commit()
+            character1 = Character(
+                user_id=1,  # Предположим, что у нас есть пользователь с ID 1
+                name="Test Character 1",
+                description="A brave warrior",
+                image_url="images/default/player1.png",
+                traits='{"strength": 10, "speed": 8, "intelligence": 6}'
+            )
+            character2 = Character(
+                user_id=2,  # Предположим, что у нас есть пользователь с ID 2
+                name="Test Character 2",
+                description="A cunning mage",
+                image_url="images/default/player2.png",
+                traits='{"strength": 5, "speed": 7, "intelligence": 10}'
+            )
+            db.session.add(character1)
+            db.session.add(character2)
+            db.session.commit()
+        return [character1.id, character2.id]
+
+class ArenaManager:
+    def __init__(self):
+        self.arena_assistant = None
+
+    async def create_arena(self, description, parameters):
+        if self.arena_assistant is None:
+            self.arena_assistant = GeminiAssistant(self.get_role_instructions('arena'))
+
+        arena_description = await self.arena_assistant.send_message(f"Create an arena with these parameters: {parameters}")
+        with current_app.app_context():
+            arena = Arena(description=description, parameters=arena_description)
+            db.session.add(arena)
+            db.session.commit()
+        return arena.id
 
     def get_role_instructions(self, role_name):
         with current_app.app_context():
@@ -73,9 +108,12 @@ class ArenaManager:
 
 class TournamentManager:
     def __init__(self):
-        print('TournamentManager')
+        self.tournament_assistant = None
 
     async def create_tournament(self, name, format):
+        if self.tournament_assistant is None:
+            self.tournament_assistant = GeminiAssistant(self.get_role_instructions('tournament'))
+
         with current_app.app_context():
             tournament = Tournament(
                 name=name,

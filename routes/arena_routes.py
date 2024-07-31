@@ -1,11 +1,15 @@
+# --- arena_routes ---
+
 from flask import Blueprint, render_template, jsonify, request, g
 from models import Character, ArenaChatMessage, GeneralChatMessage, TacticsChatMessage, User
 import logging
 import json
 from extensions import db
 import uuid
+from core import BattleManager
 
 arena_bp = Blueprint('arena', __name__)
+battle_manager = BattleManager()
 
 @arena_bp.before_request
 def before_request():
@@ -141,4 +145,13 @@ def send_tactics_chat():
         return jsonify({"status": "Message sent"}), 200
     except Exception as e:
         logging.error(f"Error saving tactics chat message: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
+@arena_bp.route('/start_test_battle', methods=['POST'])
+async def start_test_battle():
+    try:
+        await battle_manager.start_test_battle()
+        return jsonify({'status': 'Test battle started'}), 200
+    except Exception as e:
+        logging.error(f"Error starting test battle: {e}")
         return jsonify({"error": "Internal server error"}), 500
