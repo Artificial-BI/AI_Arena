@@ -1,24 +1,12 @@
 import traceback
-from flask import g, request, make_response, Flask #, current_app
+from flask import g, request, make_response, Flask, current_app, render_template
 from functools import wraps
 from models import db, User
 import uuid
 
 app = Flask(__name__)
 
-
-# Заглушка для декоратора
 def initialize_user(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        # Здесь можно логировать вызовы для отладки
-        #current_app.logger.info(f"initialize_user called for {f.__name__}")
-        return f(*args, **kwargs)
-    return decorated_function
-
-
-
-def _initialize_user(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         try:
@@ -30,9 +18,13 @@ def _initialize_user(f):
                 new_user = User(cookie_id=user_id)
                 db.session.add(new_user)
                 db.session.commit()
-                current_app.logger.info(f'Args: {args}, Kwargs: {kwargs}')
-                response = make_response(f(*args, **kwargs))
-                response.set_cookie('user_id', user_id, max_age=60*60*24*365)
+                g.user = new_user
+                response = f(*args, **kwargs)
+                if response is None:
+                    current_app.logger.error("The view function did not return a valid response after generating new user.")
+                    raise TypeError("The view function did not return a valid response.")
+                response = make_response(response)
+                response.set_cookie('user_id', user_id, max_age=60*60*24*365)  # Cookie for one year
                 current_app.logger.info(f"Set cookie and returning response: {response}")
                 return response
 
@@ -44,26 +36,24 @@ def _initialize_user(f):
                 db.session.commit()
                 g.user = new_user
 
-            current_app.logger.info(f'Args: {args}, Kwargs: {kwargs}')
-            response = make_response(f(*args, **kwargs))
+            response = f(*args, **kwargs)
+            current_app.logger.info(f"Response from view function: {response}")
+            if response is None:
+                current_app.logger.error("The view function did not return a valid response.")
+                raise TypeError("The view function did not return a valid response.")
+            response = make_response(response)
             current_app.logger.info(f"Returning the decorated response: {response}")
             return response
         except Exception as e:
             current_app.logger.error(f"Error in decorated_function: {e}")
             current_app.logger.error(f"Stack trace: {traceback.format_exc()}")
-            raise
+            return render_template('500.html', error=str(e), error_trace=traceback.format_exc()), 500
 
     return decorated_function
 
 # Включение логирования
 if not app.debug:
-    import logging
-    logging.basicConfig(level=logging.INFO)
-    file_handler = logging.FileHandler('error.log')
-    file_handler.setLevel(logging.ERROR)
-    formatter = logging.Formatter(
-        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]')
-    file_handler.setFormatter(formatter)
-    app.logger.addHandler(file_handler)
+    from logging_config import configure_logging
+    configure_logging(app)
 
 app.logger.info("Logging is configured.")

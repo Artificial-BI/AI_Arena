@@ -1,15 +1,15 @@
 {
-    "name": "Aethelred the Wise",
-    "type": "Mage",
-    "strength": 15,
+    "name": "Spider-Man",
+    "type": "Superhero",
+    "strength": 85,
     "agility": null,
-    "intelligence": 90,
+    "intelligence": 80,
     "endurance": null,
-    "speed": 25,
-    "magic": 95,
-    "defense": 10,
-    "attack": 45,
-    "charisma": 60,
-    "luck": 40,
-    "description": "Aethelred is a wizened mage of immense arcane knowledge and power. His years of study have gifted him with a mastery of elemental magic, particularly fire and ice. He wields a staff crafted from ancient oak, imbued with potent runes that amplify his spells. Though physically frail, Aethelred's intellect and magical prowess make him a formidable opponent. He is often seen as a recluse, preferring the company of his books and scrolls to that of other people. However, he is known to possess a keen mind and a sharp wit, capable of seeing through deception and manipulating situations to his advantage. His loyalty lies with those who seek knowledge and truth, and he will defend them with the full force of his magic."
+    "speed": 90,
+    "magic": 0,
+    "defense": 70,
+    "attack": 85,
+    "charisma": 70,
+    "luck": 80,
+    "description": "Peter Parker, a nerdy high school student, was bitten by a radioactive spider, granting him incredible abilities.  He can cling to walls, shoot webs from his wrists, and possesses superhuman strength, agility, and reflexes. Spider-Man's spider-sense allows him to anticipate danger, giving him a significant advantage in battle.  Despite his incredible abilities, Spider-Man is a kind and compassionate hero who fights for what is right, using his wit and quick thinking to outsmart his opponents. He often relies on his web-slinging skills to navigate the city and capture criminals. His iconic red and blue suit is a symbol of hope and inspiration for the citizens of New York City."
 }

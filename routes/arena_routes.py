@@ -1,10 +1,28 @@
 from flask import Blueprint, render_template, jsonify, request, g
-from models import Character, ArenaChatMessage, GeneralChatMessage, TacticsChatMessage
+from models import Character, ArenaChatMessage, GeneralChatMessage, TacticsChatMessage, User
 import logging
 import json
 from extensions import db
+import uuid
 
 arena_bp = Blueprint('arena', __name__)
+
+@arena_bp.before_request
+def before_request():
+    user_id = request.cookies.get('user_id')
+    if not user_id:
+        user_id = str(uuid.uuid4())
+        new_user = User(cookie_id=user_id)
+        db.session.add(new_user)
+        db.session.commit()
+        g.user = new_user
+    else:
+        g.user = User.query.filter_by(cookie_id=user_id).first()
+        if not g.user:
+            new_user = User(cookie_id=user_id)
+            db.session.add(new_user)
+            db.session.commit()
+            g.user = new_user
 
 @arena_bp.route('/')
 def arena():
@@ -17,7 +35,6 @@ def get_characters():
         characters = Character.query.order_by(Character.id.desc()).limit(2).all()
         characters_data = []
         for character in characters:
-            #logging.info(f"Character: {character.name}, Traits: {character.traits}")
             traits = json.loads(character.traits)
             characters_data.append({
                 'name': character.name,
@@ -37,7 +54,6 @@ def get_characters():
                     'Charisma': traits.get('Charisma', 0)
                 }
             })
-       # logging.info(f"Characters data: {characters_data}")
         return jsonify(characters_data)
     except Exception as e:
         logging.error(f"Error fetching characters: {e}")

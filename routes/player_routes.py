@@ -4,17 +4,35 @@ import asyncio
 from flask import Blueprint, render_template, jsonify, request, redirect, url_for, current_app, g
 from sqlalchemy import desc
 from extensions import db
-from models import Message, Character
+from models import Message, Character, User
 from datetime import datetime
 from gemini import GeminiAssistant
 import logging
 from utils import parse_character, save_to_json
+import uuid
 
 player_bp = Blueprint('player_bp', __name__)
 
 # Logging setup
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+@player_bp.before_request
+def before_request():
+    user_id = request.cookies.get('user_id')
+    if not user_id:
+        user_id = str(uuid.uuid4())
+        new_user = User(cookie_id=user_id)
+        db.session.add(new_user)
+        db.session.commit()
+        g.user = new_user
+    else:
+        g.user = User.query.filter_by(cookie_id=user_id).first()
+        if not g.user:
+            new_user = User(cookie_id=user_id)
+            db.session.add(new_user)
+            db.session.commit()
+            g.user = new_user
 
 # Helper functions
 def fetch_messages():

@@ -1,8 +1,9 @@
 import json
 import asyncio
+import uuid
 from flask import Blueprint, request, jsonify, render_template, g
 from extensions import db
-from models import Message, Role
+from models import Message, Role, User
 from gemini import GeminiAssistant
 import logging
 
@@ -12,11 +13,26 @@ admin_bp = Blueprint('admin', __name__)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+@admin_bp.before_request
+def before_request():
+    user_id = request.cookies.get('user_id')
+    if not user_id:
+        user_id = str(uuid.uuid4())
+        new_user = User(cookie_id=user_id)
+        db.session.add(new_user)
+        db.session.commit()
+        g.user = new_user
+    else:
+        g.user = User.query.filter_by(cookie_id=user_id).first()
+        if not g.user:
+            new_user = User(cookie_id=user_id)
+            db.session.add(new_user)
+            db.session.commit()
+            g.user = new_user
+
 @admin_bp.route('/')
 def arena():
-    return render_template('arena.html')
-
-
+    return render_template('admin.html')
 
 @admin_bp.route('/update_settings', methods=['POST'])
 def update_settings():
@@ -36,9 +52,7 @@ def send_message():
         assistant = GeminiAssistant(role_name)
         
         # Use asyncio.run to execute the asynchronous function
-        #logger.info(f"Sending message to assistant: {content}")
         response = asyncio.run(assistant.send_message(content))
-        #logger.info(f"Received response from assistant: {response}")
 
         # Save the message and response to the database
         message = Message(content=content, user_id=user_id)
@@ -89,4 +103,3 @@ def save_instructions():
 def admin():
     messages = Message.query.all()
     return render_template('admin.html', messages=messages)
-

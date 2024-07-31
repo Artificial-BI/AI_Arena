@@ -96,6 +96,36 @@ class Tournament(db.Model):
     end_date = db.Column(db.DateTime, nullable=True)
     current_stage = db.Column(db.String(64))
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'format': self.format,
+            'start_date': self.start_date,
+            'end_date': self.end_date,
+            'current_stage': self.current_stage
+        }
+
+class TopPlayer(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), nullable=False)
+    wins = db.Column(db.Integer, nullable=False)
+    losses = db.Column(db.Integer, nullable=False)
+    character_name = db.Column(db.String(64), nullable=False)
+    weekly_wins = db.Column(db.Integer, nullable=False)
+    weekly_losses = db.Column(db.Integer, nullable=False)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'wins': self.wins,
+            'losses': self.losses,
+            'character_name': self.character_name,
+            'weekly_wins': self.weekly_wins,
+            'weekly_losses': self.weekly_losses
+        }
+
 class TournamentMatch(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     tournament_id = db.Column(db.Integer, db.ForeignKey('tournament.id'))
@@ -111,15 +141,6 @@ class Player(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), unique=True, nullable=False)
     characters = db.relationship('Character', backref='player', lazy=True)
-
-class TopPlayer(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), nullable=False)
-    wins = db.Column(db.Integer, nullable=False)
-    losses = db.Column(db.Integer, nullable=False)
-    character_name = db.Column(db.String(64), nullable=False)
-    weekly_wins = db.Column(db.Integer, nullable=False)
-    weekly_losses = db.Column(db.Integer, nullable=False)
 
     def __repr__(self):
         return f'<TopPlayer {self.name}>'
