@@ -1,7 +1,6 @@
 from datetime import datetime
 from models import db, Arena, Tournament, TournamentMatch, Fight, Role, Player, ArenaChatMessage, Character
 from gemini import GeminiAssistant
-from character_manager import CharacterManager
 import asyncio
 from flask import current_app
 
@@ -60,7 +59,7 @@ class BattleManager:
             arena = Arena(description=description, parameters=parameters)
             db.session.add(arena)
             db.session.commit()
-        return arena.id
+            return arena.id
 
     async def create_test_characters(self):
         # Создание заглушек для персонажей
@@ -82,7 +81,7 @@ class BattleManager:
             db.session.add(character1)
             db.session.add(character2)
             db.session.commit()
-        return [character1.id, character2.id]
+            return [character1.id, character2.id]
 
 class ArenaManager:
     def __init__(self):
