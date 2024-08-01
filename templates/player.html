@@ -4,8 +4,6 @@
 <nav>
     <ul class="nav-group">
         <li><a href="/">Home</a></li>
-       <!-- <li><a href="/profile">Profile</a></li> -->
-       <!-- <li>Time left until the game starts: <span id="countdown">{{ tournament_countdown }}</span></li> -->
         <li><a href="/arena">Arena</a></li>
         <li><a href="/logout">Logout</a></li>
     </ul>
@@ -21,16 +19,13 @@
 <div class="player-container">
     <main>
         <div class="character-info">
-            <!-- Character Image -->
             {% if selected_character %}
             <div class="selected-character">
                 <h3 id="character-name">{{ selected_character.name }}</h3>
                 <img src="{{ url_for('static', filename=selected_character.image_url.replace('\\', '/')) }}" alt="Character Image">
-                <!-- <p id="character-description">{{ selected_character.description }}</p> -->
             </div>
             {% endif %}
 
-            <!-- Character Stats Chart -->
             <div class="character-stats">
                 <h2>Character Stats</h2>
                 <canvas id="character-chart"></canvas>
@@ -38,7 +33,6 @@
         </div>
 
         <div class="character-management">
-            <!-- Character List -->
             <div class="characters-section">
                 <ul id="character-list">
                     {% for character in characters %}
@@ -50,14 +44,13 @@
                     {% endfor %}
                 </ul>
             </div>
-            <!-- Create Character -->
+
             <div class="create-character">
                 <form id="create-character-form" method="post" action="{{ url_for('player_bp.create_character') }}">
                     <label for="name">Character Name:</label>
                     <input type="text" id="name" name="name" required>
                     <label for="description">Character Description:</label>
                     <textarea id="description" name="description" rows="6" required></textarea>
-                    <!-- Container for field and button -->
                     <div class="extra-input-container">
                         <input type="text" id="extraInput" name="extraInput" class="extra-input" placeholder="" readonly>
                         <button type="submit">Create Character</button>
@@ -66,7 +59,6 @@
             </div>
         </div>
 
-        <!-- Chat with AI -->
         <div class="chat-section">
             <h2>Chat with AI</h2>
             <div id="chat-box">
@@ -83,7 +75,6 @@
             </form>
         </div>
 
-        <!-- General Chat with other players -->
         <div class="general-chat">
             <h2>General Chat</h2>
             <div id="general-chat-box">

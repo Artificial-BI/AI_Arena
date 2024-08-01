@@ -17,8 +17,10 @@
                 <!-- <li><a href="/profile">Profile</a></li> -->
                 <li><a href="/viewer">Viewer</a></li>
                 <li><a href="/player">Player</a></li>
-                <li><a href="/arena">Arena</a></li>
-                <li><a href="/admin">Admin</a></li> <!-- Adding this line for "Admin" button -->
+                {% if 'player' in request.path %}
+                <li><a href="#" id="to-arena-button">To Arena</a></li>
+                {% endif %}
+                <li><a href="/admin">Admin</a></li>
                 <!-- <li><a href="/logout">Logout</a></li> -->
                 <li class="user-id">ID: <span id="user-id">{{ g.user.cookie_id }}</span></li>
             </ul>
@@ -60,6 +62,27 @@
                 });
             } else {
                 document.getElementById('user-id').innerText = userId;
+            }
+
+            const toArenaButton = document.getElementById('to-arena-button');
+            if (toArenaButton) {
+                toArenaButton.addEventListener('click', function() {
+                    fetch('/player/register_for_arena', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ character_id: {{ selected_character.id if selected_character else 'null' }} })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'registered' || data.status === 'updated' || data.status === 'already_registered') {
+                            window.location.href = '/arena';
+                        } else {
+                            alert('Error registering for arena: ' + data.error);
+                        }
+                    });
+                });
             }
         });
     </script>

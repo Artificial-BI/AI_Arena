@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const nameField = createCharacterForm.querySelector('#name');
     const descriptionField = createCharacterForm.querySelector('#description');
     const characterButtons = document.querySelectorAll('#character-list .character-item button[data-name]');
+    const registerButton = document.getElementById('register-arena-button');
 
     let characterChart;
 
@@ -173,4 +174,30 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Initial selected character traits:', selectedCharacterTraits); // Logging initial selected character data
         displayCharacterStats(selectedCharacterTraits);
     }
+
+    // Register for arena button handler
+    registerButton.addEventListener('click', function() {
+        const selectedCharacterId = lastCharacterId; // Using lastCharacterId as selected character id
+        if (!selectedCharacterId) {
+            alert('Please select a character first.');
+            return;
+        }
+
+        fetch(`/player/register_for_arena`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ character_id: selectedCharacterId }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success' || data.status === 'registered' || data.status === 'updated') {
+                window.location.href = '/arena'; // Redirect to the arena page
+            } else {
+                alert('Failed to register for the arena: ' + data.error);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    });
 });

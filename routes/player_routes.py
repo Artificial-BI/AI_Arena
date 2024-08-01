@@ -4,7 +4,7 @@ import asyncio
 from flask import Blueprint, render_template, jsonify, request, redirect, url_for, current_app, g
 from sqlalchemy import desc
 from extensions import db
-from models import Message, Character, User
+from models import Message, Character, User, Registrar
 from datetime import datetime
 from gemini import GeminiAssistant
 import logging
@@ -183,4 +183,40 @@ def send_general_message():
         return jsonify({"status": "General message sent"})
     except Exception as e:
         logger.error(f"Error sending general message: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@player_bp.route('/register_for_arena', methods=['POST'])
+def register_for_arena():
+    try:
+        data = request.get_json()
+        character_id = data.get('character_id')
+        
+        if not character_id:
+            return jsonify({"error": "Character ID is required"}), 400
+        
+        user_id = g.user.id
+        arena_id = 1  # Assuming a single arena for simplicity
+
+        # Check if the user is already registered for the arena
+        existing_registration = Registrar.query.filter_by(user_id=user_id, arena_id=arena_id).first()
+        
+        if existing_registration:
+            # If the character ID is different, update the existing registration
+            if existing_registration.character_id != character_id:
+                existing_registration.character_id = character_id
+                db.session.commit()
+                logger.info(f"Updated registration for user {user_id} with new character {character_id} for arena {arena_id}")
+                return jsonify({"status": "updated"})
+            else:
+                logger.info(f"User {user_id} already registered with character {character_id} for arena {arena_id}")
+                return jsonify({"status": "already_registered"})
+        else:
+            # Create a new registration
+            new_registration = Registrar(user_id=user_id, character_id=character_id, arena_id=arena_id)
+            db.session.add(new_registration)
+            db.session.commit()
+            logger.info(f"User {user_id} registered character {character_id} for arena {arena_id}")
+            return jsonify({"status": "registered"})
+    except Exception as e:
+        logger.error(f"Error registering for arena: {e}")
         return jsonify({"error": str(e)}), 500

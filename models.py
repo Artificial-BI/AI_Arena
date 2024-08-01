@@ -1,5 +1,3 @@
-# --- models.py ---
-
 from datetime import datetime
 from extensions import db  # Import an instance of SQLAlchemy from extensions.py
 
@@ -38,6 +36,7 @@ class Message(db.Model):
 
     def __repr__(self):
         return f'<Message {self.content[:15]}>'
+
 class ArenaChatMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -48,7 +47,6 @@ class ArenaChatMessage(db.Model):
 
     def __repr__(self):
         return f'<ArenaChatMessage {self.content[:15]}>'
-
 
 class GeneralChatMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -147,3 +145,27 @@ class Player(db.Model):
 
     def __repr__(self):
         return f'<Player {self.name}>'
+
+class Registrar(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    character_id = db.Column(db.Integer, db.ForeignKey('character.id'), nullable=False)
+    arena_id = db.Column(db.Integer, db.ForeignKey('arena.id'), nullable=False)
+    registration_date = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', backref='registrations')
+    character = db.relationship('Character', backref='registrations')
+    arena = db.relationship('Arena', backref='registrations')
+
+    def __repr__(self):
+        return f'<Registrar User ID: {self.user_id}, Character ID: {self.character_id}, Arena ID: {self.arena_id}>'
+
+class Score(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    arena_id = db.Column(db.Integer, db.ForeignKey('arena.id'), nullable=False)
+    character_id = db.Column(db.Integer, db.ForeignKey('character.id'), nullable=False)
+    score = db.Column(db.Integer, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<Score Arena ID: {self.arena_id}, Character ID: {self.character_id}, Score: {self.score}>'

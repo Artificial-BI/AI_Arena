@@ -1,15 +1,15 @@
 {
-    "name": "Spider-Man",
-    "type": "Superhero",
-    "strength": 85,
+    "name": "Kage",
+    "type": "Ninja",
+    "strength": 60,
     "agility": null,
-    "intelligence": 80,
+    "intelligence": 75,
     "endurance": null,
     "speed": 90,
-    "magic": 0,
-    "defense": 70,
+    "magic": 10,
+    "defense": 55,
     "attack": 85,
-    "charisma": 70,
-    "luck": 80,
-    "description": "Peter Parker, a nerdy high school student, was bitten by a radioactive spider, granting him incredible abilities.  He can cling to walls, shoot webs from his wrists, and possesses superhuman strength, agility, and reflexes. Spider-Man's spider-sense allows him to anticipate danger, giving him a significant advantage in battle.  Despite his incredible abilities, Spider-Man is a kind and compassionate hero who fights for what is right, using his wit and quick thinking to outsmart his opponents. He often relies on his web-slinging skills to navigate the city and capture criminals. His iconic red and blue suit is a symbol of hope and inspiration for the citizens of New York City."
+    "charisma": 30,
+    "luck": 65,
+    "description": "Kage is a master of stealth and deception, honed in the shadows of a secluded mountain monastery. His movements are fluid and silent, making him a deadly assassin. Trained from childhood in the art of Ninjutsu, he possesses an uncanny ability to blend into his surroundings, disappearing like smoke in the wind. His arsenal includes a variety of deadly weapons, from poisoned darts to razor-sharp throwing stars. Though he may lack in charisma, his cunning mind and tactical brilliance compensate for it. He is a master of disguise, able to transform himself into any persona necessary to achieve his objectives. His luck has been a constant companion, allowing him to escape seemingly impossible situations.  Kage is a formidable opponent, his loyalty to his cause unwavering. He is a living legend in the world of espionage, feared by his enemies and admired by his allies."
 }

@@ -3,6 +3,8 @@ from models import Character, ArenaChatMessage, GeneralChatMessage, User  # До
 import logging
 import json
 from extensions import db
+import uuid
+
 
 viewer_bp = Blueprint('viewer', __name__)
 
