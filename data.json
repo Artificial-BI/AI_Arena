@@ -1,15 +1,15 @@
 {
-    "name": "Grok",
-    "type": "Goblin",
-    "strength": 35,
+    "name": "Hulk",
+    "type": "Berserker",
+    "strength": 90,
     "agility": null,
-    "intelligence": 15,
+    "intelligence": 10,
     "endurance": null,
-    "speed": 70,
+    "speed": 40,
     "magic": 0,
-    "defense": 25,
-    "attack": 45,
-    "charisma": 10,
-    "luck": 30,
-    "description": "Grok is a small, wiry goblin with a mischievous glint in his beady eyes. Despite his lack of intelligence, he possesses a surprising amount of cunning and agility.  He's a skilled hunter and tracker, able to move silently through the forest and utilize traps and ambushes with surprising effectiveness. While his strength is limited, he compensates with a quick blade and a knack for finding weak points in his opponents. Grok's luck is often a double-edged sword; he tends to escape perilous situations with surprising ease, but his schemes often go awry. He lives for the thrill of the hunt, and his loyalty is easily bought with a promise of riches or a chance to prove his strength. Grok's life has been a constant struggle for survival in the unforgiving wilderness, and he possesses a ruthless streak that makes him a dangerous opponent."
+    "defense": 60,
+    "attack": 95,
+    "charisma": 5,
+    "luck": 10,
+    "description": "Hulk is a towering, green-skinned behemoth with incredible strength and resilience. His rage fuels his power, making him a fearsome warrior in battle. He is a simple, primal being driven by instinct and emotion. While possessing limited intelligence, Hulk's raw power and ferocity make him a formidable opponent.  He has a deep connection to his primal instincts, allowing him to withstand immense pain and physical trauma.  His anger is a double-edged sword; it makes him powerful but also prone to uncontrolled rage, making him difficult to control in combat. Despite his savage nature, Hulk has a surprising degree of compassion and loyalty to his friends, albeit expressed in his own unique and often destructive way."
 }

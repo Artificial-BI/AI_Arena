@@ -43,6 +43,7 @@
                         </form>
                     {% endfor %}
                 </ul>
+                <p id="no-characters-message" style="display:none; color: red;">No characters available for participation in battles.</p>
             </div>
 
             <div class="create-character">
@@ -56,6 +57,7 @@
                         <button type="submit">Create Character</button>
                     </div>
                 </form>
+                <button id="register-arena-button">Register for Arena</button> <!-- Add this button -->
             </div>
         </div>
 
@@ -71,22 +73,6 @@
             </div>
             <form id="chat-form" method="post" action="{{ url_for('player_bp.send_message') }}">
                 <input type="text" id="message" name="message" placeholder="Enter your message...">
-                <button type="submit">Send</button>
-            </form>
-        </div>
-
-        <div class="general-chat">
-            <h2>General Chat</h2>
-            <div id="general-chat-box">
-                {% for message in general_messages %}
-                <div class="chat-message {{ 'right' if message.user_id == g.user.id else 'left' }}">
-                    <p>{{ message.content }}</p>
-                    <span class="timestamp">{{ message.timestamp.strftime('%Y-%m-%d %H:%M:%S') }} - {{ message.user_id }}</span>
-                </div>
-                {% endfor %}
-            </div>
-            <form id="general-chat-form" method="post" action="{{ url_for('player_bp.send_general_message') }}">
-                <input type="text" name="message" id="general-message" placeholder="Enter your message...">
                 <button type="submit">Send</button>
             </form>
         </div>

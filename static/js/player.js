@@ -7,11 +7,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const descriptionField = createCharacterForm.querySelector('#description');
     const characterButtons = document.querySelectorAll('#character-list .character-item button[data-name]');
     const registerButton = document.getElementById('register-arena-button');
+    const noCharactersMessage = document.getElementById('no-characters-message');
 
     let characterChart;
+    let selectedCharacterId = null;
 
     function displayCharacterStats(traits) {
-        console.log('Received traits:', traits); // Logging traits data
+        console.log('Received traits:', traits);
 
         const ctx = document.getElementById('character-chart').getContext('2d');
         const chartData = {
@@ -19,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
             datasets: [{
                 label: 'Attributes',
                 data: Object.values(traits),
-                backgroundColor: 'rgba(34, 139, 34, 0.8)',  // Dark green bars
+                backgroundColor: 'rgba(34, 139, 34, 0.8)',
                 borderColor: 'rgba(34, 139, 34, 1)',
                 borderWidth: 1
             }]
@@ -59,21 +61,21 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     },
                     legend: {
-                        display: false // Remove the chart title
+                        display: false
                     }
                 }
             },
             plugins: [{
                 afterDatasetsDraw: function(chart) {
                     const ctx = chart.ctx;
-                    ctx.font = '8px Arial';  // Reduce text size to normal
+                    ctx.font = '8px Arial';
                     ctx.fillStyle = 'rgba(0, 0, 0, 1)';
 
                     chart.data.datasets.forEach(function(dataset, i) {
                         const meta = chart.getDatasetMeta(i);
                         meta.data.forEach(function(bar, index) {
                             const data = dataset.data[index];
-                            if (data !== 0) { // Display only non-zero values
+                            if (data !== 0) {
                                 ctx.fillText(data, bar.x, bar.y - 5);
                             }
                         });
@@ -82,30 +84,34 @@ document.addEventListener('DOMContentLoaded', function() {
             }]
         });
 
-        // Convert traits to a string and insert into the field
         const traitsString = Object.entries(traits).map(([key, value]) => `${key}:${value}`).join(', ');
         extraInput.value = traitsString;
     }
 
     function selectCharacter(characterId) {
+        selectedCharacterId = characterId;
         const button = document.querySelector(`#character-list .character-item button[data-id='${characterId}']`);
         if (button) {
             const user_id = button.dataset.user_id;
             nameField.value = button.dataset.name;
             descriptionField.value = button.dataset.description;
 
-            // Update character traits in the extraInput field
             const traits = JSON.parse(button.dataset.traits);
-            console.log('Selected character traits:', traits); // Logging selected character data
+            console.log('Selected character traits:', traits);
             displayCharacterStats(traits);
         }
     }
 
-    characterButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            selectCharacter(this.dataset.id);
+    if (characterButtons.length === 0) {
+        noCharactersMessage.style.display = 'block';
+    } else {
+        noCharactersMessage.style.display = 'none';
+        characterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                selectCharacter(this.dataset.id);
+            });
         });
-    });
+    }
 
     chatForm.addEventListener('submit', function(event) {
         event.preventDefault();
@@ -114,7 +120,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (!message) {
             alert('Enter a message before sending.');
-            return; // Check for empty message
+            return;
         }
 
         fetch(chatForm.action, {
@@ -137,7 +143,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 messageInput.value = '';
                 chatBox.scrollTop = chatBox.scrollHeight;
 
-                // Update character name, description, and traits if they were parsed
                 if (data.character) {
                     if (data.character.name) {
                         document.getElementById('name').value = data.character.name;
@@ -158,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             "Endurance": data.character.endurance,
                             "Luck": data.character.luck
                         };
-                        console.log('Updated character traits:', traits); // Logging updated character data
+                        console.log('Updated character traits:', traits);
                         displayCharacterStats(traits);
                     }
                 }
@@ -167,17 +172,14 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => console.error('Error:', error));
     });
 
-    // Check if a character is selected and their traits
     if (lastCharacterId !== null) {
         selectCharacter(lastCharacterId);
     } else if (selectedCharacterTraits) {
-        console.log('Initial selected character traits:', selectedCharacterTraits); // Logging initial selected character data
+        console.log('Initial selected character traits:', selectedCharacterTraits);
         displayCharacterStats(selectedCharacterTraits);
     }
 
-    // Register for arena button handler
     registerButton.addEventListener('click', function() {
-        const selectedCharacterId = lastCharacterId; // Using lastCharacterId as selected character id
         if (!selectedCharacterId) {
             alert('Please select a character first.');
             return;
@@ -193,7 +195,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success' || data.status === 'registered' || data.status === 'updated') {
-                window.location.href = '/arena'; // Redirect to the arena page
+                window.location.href = '/arena';
             } else {
                 alert('Failed to register for the arena: ' + data.error);
             }
