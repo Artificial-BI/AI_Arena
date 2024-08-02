@@ -62,13 +62,36 @@ def parse_character(text):
 
     return character
 
-def save_to_json(character, filename='character_data.json'):
+def parse_arena(text):
+    # Define regular expressions for each field
+    difficulty_pattern = re.compile(r"Difficulty:\s*(\d+)%")
+    danger_pattern = re.compile(r"Danger:\s*(\d+)%")
+    size_pattern = re.compile(r"Size:\s*(.*)")
+    atmosphere_pattern = re.compile(r"Describe Arena Atmosphere:\s*(.*)", re.DOTALL)
+
+    # Extract values using regular expressions
+    difficulty = difficulty_pattern.search(text)
+    danger = danger_pattern.search(text)
+    size = size_pattern.search(text)
+    atmosphere = atmosphere_pattern.search(text)
+
+    # Create a dictionary with extracted values
+    arena = {
+        "difficulty": int(difficulty.group(1)) if difficulty else None,
+        "danger": int(danger.group(1)) if danger else None,
+        "size": size.group(1).strip() if size else None,
+        "atmosphere": atmosphere.group(1).strip() if atmosphere else None
+    }
+
+    return arena
+
+def save_to_json(data, filename='data.json'):
     try:
         with open(filename, 'w') as f:
-            json.dump(character, f, indent=4)
-        print(f"Character data saved to {filename}")
+            json.dump(data, f, indent=4)
+        print(f"Data saved to {filename}")
     except Exception as e:
-        print(f"Error saving character data to JSON: {e}")
+        print(f"Error saving data to JSON: {e}")
 
 # Example usage
 if __name__ == "__main__":
@@ -89,5 +112,21 @@ if __name__ == "__main__":
     """
 
     parsed_character = parse_character(character_text)
-    print('TEST CHARACTERS:',parsed_character)
+    print('TEST CHARACTERS:', parsed_character)
     save_to_json(parsed_character)
+
+    arena_text = """
+    Set Arena Parameters:
+
+    Difficulty: 60%
+    Danger: 45%
+    Size: Medium
+
+    Describe Arena Atmosphere:
+
+    The arena is a sprawling, sun-drenched clearing within a vast, ancient forest. Towering trees, gnarled and twisted by time, cast long, dappled shadows across the verdant floor. The air is thick with the scent of pine needles and damp earth, a heady mix of life and decay. The silence is broken only by the rustling of leaves and the occasional chirp of unseen birds. A sense of hidden danger hangs heavy in the air, as if the very forest itself is watching, waiting for a moment to unleash its fury.
+    """
+
+    parsed_arena = parse_arena(arena_text)
+    print('TEST ARENA:', parsed_arena)
+    save_to_json(parsed_arena, 'arena_data.json')

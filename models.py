@@ -43,10 +43,14 @@ class ArenaChatMessage(db.Model):
     content = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     sender = db.Column(db.String(64), nullable=False)  # 'player1', 'player2', 'referee'
-    arena_id = db.Column(db.Integer, db.ForeignKey('arena.id'), nullable=True)  # Add this line
+    arena_id = db.Column(db.Integer, db.ForeignKey('arena.id'), nullable=True)
+    read_status = db.Column(db.Integer, default=0)  # Add this line
 
     def __repr__(self):
         return f'<ArenaChatMessage {self.content[:15]}>'
+
+
+
 
 class GeneralChatMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)

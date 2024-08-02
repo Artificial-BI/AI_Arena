@@ -21,19 +21,28 @@ class ChatMessageHistory:
     def get_history(self):
         return self.messages
 
+# gemini.py
 class GeminiAssistant:
-    def __init__(self, role_name, use_history=True):
-        self.chat_history = ChatMessageHistory()
+    def __init__(self, role_name, use_history=False):
+        self.chat_history = []
         self.use_history = use_history
 
-        # Load role instructions from the database
         role = Role.query.filter_by(name=role_name).first()
         if role:
             role_instructions = f"system_instruction: {role.instructions}"
             logger.info(f"Loaded instructions for role: {role_name}")
         else:
-            role_instructions = ''
-            logger.error(f"Role '{role_name}' not found in the database")
+            try:
+                with open('default_role.json', 'r', encoding='utf-8') as file:
+                    role_data = json.load(file)
+                    role_instructions = role_data.get(role_name, '')
+                    if role_instructions:
+                        logger.info(f"Loaded instructions for role from JSON file: {role_name}")
+                    else:
+                        logger.warning(f"No instructions found for role in JSON file: {role_name}")
+            except FileNotFoundError:
+                role_instructions = ''
+                logger.error(f"JSON file not found: default_role.json")
 
         conf = Config()
         genai.configure(api_key=conf.GEMINI_API_TOKEN)
@@ -41,23 +50,20 @@ class GeminiAssistant:
             'gemini-1.5-flash',
             system_instruction=role_instructions
         )
-        logger.info("GeminiAssistant initialized with instructions from database")
+        self.chat = self.model.start_chat(history=[])
+        logger.info("GeminiAssistant initialized with instructions from database or JSON file")
 
     async def send_message(self, msg):
         logger.info(f"Sending message: {msg}")
-        self.chat_history.add_user_message(msg)
+        self.chat_history.append({"role": "user", "content": msg})
         
-        messages = self.chat_history.get_history() if self.use_history else [{"role": "user", "content": msg}]
+        response = await self.chat.send_message_async(msg)
         
-        response = await self.model.chat(messages=messages)
         if response and response.candidates:
             result = response.candidates[0].content.parts[0].text
-            self.chat_history.add_ai_message(result)
+            self.chat_history.append({"role": "assistant", "content": result})
             logger.info(f"Received response: {result}")
             return result
         else:
             logger.error("No response received")
             return "Sorry, I couldn't understand your message."
-
-if __name__ == "__main__":
-    logger.info("GeminiAssistant module")

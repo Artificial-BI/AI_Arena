@@ -4,124 +4,165 @@ from gemini import GeminiAssistant
 import asyncio
 from flask import current_app
 import logging
+from utils import parse_arena
+import json
+
+class CoreComon:
+    def get_role_instructions(self, role_name):
+        # Получение инструкций для роли из базы данных
+        with current_app.app_context():
+            role = Role.query.filter_by(name=role_name).first()
+            logging.info(f"get role: {role}")
+            if not role:
+                raise ValueError(f"Role '{role_name}' not found in the database")
+            return role.instructions
 
 class ArenaManager:
     def __init__(self):
-        self.assistant = None  # Initialize the assistant here
+        self.assistant = None
+        self.ccom = CoreComon()
 
     async def generate_arena(self, character_data):
         logging.info("--- Generating arena ---")
-        if self.assistant is None:
-            self.assistant = GeminiAssistant(self.get_role_instructions('arena'))
+        if self.assistant == None:
+            role_instructions = self.ccom.get_role_instructions('arena')
+            self.assistant = GeminiAssistant(role_instructions, False)
+
         parameters = await self.assistant.send_message(f"Generate arena with the following character data: {character_data}")
         arena_description = "Generated Arena based on characters"
 
-        # Save the arena to the database
-        new_arena = Arena(description=arena_description, parameters=parameters)
+        logging.info(f"arena_parameters: {parameters}")
+
+        parsed_parameters = parse_arena(parameters)
+
+        new_arena = Arena(description=arena_description, parameters=json.dumps(parsed_parameters))
         db.session.add(new_arena)
         db.session.commit()
 
         logging.info(f"Arena generated with ID: {new_arena.id}")
         return new_arena
 
-    def generate_tactic_recommendations(self, character, arena, chat_history):
-        logging.info(f"Generating tactic recommendations for character: {character.name}")
-        # This is where you would call your assistant to generate recommendations
-        recommendations = "Generated tactic recommendations based on character, arena, and chat history."
-        return recommendations
-
-    def get_role_instructions(self, role_name):
-        with current_app.app_context():
-            role = Role.query.filter_by(name=role_name).first()
-            if not role:
-                raise ValueError(f"Role '{role_name}' not found in the database")
-            return role.instructions
 
 class BattleManager:
     def __init__(self):
+        self.ccom = CoreComon()
         self.referee_assistant = None
         self.commentator_assistant = None
-        self.artist_assistant = None
         self.arena_manager = ArenaManager()
 
     async def manage_battle_round(self, character_data, arena):
         logging.info("--- Managing battle round ---")
 
-        # Cycle through participants to get their moves
-        moves = []
+        # Сохранение ходов участников в чат арены
         for character in character_data:
-            recommendations = self.arena_manager.generate_tactic_recommendations(character, arena, [])
-            move_description = f"{character['name']} performs a strategic move based on recommendations: {recommendations}"
+            move_description = f"{character['name']} performs a strategic move based on current recommendations."
             logging.info(f"Move for {character['name']}: {move_description}")
-            moves.append((character['id'], move_description))
-            # Save move to the arena chat
-            new_chat_message = ArenaChatMessage(content=move_description, sender='fighter', user_id=character['user_id'], arena_id=arena.id)
+            new_chat_message = ArenaChatMessage(content=move_description, sender='fighter', user_id=character['user_id'], arena_id=arena.id, read_status=0)
             db.session.add(new_chat_message)
         db.session.commit()
 
-        # Evaluate moves by referee
+        # Ожидание получения ходов от всех участников
+        await self.wait_for_moves(arena.id, len(character_data))
+
+        # Получение непрочитанных сообщений
+        unread_messages = ArenaChatMessage.query.filter_by(arena_id=arena.id, read_status=0).all()
+        moves = [(msg.user_id, msg.content) for msg in unread_messages]
+
+        # Пометка сообщений как прочитанных
+        for msg in unread_messages:
+            msg.read_status = 1
+        db.session.commit()
+
+        # 6. Запрос к ассистенту рефери
         referee_evaluation = await self.evaluate_moves(character_data, arena, moves)
 
-        # Generate comments by commentator
+        # 7. Запрос к ассистенту комментатору
         commentary = await self.generate_commentary(character_data, arena, moves, referee_evaluation)
 
-        # Generate images by artist
-        battle_image = await self.generate_battle_image(character_data, arena, moves)
+        logging.info("--- Battle round completed ---")
+
+    async def wait_for_moves(self, arena_id, num_participants):
+        logging.info("Waiting for moves from all participants")
+        while True:
+            unread_count = ArenaChatMessage.query.filter_by(arena_id=arena_id, read_status=0).count()
+            if unread_count >= num_participants:
+                break
+            await asyncio.sleep(1)
+        logging.info("All moves received")
+
+        # Оценка ходов рефери
+        referee_evaluation = await self.evaluate_moves(character_data, arena, moves)
+
+        # Генерация комментариев комментатора
+        commentary = await self.generate_commentary(character_data, arena, moves, referee_evaluation)
 
         logging.info("--- Battle round completed ---")
+
+    async def wait_for_moves(self, arena_id, num_participants):
+        logging.info("Waiting for moves from all participants")
+        while True:
+            unread_count = ArenaChatMessage.query.filter_by(arena_id=arena_id, read_status=0).count()
+            if unread_count >= num_participants:
+                break
+            await asyncio.sleep(1)
+        logging.info("All moves received")
 
     async def evaluate_moves(self, character_data, arena, moves):
         logging.info("Evaluating moves by referee")
         if self.referee_assistant is None:
-            self.referee_assistant = GeminiAssistant(self.get_role_instructions('referee'))
+            self.referee_assistant = GeminiAssistant(self.ccom.get_role_instructions('referee'))
         evaluation_message = f"Evaluate the following moves in arena {arena.id}: {moves}"
         if not evaluation_message.strip():
             logging.error("Empty evaluation message, skipping evaluation")
             return "No evaluation provided"
         evaluation = await self.referee_assistant.send_message(evaluation_message)
         logging.info(f"Referee evaluation: {evaluation}")
+    
+        # Сохранение результатов судейства в чат арены
+        evaluation_message = ArenaChatMessage(content=evaluation, sender='referee', user_id=None, arena_id=arena.id, read_status=0)
+        db.session.add(evaluation_message)
+        db.session.commit()
+        
         return evaluation
+
 
     async def generate_commentary(self, character_data, arena, moves, evaluation):
         logging.info("Generating commentary")
         if self.commentator_assistant is None:
-            self.commentator_assistant = GeminiAssistant(self.get_role_instructions('commentator'))
+            self.commentator_assistant = GeminiAssistant(self.ccom.get_role_instructions('commentator'))
         commentary_message = f"Generate commentary for the following moves in arena {arena.id}: {moves} with evaluation {evaluation}"
         if not commentary_message.strip():
             logging.error("Empty commentary message, skipping commentary")
             return "No commentary provided"
         commentary = await self.commentator_assistant.send_message(commentary_message)
         logging.info(f"Commentary: {commentary}")
+        
+        # Сохранение комментариев в общий чат
+        commentary_message = ArenaChatMessage(content=commentary, sender='commentator', user_id=None, arena_id=arena.id, read_status=0)
+        db.session.add(commentary_message)
+        db.session.commit()
+        
         return commentary
 
-    async def generate_battle_image(self, character_data, arena, moves):
-        logging.info("Generating battle image")
-        if self.artist_assistant is None:
-            self.artist_assistant = GeminiAssistant(self.get_role_instructions('artist'))
-        image_message = f"Generate an image for the following moves in arena {arena.id}: {moves}"
-        if not image_message.strip():
-            logging.error("Empty image message, skipping image generation")
-            return "No image generated"
-        image = await self.artist_assistant.send_message(image_message)
-        logging.info(f"Generated battle image: {image}")
-        return image
 
+    # Start the test battle process
     async def start_test_battle(self):
         logging.info("--- Starting test battle ---")
         try:
-            # Получение данных зарегистрированных персонажей
+            # 2. Получение данных зарегистрированных персонажей
             character_data = await self.get_registered_character_data()
 
-            # Генерация арены с использованием зарегистрированных персонажей
+            # 3. Генерация параметров и описания арены на основании характеристик участников и внесение результатов в базу
             arena = await self.arena_manager.generate_arena(character_data)
 
-            # Цикл по двум кругам битвы
+            # 4. Старт цикла раундов
             for round_number in range(2):
                 logging.info(f"--- Starting round {round_number + 1} ---")
                 await self.manage_battle_round(character_data, arena)
             logging.info("Test battle completed")
         except Exception as e:
             logging.error(f"Error in test battle: {e}")
+
 
     async def get_registered_character_data(self):
         logging.info("Fetching registered character data")
@@ -140,14 +181,16 @@ class BattleManager:
                     })
             return character_data
 
+
 class TournamentManager:
     def __init__(self):
+        self.ccom = CoreComon()
         self.tournament_assistant = None
 
     async def create_tournament(self, name, format):
         logging.info(f"Creating tournament with name: {name} and format: {format}")
         if self.tournament_assistant is None:
-            self.tournament_assistant = GeminiAssistant(self.get_role_instructions('tournament'))
+            self.tournament_assistant = GeminiAssistant(self.ccom.get_role_instructions('tournament'))
 
         with current_app.app_context():
             tournament = Tournament(
@@ -178,10 +221,3 @@ class TournamentManager:
             if tournament:
                 tournament.current_stage = stage
                 db.session.commit()
-
-    def get_role_instructions(self, role_name):
-        with current_app.app_context():
-            role = Role.query.filter_by(name=role_name).first()
-            if not role:
-                raise ValueError(f"Role '{role_name}' not found in the database")
-            return role.instructions

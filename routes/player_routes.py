@@ -37,28 +37,28 @@ def before_request():
 # Helper functions
 def fetch_messages():
     try:
-        return Message.query.all()
+        return Message.query.filter_by(user_id=g.user.id).order_by(Message.timestamp.asc()).all()
     except Exception as e:
         logger.error(f"Error fetching messages: {e}")
         return []
 
 def fetch_characters():
     try:
-        return Character.query.all()
+        return Character.query.filter_by(user_id=g.user.id).all()
     except Exception as e:
         logger.error(f"Error fetching characters: {e}")
         return []
 
 def get_selected_character():
     try:
-        return Character.query.order_by(desc(Character.id)).first()
+        return Character.query.filter_by(user_id=g.user.id).order_by(desc(Character.id)).first()
     except Exception as e:
         logger.error(f"Error fetching selected character: {e}")
         return None
 
 def get_last_character_id():
     try:
-        last_character = Character.query.order_by(desc(Character.id)).first()
+        last_character = Character.query.filter_by(user_id=g.user.id).order_by(desc(Character.id)).first()
         return last_character.id if last_character else None
     except Exception as e:
         logger.error(f"Error fetching last character: {e}")
@@ -82,7 +82,7 @@ def arena():
 @player_bp.route('/select_character/<int:character_id>', methods=['POST'])
 def select_character(character_id):
     character = Character.query.get(character_id)
-    if character:
+    if character and character.user_id == g.user.id:
         selected_character = {
             "name": character.name,
             "description": character.description,
@@ -90,8 +90,8 @@ def select_character(character_id):
         }
         logger.info(f"Selected character: {selected_character}")
         return jsonify(selected_character)
-    logger.error(f"Character not found: {character_id}")
-    return jsonify({"error": "Character not found"}), 404
+    logger.error(f"Character not found or access denied: {character_id}")
+    return jsonify({"error": "Character not found or access denied"}), 404
 
 @player_bp.route('/send_message', methods=['POST'])
 def send_message():
@@ -104,7 +104,7 @@ def send_message():
         user_id = g.user.id  # Use the current user's ID
 
         # Create assistant on each call
-        assistant = GeminiAssistant("character_generator")
+        assistant = GeminiAssistant("Character Generator")
         # Use asyncio.run to execute the async function
         logger.info(f"Sending message to assistant: {content}")
         response = asyncio.run(assistant.send_message(content))
@@ -112,7 +112,7 @@ def send_message():
 
         # Save message and response to the database
         message = Message(content=content, user_id=user_id)
-        response_message = Message(content=response, user_id=0)
+        response_message = Message(content=response, user_id=user_id)
         db.session.add(message)
         db.session.add(response_message)
         db.session.commit()
@@ -132,10 +132,13 @@ def send_message():
 def delete_character(character_id):
     try:
         character = Character.query.get(character_id)
-        db.session.delete(character)
-        db.session.commit()
-        logger.info(f"Deleted character: {character_id}")
-        return redirect(url_for('player_bp.player'))
+        if character and character.user_id == g.user.id:
+            db.session.delete(character)
+            db.session.commit()
+            logger.info(f"Deleted character: {character_id}")
+            return redirect(url_for('player_bp.player'))
+        else:
+            return jsonify({"error": "Character not found or access denied"}), 404
     except Exception as e:
         logger.error(f"Error deleting character: {e}")
         return jsonify({"error": str(e)}), 500
@@ -146,20 +149,18 @@ def create_character():
         name = request.form['name']
         description = request.form['description']
         traits_string = request.form['extraInput']
-        
-        # Convert traits string to dictionary
+
         traits = {}
         for item in traits_string.split(', '):
             key, value = item.split(':')
             try:
                 traits[key] = int(value)
             except ValueError:
-                traits[key] = 0  # or any other default value for invalid data
-        
-        # Convert dictionary to JSON string with Unicode encoding
+                traits[key] = 0
+
         traits_json = json.dumps(traits, ensure_ascii=False)
-        
-        new_character = Character(name=name, description=description, image_url='images/default/character.png', traits=traits_json)
+
+        new_character = Character(name=name, description=description, image_url='images/default/character.png', traits=traits_json, user_id=g.user.id)
         db.session.add(new_character)
         db.session.commit()
         logger.info(f"Created new character: {name}")
@@ -197,11 +198,9 @@ def register_for_arena():
         user_id = g.user.id
         arena_id = 1  # Assuming a single arena for simplicity
 
-        # Check if the user is already registered for the arena
         existing_registration = Registrar.query.filter_by(user_id=user_id, arena_id=arena_id).first()
         
         if existing_registration:
-            # If the character ID is different, update the existing registration
             if existing_registration.character_id != character_id:
                 existing_registration.character_id = character_id
                 db.session.commit()
@@ -211,7 +210,6 @@ def register_for_arena():
                 logger.info(f"User {user_id} already registered with character {character_id} for arena {arena_id}")
                 return jsonify({"status": "already_registered"})
         else:
-            # Create a new registration
             new_registration = Registrar(user_id=user_id, character_id=character_id, arena_id=arena_id)
             db.session.add(new_registration)
             db.session.commit()
