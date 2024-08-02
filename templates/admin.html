@@ -5,6 +5,7 @@
 {% block head %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 {% endblock %}
 
@@ -13,13 +14,10 @@
     <label for="role-select">Roles:</label>
     <div class="role-select-container">
         <select id="role-select" name="role-select">
-            <option value="character_generator">Character Generator</option>
-            <option value="arena_generator">Arena Generator</option>
-            <option value="tactician">Tactician</option>
-            <option value="referee">Referee</option>
-            <option value="security">Security</option>
-            <option value="translator_moderator">Translator-Moderator</option>
-            <option value="commentator">Commentator</option>
+            <option value="" disabled selected>Select a role</option>
+            {% for role in roles %}
+                <option value="{{ role.name }}">{{ role.name }}</option>
+            {% endfor %}
         </select>
         <button type="button" id="save-role" class="save-button">Save</button>
     </div>
@@ -69,4 +67,45 @@
         <button type="submit" class="save-button">Update Settings</button>
     </form>
 </div>
+
+<script>
+    $(document).ready(function() {
+        $('#role-select').change(function() {
+            var roleName = $(this).val();
+            $.post('{{ url_for('admin.get_instructions') }}', { role: roleName }, function(data) {
+                if (data.instructions !== undefined) {
+                    $('#instructions').val(data.instructions);
+                } else {
+                    $('#instructions').val('');
+                }
+            });
+        });
+
+        $('#save-role').click(function() {
+            var roleName = $('#role-select').val();
+            var instructions = $('#instructions').val();
+            $.post('{{ url_for('admin.save_instructions') }}', { role: roleName, instructions: instructions }, function(data) {
+                if (data.status === 'success') {
+                    alert('Instructions saved successfully.');
+                } else {
+                    alert('Error saving instructions: ' + data.message);
+                }
+            });
+        });
+
+        $('#chat-form').submit(function(event) {
+            event.preventDefault();
+            var roleName = $('#role-select').val();
+            var messageContent = $('#message').val();
+            $.post('{{ url_for('admin.send_message') }}', { role: roleName, message: messageContent }, function(data) {
+                if (data.status === 'Message sent') {
+                    alert('Message sent successfully.');
+                } else {
+                    alert('Error sending message: ' + data.error);
+                }
+            });
+        });
+    });
+</script>
+
 {% endblock %}

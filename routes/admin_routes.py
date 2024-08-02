@@ -31,8 +31,9 @@ def before_request():
             g.user = new_user
 
 @admin_bp.route('/')
-def arena():
-    return render_template('admin.html')
+def admin():
+    roles = Role.query.all()
+    return render_template('admin.html', roles=roles)
 
 @admin_bp.route('/update_settings', methods=['POST'])
 def update_settings():
@@ -100,6 +101,7 @@ def save_instructions():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @admin_bp.route('/admin', methods=['GET'])
-def admin():
+def admin_page():
     messages = Message.query.all()
-    return render_template('admin.html', messages=messages)
+    roles = Role.query.all()
+    return render_template('admin.html', messages=messages, roles=roles)
