@@ -161,6 +161,8 @@ async def start_test_battle():
         logging.error(f"Error starting test battle: {e}")
         return jsonify({"error": "Internal server error"}), 500
     
+    
+    
 @arena_bp.route('/start_tactics', methods=['POST'])
 async def start_tactics():
     logging.info("Received request to start tactics")
@@ -196,6 +198,10 @@ async def start_tactics():
             assistant = GeminiAssistant("tactician")
             response = await assistant.send_message(prompt)
 
+            if not response.strip():
+                logging.error("Received empty response from assistant")
+                return jsonify({"error": "Received empty response from assistant"}), 500
+
             # Save the tactics response to the tactics chat
             tactics_message = TacticsChatMessage(content=response, sender="tactician", user_id=user_id)
             db.session.add(tactics_message)
@@ -210,3 +216,55 @@ async def start_tactics():
         logging.error(f"Error generating tactics: {e}")
         return jsonify({"error": str(e)}), 500
 
+@arena_bp.route('/generate_fighter_move', methods=['POST'])
+async def generate_fighter_move():
+    logging.info("Received request to generate fighter move")
+    try:
+        user_id = g.user.id
+        registrar = Registrar.query.filter_by(user_id=user_id).first()
+        if not registrar:
+            logging.error("User not registered for arena")
+            return jsonify({"error": "User not registered for arena"}), 400
+
+        character = Character.query.get(registrar.character_id)
+        arena = Arena.query.get(registrar.arena_id)
+        
+        if not character or not arena:
+            logging.error("Character or arena not found")
+            return jsonify({"error": "Character or arena not found"}), 400
+
+        # Fetch the latest tactics message
+        tactics_message = TacticsChatMessage.query.filter_by(user_id=user_id).order_by(TacticsChatMessage.timestamp.desc()).first()
+        tactics_content = tactics_message.content if tactics_message else ""
+
+        # Fetch the latest player message
+        player_message = GeneralChatMessage.query.filter_by(user_id=user_id).order_by(GeneralChatMessage.timestamp.desc()).first()
+        player_content = player_message.content if player_message else ""
+
+        # Construct the assistant prompt
+        prompt = f"Arena Description: {arena.description}\n"
+        prompt += f"Arena Parameters: {arena.parameters}\n\n"
+        prompt += f"Character Name: {character.name}\n"
+        prompt += f"Character Traits: {character.traits}\n\n"
+        prompt += f"Tactics Advice: {tactics_content}\n"
+        prompt += f"Player Input: {player_content}\n\n"
+        prompt += "Generate the next move for the character based on the above information."
+
+        # Create assistant and get response
+        assistant = GeminiAssistant("fighter")
+        response = await assistant.send_message(prompt)
+
+        if not response.strip():
+            logging.error("Received empty response from assistant")
+            return jsonify({"error": "Received empty response from assistant"}), 500
+
+        # Save the fighter's move to the arena chat
+        fighter_move = ArenaChatMessage(content=response, sender="fighter", user_id=user_id, arena_id=arena.id)
+        db.session.add(fighter_move)
+        db.session.commit()
+
+        logging.info("Fighter move generated successfully")
+        return jsonify({"status": "Fighter move generated", "response": response}), 200
+    except Exception as e:
+        logging.error(f"Error generating fighter move: {e}")
+        return jsonify({"error": str(e)}), 500

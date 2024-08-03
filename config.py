@@ -1,10 +1,16 @@
 # --- config.py ---
 
 import os
-from dotenv import load_dotenv
+
+def load_dotenv(dotenv_path):
+    with open(dotenv_path, 'r') as f:
+        for line in f:
+            if line.strip() and not line.startswith('#'):
+                key, value = line.strip().split('=', 1)
+                os.environ[key] = value
 
 class Config:
-    load_dotenv()
+    load_dotenv('.env')
     
     # Secret key for session data protection
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'

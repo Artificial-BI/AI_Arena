@@ -1,15 +1,15 @@
 {
-    "name": "Djin",
-    "type": "Djinn",
-    "strength": 25,
+    "name": "Terra",
+    "type": "Earth Mage",
+    "strength": 20,
     "agility": null,
-    "intelligence": 90,
+    "intelligence": 80,
     "endurance": null,
-    "speed": 80,
-    "magic": 98,
-    "defense": 15,
-    "attack": 60,
-    "charisma": 30,
-    "luck": 50,
-    "description": "Djin is a mischievous Djinn bound to a magical lamp. He possesses immense magical power, able to manipulate elements and grant wishes, but his intelligence often leads to unintended consequences. With a sly grin and a penchant for pranks, Djin's cunning and quick wit make him a formidable opponent. His mastery of illusions and teleportation allows him to vanish and reappear at will, leaving his foes bewildered. While lacking physical strength, his speed and agility make him a hard target to hit. However, his limited stamina and poor defense make him vulnerable to sustained attacks. Djin was once a powerful sorcerer in the ancient world, but after an ill-fated experiment, he was bound to the lamp as punishment. Now, he seeks to regain his freedom and restore his former glory, even if it means playing tricks and manipulating those who wish upon him."
+    "speed": 30,
+    "magic": 95,
+    "defense": 40,
+    "attack": 65,
+    "charisma": 25,
+    "luck": 15,
+    "description": "Terra is a stoic and reserved mage, her connection to the earth profound and unwavering.  She has dedicated her life to mastering the arcane arts, specifically those that draw upon the earth's raw power. Her intelligence is her greatest asset, allowing her to decipher complex spells and manipulate the elements with precision.  While her strength and speed are modest, she compensates with her powerful magic, capable of summoning massive earth golems, manipulating the ground to create treacherous terrain, and even controlling the very elements within the earth. Though she is not known for her charisma or luck, her dedication to her craft and her unwavering resolve have earned her respect among those who know her. Terra's past is shrouded in mystery, whispered tales of her family's ancient lineage, guardians of the earth's secrets. Though she rarely speaks of it, she carries the weight of her heritage, a responsibility to protect the balance of nature."
 }
