@@ -30,7 +30,7 @@ def before_request():
 @arena_bp.route('/')
 def arena():
     characters = Character.query.order_by(Character.id.desc()).limit(2).all()
-    return render_template('arena.html', characters=characters)
+    return render_template('arena.html', characters=characters, enumerate=enumerate)
 
 @arena_bp.route('/get_characters')
 def get_characters():
@@ -65,7 +65,8 @@ def get_characters():
 @arena_bp.route('/get_arena_chat')
 def get_arena_chat():
     try:
-        messages = ArenaChatMessage.query.order_by(ArenaChatMessage.timestamp.asc()).all()
+        user_id = g.user.id
+        messages = ArenaChatMessage.query.filter_by(user_id=user_id).order_by(ArenaChatMessage.timestamp.asc()).all()
         chat_data = [{'content': msg.content, 'timestamp': msg.timestamp, 'sender': msg.sender, 'user_id': msg.user_id} for msg in messages]
         return jsonify(chat_data)
     except Exception as e:
@@ -93,7 +94,8 @@ def send_arena_chat():
 @arena_bp.route('/get_general_chat')
 def get_general_chat():
     try:
-        messages = GeneralChatMessage.query.order_by(GeneralChatMessage.timestamp.asc()).all()
+        user_id = g.user.id
+        messages = GeneralChatMessage.query.filter_by(user_id=user_id).order_by(GeneralChatMessage.timestamp.asc()).all()
         chat_data = [{'content': msg.content, 'timestamp': msg.timestamp, 'sender': msg.sender, 'user_id': msg.user_id} for msg in messages]
         return jsonify(chat_data)
     except Exception as e:
@@ -121,12 +123,14 @@ def send_general_chat():
 @arena_bp.route('/get_tactics_chat')
 def get_tactics_chat():
     try:
-        messages = TacticsChatMessage.query.order_by(TacticsChatMessage.timestamp.asc()).all()
+        user_id = g.user.id
+        messages = TacticsChatMessage.query.filter_by(user_id=user_id).order_by(TacticsChatMessage.timestamp.asc()).all()
         chat_data = [{'content': msg.content, 'timestamp': msg.timestamp, 'sender': msg.sender, 'user_id': msg.user_id} for msg in messages]
         return jsonify(chat_data)
     except Exception as e:
         logging.error(f"Error fetching tactics chat messages: {e}")
         return jsonify({"error": "Internal server error"}), 500
+
 
 @arena_bp.route('/send_tactics_chat', methods=['POST'])
 def send_tactics_chat():
@@ -156,10 +160,10 @@ async def start_test_battle():
     except Exception as e:
         logging.error(f"Error starting test battle: {e}")
         return jsonify({"error": "Internal server error"}), 500
-
-@arena_bp.route('/generate_tactics', methods=['POST'])
-async def generate_tactics():
-    logging.info("Received request to generate tactics")
+    
+@arena_bp.route('/start_tactics', methods=['POST'])
+async def start_tactics():
+    logging.info("Received request to start tactics")
     try:
         user_id = g.user.id
         registrar = Registrar.query.filter_by(user_id=user_id).first()
@@ -174,78 +178,35 @@ async def generate_tactics():
             logging.error("Character or arena not found")
             return jsonify({"error": "Character or arena not found"}), 400
 
-        # Fetch arena chat messages
-        arena_chat_messages = ArenaChatMessage.query.filter_by(arena_id=arena.id).order_by(ArenaChatMessage.timestamp.asc()).all()
-        chat_content = "\n".join([msg.content for msg in arena_chat_messages])
+        # Получение непрочитанных сообщений
+        unread_tactics_messages = TacticsChatMessage.query.filter_by(user_id=user_id, read_status=0).all()
+        if not unread_tactics_messages:
+            # Fetch character and arena details
+            character = Character.query.get(registrar.character_id)
+            arena = Arena.query.get(registrar.arena_id)
 
-        # Construct the assistant prompt
-        prompt = f"Arena Description: {arena.description}\n"
-        prompt += f"Arena Parameters: {arena.parameters}\n\n"
-        prompt += f"Character Name: {character.name}\n"
-        prompt += f"Character Traits: {character.traits}\n\n"
-        prompt += f"Opponent Moves:\n{chat_content}\n\n"
-        prompt += "Generate tactical advice for the next move."
+            # Construct the assistant prompt
+            prompt = f"Arena Description: {arena.description}\n"
+            prompt += f"Arena Parameters: {arena.parameters}\n\n"
+            prompt += f"Character Name: {character.name}\n"
+            prompt += f"Character Traits: {character.traits}\n\n"
+            prompt += "Generate tactical advice for the next move."
 
-        # Create assistant and get response
-        assistant = GeminiAssistant("tactician")
-        response = await assistant.send_message(prompt)
+            # Create assistant and get response
+            assistant = GeminiAssistant("tactician")
+            response = await assistant.send_message(prompt)
 
-        # Save the tactics response to the tactics chat
-        tactics_message = TacticsChatMessage(content=response, sender="tactician", user_id=user_id)
-        db.session.add(tactics_message)
-        db.session.commit()
+            # Save the tactics response to the tactics chat
+            tactics_message = TacticsChatMessage(content=response, sender="tactician", user_id=user_id)
+            db.session.add(tactics_message)
+            db.session.commit()
 
-        logging.info("Tactics generated successfully")
-        return jsonify({"status": "Tactics generated", "response": response}), 200
+            logging.info("Tactics generated successfully")
+            return jsonify({"status": "Tactics generated", "response": response}), 200
+        else:
+            logging.info("Unread tactics messages present")
+            return jsonify({"status": "Unread tactics messages present"}), 200
     except Exception as e:
         logging.error(f"Error generating tactics: {e}")
-        return jsonify({"error": "Internal server error"}), 500
+        return jsonify({"error": str(e)}), 500
 
-@arena_bp.route('/generate_fighter_move', methods=['POST'])
-async def generate_fighter_move():
-    logging.info("Received request to generate fighter move")
-    try:
-        user_id = g.user.id
-        registrar = Registrar.query.filter_by(user_id=user_id).first()
-        if not registrar:
-            logging.error("User not registered for arena")
-            return jsonify({"error": "User not registered for arena"}), 400
-
-        character = Character.query.get(registrar.character_id)
-        arena = Arena.query.get(registrar.arena_id)
-        
-        if not character or not arena:
-            logging.error("Character or arena not found")
-            return jsonify({"error": "Character or arena not found"}), 400
-
-        # Fetch the latest tactics message
-        tactics_message = TacticsChatMessage.query.filter_by(user_id=user_id).order_by(TacticsChatMessage.timestamp.desc()).first()
-        tactics_content = tactics_message.content if tactics_message else ""
-
-        # Fetch the latest player message
-        player_message = GeneralChatMessage.query.filter_by(user_id=user_id).order_by(GeneralChatMessage.timestamp.desc()).first()
-        player_content = player_message.content if player_message else ""
-
-        # Construct the assistant prompt
-        prompt = f"Arena Description: {arena.description}\n"
-        prompt += f"Arena Parameters: {arena.parameters}\n\n"
-        prompt += f"Character Name: {character.name}\n"
-        prompt += f"Character Traits: {character.traits}\n\n"
-        prompt += f"Tactics Advice: {tactics_content}\n"
-        prompt += f"Player Input: {player_content}\n\n"
-        prompt += "Generate the next move for the character based on the above information."
-
-        # Create assistant and get response
-        assistant = GeminiAssistant("fighter")
-        response = await assistant.send_message(prompt)
-
-        # Save the fighter's move to the arena chat
-        fighter_move = ArenaChatMessage(content=response, sender="fighter", user_id=user_id, arena_id=arena.id)
-        db.session.add(fighter_move)
-        db.session.commit()
-
-        logging.info("Fighter move generated successfully")
-        return jsonify({"status": "Fighter move generated", "response": response}), 200
-    except Exception as e:
-        logging.error(f"Error generating fighter move: {e}")
-        return jsonify({"error": "Internal server error"}), 500

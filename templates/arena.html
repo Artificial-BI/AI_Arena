@@ -1,14 +1,12 @@
-<!-- arena.html -->
-
 {% extends 'base.html' %}
-
 {% block head %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/arena.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Добавляем эту строку -->
 {% endblock %}
 
 {% block content %}
+
 <h1>Arena Interface</h1>
 
 <!-- Arena Name -->
@@ -16,38 +14,37 @@
 
 <!-- Button to start test battle -->
 <button id="start-test-battle">Start Test Battle</button>
+<button id="start-tactics">Начать бой</button> <!-- Добавляем кнопку для запуска боя -->
 
-<!-- Player Names -->
-<div id="players-names">
-    <div class="player-name" id="player1-name">
-        <h3>{{ characters[0].name if characters|length > 0 else 'Player 1' }}</h3>
-    </div>
-    <div class="player-name" id="player2-name">
-        <h3>{{ characters[1].name if characters|length > 1 else 'Player 2' }}</h3>
-    </div>
-</div>
-
-<!-- Player Images and Attributes -->
-<div class="character-section">
-    <div class="character">
-        <img src="{{ url_for('static', filename='images/default/player1.png') }}" alt="Player 1 Image" id="player1-image">
-        <p id="player1-description">{{ characters[0].description if characters|length > 0 else 'Player 1 description' }}</p>
-        <!-- Character Attributes Chart -->
-        <div class="character-stats">
-            <h2>Character Attributes</h2>
-            <canvas id="player1-stats"></canvas>
-        </div>
-    </div>
-    <div class="character">
-        <img src="{{ url_for('static', filename='images/default/player2.png') }}" alt="Player 2 Image" id="player2-image">
-        <p id="player2-description">{{ characters[1].description if characters|length > 1 else 'Player 2 description' }}</p>
-        <!-- Character Attributes Chart -->
-        <div class="character-stats">
-            <h2>Character Attributes</h2>
-            <canvas id="player2-stats"></canvas>
-        </div>
-    </div>
-</div>
+<!-- Player Table -->
+<table id="players-table">
+    <thead>
+        <tr>
+            <th>Number</th>
+            <th>Player Name/ID</th>
+            <th>Character Name</th>
+            <th>Character Traits</th>
+            <th>Character Image</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for i, character in enumerate(characters) %}
+        <tr data-traits="{{ character.traits }}">
+            <td>{{ i + 1 }}</td>
+            <td>{{ character.user_id }}</td>
+            <td>{{ character.name }}</td>
+            <td>
+                <div class="chart-container">
+                    <canvas id="traits-chart-{{ i + 1 }}" class="chart-canvas"></canvas>
+                </div>
+            </td>
+            <td>
+                <img src="{{ url_for('static', filename=character.image_url) }}" alt="Character Image" class="character-image" data-description="{{ character.description }}">
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 
 <!-- Arena Chat -->
 <h2>Arena Chat</h2>
@@ -75,5 +72,10 @@
     <button type="submit">Send</button>
 </form>
 
+<div id="tooltip" style="position: absolute; display: none; background: #fff; border: 1px solid #ccc; padding: 10px; border-radius: 4px;"></div>
+
+<script>
+    const user_id = "{{ g.user.id }}";
+</script>
 <script src="{{ url_for('static', filename='js/arena.js') }}"></script>
 {% endblock %}

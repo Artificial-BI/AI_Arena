@@ -1,21 +1,56 @@
-
-/* player.css */
-
+/* Основные переменные */
 :root {
     --bg-color: #f4f4f4;
     --text-color: #333;
     --nav-bg-color: #013908;
     --nav-text-color: #fff;
-    --button-bg-color: #013908;
+    --button-bg-color: #065311;
     --button-text-color: #fff;
-    --button-hover-bg-color: #0a5603;
-    --button-active-bg-color: #15a9df;
-    --button-border-color: #013206;
-    --input-border-color: #0a0a0a;
-    --input-focus-border-color: #46a8f8;
-    --input-focus-shadow-color: rgba(19, 199, 240, 0.6);
-    --message-bg-color: #e0e0e0; /* Light gray background for messages */
-    --message-text-color: #000000; /* Black text color for messages */
+    --button-hover-bg-color: #054010;
+    --button-active-bg-color: #03300a;
+    --button-border-color: #000;
+    --input-border-color: #000;
+    --input-focus-border-color: #66afe9;
+    --input-focus-shadow-color: rgba(102, 175, 233, 0.6);
+    --chat-border-color: #000; /* Цвет бордюра для чатов */
+}
+
+/* Настройки для светлой темы */
+@media (prefers-color-scheme: light) {
+    :root {
+        --bg-color: #f4f4f4;
+        --text-color: #333;
+        --nav-bg-color: #013908;
+        --nav-text-color: #fff;
+        --button-bg-color: #065311;
+        --button-text-color: #fff;
+        --button-hover-bg-color: #054010;
+        --button-active-bg-color: #03300a;
+        --button-border-color: #000;
+        --input-border-color: #000;
+        --input-focus-border-color: #66afe9;
+        --input-focus-shadow-color: rgba(102, 175, 233, 0.6);
+        --chat-border-color: #000; /* Цвет бордюра для чатов */
+    }
+}
+
+/* Настройки для темной темы */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-color: #333;
+        --text-color: #f4f4f4;
+        --nav-bg-color: #013908;
+        --nav-text-color: #fff;
+        --button-bg-color: #065311;
+        --button-text-color: #fff;
+        --button-hover-bg-color: #054010;
+        --button-active-bg-color: #03300a;
+        --button-border-color: #fff;
+        --input-border-color: #fff;
+        --input-focus-border-color: #66afe9;
+        --input-focus-shadow-color: rgba(102, 175, 233, 0.6);
+        --chat-border-color: #fff; /* Цвет бордюра для чатов */
+    }
 }
 
 body {
@@ -58,13 +93,11 @@ header nav ul li button {
     background-color: var(--button-bg-color);
     color: var(--button-text-color);
     padding: 10px 20px;
-    border: 1px;
+    border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
     transition: background-color 0.3s ease, border-color 0.3s ease;
-    text-decoration: none;
-    display: inline-block;
 }
 
 header nav ul li button:hover {
@@ -81,7 +114,7 @@ header nav ul li button:active {
 .chat-section,
 .general-chat,
 .character-stats {
-    background-color: #ffffff;
+    background-color: var(--chat-box-bg-color);
     padding: 20px;
     border-radius: 4px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -90,32 +123,12 @@ header nav ul li button:active {
 
 .character-item {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     margin-bottom: 10px;
 }
 
-.character-item button {
-    background-color: var(--button-bg-color);
-    color: var(--button-text-color);
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
-}
-
-.character-item button:hover {
-    background-color: var(--button-hover-bg-color);
-}
-
-.character-item button:active {
-    background-color: var(--button-active-bg-color);
-}
-
 .character-item form {
-    display: inline-block;
+    margin-right: 10px;
 }
 
 .chat-section,
@@ -126,8 +139,8 @@ header nav ul li button:active {
 
 #chat-box,
 #general-chat-box {
-    border: 1px solid var(--input-border-color);
-    background-color: #fff;
+    border: 1px solid var(--chat-border-color); /* Добавлен бордюр */
+    background-color: var(--chat-box-bg-color);
     padding: 10px;
     height: 200px;
     overflow-y: scroll;
@@ -138,19 +151,17 @@ header nav ul li button:active {
     border-radius: 10px;
     margin-bottom: 10px;
     max-width: 70%;
-    background-color: var(--message-bg-color); /* Light gray background */
-    color: var(--message-text-color); /* Black text color */
 }
 
 .chat-message.right {
-    background-color: #d3d3d3; /* Light gray background for user messages */
-    color: #000; /* Black text color */
+    background-color: var(--button-bg-color);
+    color: var(--button-text-color);
     margin-left: auto;
 }
 
 .chat-message.left {
-    background-color: #f0f0f0; /* Another shade of gray for neural network messages */
-    color: #000; /* Black text color */
+    background-color: var(--button-border-color);
+    color: var(--text-color);
 }
 
 .timestamp {
@@ -170,25 +181,38 @@ header nav ul li button:active {
 #general-chat-form input[type="text"] {
     flex: 1;
     margin-right: 10px;
+    padding: 10px;
+    border: 1px solid var(--input-border-color);
+    border-radius: 4px;
 }
 
 #chat-form button,
 #general-chat-form button {
     padding: 8px 20px;
+    background-color: var(--button-bg-color);
+    color: var(--button-text-color);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+#chat-form button:hover,
+#general-chat-form button:hover {
+    background-color: var(--button-hover-bg-color);
+}
+
+#chat-form button:active,
+#general-chat-form button:active {
+    background-color: var(--button-active-bg-color);
 }
 
 .selected-character img {
     display: block;
     margin: 0 auto;
     max-width: 100%;
-    height: 306px; /* Setting the height */
-}
-
-.character-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
+    height: auto;
 }
 
 .character-stats canvas {
@@ -196,47 +220,7 @@ header nav ul li button:active {
     height: auto;
 }
 
-.character-management {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-}
-
-.characters-section {
-    flex: 1;
-    max-height: 500px; /* Set a fixed height */
-    overflow-y: auto; /* Дadd scroll */
-    border: 1px solid var(--input-border-color);
-    padding: 10px;
-}
-
-.create-character {
-    flex: 1;
-}
-
-.create-character textarea {
-    width: 100%;
-    height: 120px; /* Increasing the height */
-}
-
-.create-character input[type="text"] {
-    width: 100%;
-}
-
-/* New style to reduce field and container height */
-.extra-input-container {
-    display: flex;
-    align-items: center;
-    margin-top: 10px;
-}
-
-.extra-input {
-    height: 40px;
-    width: 10px;/*calc(100% / 10%); /* Reduce the width by 3 times */
-    margin-right: 10px;
-}
-
-/* Adaptive styles */
+/* Адаптивные стили */
 @media (max-width: 600px) {
     header nav ul {
         flex-direction: column;
@@ -254,15 +238,5 @@ header nav ul li button:active {
 
     .nav-group li {
         margin-bottom: 10px;
-    }
-
-    .character-info {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .character-management {
-        flex-direction: column;
-        align-items: flex-start;
     }
 }

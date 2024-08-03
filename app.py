@@ -1,3 +1,5 @@
+# --- app.py ---
+
 from flask import Flask, render_template, request, g
 from config import Config
 from logging_config import configure_logging
@@ -32,6 +34,9 @@ app.register_blueprint(arena_bp, url_prefix='/arena')
 # Import and register the webhook blueprint
 from webhook import webhook_bp
 app.register_blueprint(webhook_bp)
+
+# Add enumerate to Jinja2 environment
+app.jinja_env.globals.update(enumerate=enumerate)
 
 # Define error handlers
 @app.errorhandler(404)

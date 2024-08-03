@@ -1,3 +1,4 @@
+/* Основные переменные */
 :root {
     --bg-color: #f4f4f4;
     --text-color: #333;
@@ -14,6 +15,45 @@
     --input-focus-shadow-color: rgba(102, 175, 233, 0.6);
 }
 
+/* Настройки для светлой темы */
+@media (prefers-color-scheme: light) {
+    :root {
+        --bg-color: #f4f4f4;
+        --text-color: #333;
+        --nav-bg-color: #013908;
+        --nav-text-color: #fff;
+        --button-bg-color: #065311;
+        --button-text-color: #fff;
+        --button-hover-bg-color: #054010;
+        --button-active-bg-color: #03300a;
+        --button-border-color: #000000;
+        --button-inactive-bg-color: #ccc;
+        --input-border-color: #000000;
+        --input-focus-border-color: #66afe9;
+        --input-focus-shadow-color: rgba(102, 175, 233, 0.6);
+    }
+}
+
+/* Настройки для темной темы */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-color: #1e1e1e;
+        --text-color: #fff;
+        --nav-bg-color: #0a3d06;
+        --nav-text-color: #fff;
+        --button-bg-color: #0a5b14;
+        --button-text-color: #fff;
+        --button-hover-bg-color: #086410;
+        --button-active-bg-color: #064009;
+        --button-border-color: #fff;
+        --button-inactive-bg-color: #444;
+        --input-border-color: #fff;
+        --input-focus-border-color: #66afe9;
+        --input-focus-shadow-color: rgba(102, 175, 233, 0.6);
+    }
+}
+
+/* Основные стили */
 body {
     font-family: Arial, sans-serif;
     background-color: var(--bg-color);
@@ -99,7 +139,7 @@ form button:active {
     border-color: var(--button-border-color);
 }
 
-/* Header and Footer Styles */
+/* Стили для шапки и подвала */
 header {
     background-color: var(--nav-bg-color);
     color: var(--nav-text-color);
@@ -185,7 +225,7 @@ footer .social-links a:hover {
     margin-right: 10px;
 }
 
-/* Styles for tournament table */
+/* Стили для таблицы турниров */
 .tournament-table table {
     width: 100%;
     border-collapse: collapse;
@@ -201,7 +241,7 @@ footer .social-links a:hover {
     background-color: #f2f2f2;
 }
 
-/* Styles for the list of top players*/
+/* Стили для списка топ-игроков */
 .top-players-list {
     border: 1px solid #000;
     padding: 10px;
@@ -217,7 +257,7 @@ footer .social-links a:hover {
     margin: 5px 0;
 }
 
-/* GIF container styles*/
+/* Стили для GIF контейнера */
 .gif-container {
     display: flex;
     justify-content: space-between;
@@ -232,7 +272,7 @@ footer .social-links a:hover {
     flex: 1;
 }
 
-/* Styles for the registration modal window */
+/* Стили для модального окна регистрации */
 .modal {
     display: none;
     position: fixed;

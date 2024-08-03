@@ -1,19 +1,62 @@
+/* Основные переменные */
 :root {
     --bg-color: #f4f4f4;
     --text-color: #333;
     --nav-bg-color: #013908;
     --nav-text-color: #fff;
-    --button-bg-color: #013908;
+    --button-bg-color: #065311;
     --button-text-color: #fff;
-    --button-inactive-bg-color: #ccc;
-    --input-border-color: #ccc;
+    --button-hover-bg-color: #054010;
+    --button-active-bg-color: #03300a;
+    --button-border-color: #000000;
+    --input-border-color: #000000;
     --input-focus-border-color: #66afe9;
     --input-focus-shadow-color: rgba(102, 175, 233, 0.6);
-    --chat-box-border-color: #ccc;
-    --chat-box-bg-color: #fff;
-    --chat-box-text-color: #333;
-    --button-hover-color: #013908;
-    --button-active-color: #013908;
+    --chat-border-color: #000; /* Цвет бордюра для чатов */
+    --chat-bg-color: #fff; /* Цвет фона для сообщений чата */
+    --chat-text-color: #333; /* Цвет текста для сообщений чата */
+}
+
+/* Настройки для светлой темы */
+@media (prefers-color-scheme: light) {
+    :root {
+        --bg-color: #f4f4f4;
+        --text-color: #333;
+        --nav-bg-color: #013908;
+        --nav-text-color: #fff;
+        --button-bg-color: #065311;
+        --button-text-color: #fff;
+        --button-hover-bg-color: #054010;
+        --button-active-bg-color: #03300a;
+        --button-border-color: #000000;
+        --input-border-color: #000000;
+        --input-focus-border-color: #66afe9;
+        --input-focus-shadow-color: rgba(102, 175, 233, 0.6);
+        --chat-border-color: #000;
+        --chat-bg-color: #fff; /* Цвет фона для сообщений чата */
+        --chat-text-color: #333; /* Цвет текста для сообщений чата */
+    }
+}
+
+/* Настройки для темной темы */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-color: #1e1e1e;
+        --text-color: #fff;
+        --nav-bg-color: #0a3d06;
+        --nav-text-color: #fff;
+        --button-bg-color: #0a5b14;
+        --button-text-color: #fff;
+        --button-hover-bg-color: #086410;
+        --button-active-bg-color: #064009;
+        --button-border-color: #fff;
+        --input-border-color: #fff;
+        --input-focus-border-color: #66afe9;
+        --input-focus-shadow-color: rgba(102, 175, 233, 0.6);
+        --chat-border-color: #fff;
+        --chat-bg-color: #333; /* Цвет фона для сообщений чата */
+        --chat-text-color: #fff; /* Цвет текста для сообщений чата */
+    }
 }
 
 body {
@@ -24,111 +67,35 @@ body {
     padding: 0;
 }
 
-nav ul {
+.arena-container {
+    padding: 20px;
+}
+
+header nav ul {
     list-style: none;
     background-color: var(--nav-bg-color);
     padding: 10px;
     margin: 0;
     display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
 }
 
-nav ul li {
+header nav ul li {
     margin-right: 10px;
+    color: var(--nav-text-color);
 }
 
-nav ul li a {
+header nav ul li a,
+header nav ul li span {
     color: var(--nav-text-color);
     text-decoration: none;
     padding: 8px 16px;
-    display: block;
+    display: inline-block;
 }
 
-nav ul li a:hover {
-    background-color: darken(var(--button-bg-color), 10%);
-    color: var(--button-text-color);
-}
-
-.container {
-    padding: 20px;
-}
-
-/* Styles for arena interface */
-#players-names {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 20px;
-}
-
-.player-name {
-    width: 45%;
-    text-align: center;
-    border: 1px solid #3209e8;
-    padding: 10px;
-    border-radius: 10px;
-    background-color: #fff;
-}
-
-.player-name h3 {
-    margin: 0;
-    font-size: 1.2em;
-}
-
-.character-section {
-    margin-top: 10px;
-    display: flex;
-    justify-content: space-between;
-}
-
-.character-section .character {
-    width: 45%;
-    text-align: center;
-}
-
-.character-section img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 10px;
-}
-
-.character-section p {
-    margin-top: 10px;
-    font-size: 1em;
-}
-
-.character-stats {
-    margin-top: 10px;
-}
-
-#arena-chat-box,
-#tactics-chat-box,
-#general-chat-box {
-    border: 1px solid var(--chat-box-border-color);
-    background-color: var(--chat-box-bg-color);
-    color: var(--chat-box-text-color);
-    padding: 10px;
-    margin-top: 10px;
-    height: 200px;
-    overflow-y: scroll;
-}
-
-#general-chat-form,
-#tactics-chat-form {
-    margin-top: 10px;
-    display: flex;
-}
-
-#general-chat-form input[type="text"],
-#tactics-chat-form input[type="text"] {
-    flex: 1;
-    padding: 10px;
-    border: 1px solid var(--input-border-color);
-    border-radius: 4px;
-    margin-right: 10px;
-    font-size: 16px;
-}
-
-#general-chat-form button,
-#tactics-chat-form button {
+header nav ul li button {
     background-color: var(--button-bg-color);
     color: var(--button-text-color);
     padding: 10px 20px;
@@ -136,50 +103,48 @@ nav ul li a:hover {
     border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
-#general-chat-form button:hover,
-#tactics-chat-form button:hover {
-    background-color: var(--button-hover-color);
+header nav ul li button:hover {
+    background-color: var(--button-hover-bg-color);
 }
 
-#general-chat-form button:active,
-#tactics-chat-form button:active {
-    background-color: var(--button-active-color);
+header nav ul li button:active {
+    background-color: var(--button-active-bg-color);
 }
 
-.arena-chat-message,
-.tactics-chat-message,
-.general-chat-message {
+.arena-chat-section,
+#arena-chat-box,
+#tactics-chat-box,
+#general-chat-box {
+    background-color: var(--chat-bg-color);
+    color: var(--chat-text-color);
+    padding: 20px;
+    border-radius: 4px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    border: 1px solid var(--chat-border-color); /* Добавлен бордюр */
+    height: 300px; /* Фиксированная высота */
+    overflow-y: scroll; /* Добавлен скроллбар */
+}
+
+.chat-message {
     padding: 10px;
     border-radius: 10px;
     margin-bottom: 10px;
     max-width: 70%;
 }
 
-.arena-chat-message.left,
-.tactics-chat-message.left,
-.general-chat-message.left {
-    background-color: var(--button-inactive-bg-color);
-    color: var(--text-color);
-}
-
-.arena-chat-message.right,
-.tactics-chat-message.right,
-.general-chat-message.right {
+.chat-message.right {
     background-color: var(--button-bg-color);
     color: var(--button-text-color);
     margin-left: auto;
 }
 
-.arena-chat-message.center,
-.tactics-chat-message.center,
-.general-chat-message.center {
-    background-color: var(--nav-bg-color);
-    color: var(--nav-text-color);
-    text-align: center;
-    margin: 0 auto;
+.chat-message.left {
+    background-color: var(--button-border-color);
+    color: var(--text-color);
 }
 
 .timestamp {
@@ -189,53 +154,119 @@ nav ul li a:hover {
     margin-top: 5px;
 }
 
-/* Header and Footer Styles */
-header {
-    background-color: var(--nav-bg-color);
-    color: var(--nav-text-color);
-    padding: 10px 0;
-    text-align: center;
-}
-
-header .logo h1 {
-    margin: 0;
-}
-
-nav ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+#chat-form {
     display: flex;
-    justify-content: center;
+    margin-top: 10px;
 }
 
-nav ul li {
-    margin: 0 15px;
+#chat-form input[type="text"] {
+    flex: 1;
+    margin-right: 10px;
+    padding: 10px;
+    border: 1px solid var(--input-border-color);
+    border-radius: 4px;
 }
 
-nav ul li a {
-    color: var(--nav-text-color);
-    text-decoration: none;
+#chat-form button {
+    padding: 8px 20px;
+    background-color: var(--button-bg-color);
+    color: var(--button-text-color);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
-footer {
-    background-color: var(--nav-bg-color);
-    color: var (--nav-text-color);
-    padding: 20px 0;
-    text-align: center;
+#chat-form button:hover {
+    background-color: var(--button-hover-bg-color);
 }
 
-footer .footer-content {
-    max-width: 800px;
-    margin: 0 auto;
+#chat-form button:active {
+    background-color: var(--button-active-bg-color);
 }
 
-footer .social-links a {
-    margin: 0 10px;
-    color: var(--nav-text-color);
-    text-decoration: none;
+.table-container {
+    height: 300px; /* Фиксированная высота */
+    overflow-y: scroll; /* Добавлен скроллбар */
+    border: 1px solid var(--chat-border-color); /* Добавлен бордюр */
+    padding: 10px;
+    background-color: var(--chat-bg-color);
+    border-radius: 4px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-footer .social-links a:hover {
-    text-decoration: underline;
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table thead {
+    background-color: var(--bg-color);
+}
+
+table th, table td {
+    border: 1px solid var(--chat-border-color); /* Добавлен бордюр */
+    padding: 8px;
+    text-align: left;
+}
+
+table tbody tr {
+    height: 100px; /* Установленная высота строки */
+}
+
+.character-image {
+    max-height: 400px; /* Уменьшенная высота изображения */
+    width: auto;
+    display: block;
+    margin: auto; /* Центрирование изображения */
+}
+
+/* Контейнер для графиков, чтобы сделать их адаптивными */
+.chart-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.chart-canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.table-container {
+    display: flex;
+    flex-direction: column;
+}
+
+table {
+    flex: 1 1 auto;
+}
+
+/* Устанавливаем адаптивные размеры для изображений */
+.character-image {
+    max-width: 100%;
+    height: auto;
+}
+
+.tooltip {
+    position: absolute;
+    display: none;
+    background: var(--chat-bg-color);
+    border: 1px solid var(--chat-border-color);
+    padding: 10px;
+    border-radius: 4px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Адаптивные стили */
+@media (max-width: 600px) {
+    header nav ul {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    header nav ul li {
+        margin-bottom: 10px;
+    }
 }

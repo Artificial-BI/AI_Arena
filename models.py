@@ -68,9 +68,11 @@ class TacticsChatMessage(db.Model):
     content = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     sender = db.Column(db.String(64), nullable=False)  # 'player', 'viewer', 'referee'
+    read_status = db.Column(db.Integer, default=0)  # Add this line
 
     def __repr__(self):
         return f'<TacticsChatMessage {self.content[:15]}>'
+
 
 class RefereePrompt(db.Model):
     id = db.Column(db.Integer, primary_key=True)
