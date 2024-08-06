@@ -17,7 +17,7 @@ class Config:
     
     # API token for accessing Gemini
     GEMINI_API_TOKEN = os.getenv('GEMINI_API_TOKEN')
-    
+    OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
     # Define the base directory of the project
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
     

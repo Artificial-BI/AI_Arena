@@ -13,8 +13,8 @@
     --input-focus-border-color: #66afe9;
     --input-focus-shadow-color: rgba(102, 175, 233, 0.6);
     --chat-border-color: #000; /* Цвет бордюра для чатов */
-    --chat-bg-color: #fff; /* Цвет фона для сообщений чата */
-    --chat-text-color: #333; /* Цвет текста для сообщений чата */
+    --chat-bg-color: var(--bg-color); /* Цвет фона для сообщений чата */
+    --chat-text-color: var(--text-color); /* Цвет текста для сообщений чата */
 }
 
 /* Настройки для светлой темы */
@@ -33,7 +33,7 @@
         --input-focus-border-color: #66afe9;
         --input-focus-shadow-color: rgba(102, 175, 233, 0.6);
         --chat-border-color: #000;
-        --chat-bg-color: #fff; /* Цвет фона для сообщений чата */
+        --chat-bg-color: #f4f4f4; /* Цвет фона для сообщений чата */
         --chat-text-color: #333; /* Цвет текста для сообщений чата */
     }
 }
@@ -54,7 +54,7 @@
         --input-focus-border-color: #66afe9;
         --input-focus-shadow-color: rgba(102, 175, 233, 0.6);
         --chat-border-color: #fff;
-        --chat-bg-color: #333; /* Цвет фона для сообщений чата */
+        --chat-bg-color: #1e1e1e; /* Цвет фона для сообщений чата */
         --chat-text-color: #fff; /* Цвет текста для сообщений чата */
     }
 }
@@ -115,6 +115,7 @@ header nav ul li button:active {
 }
 
 .arena-chat-section,
+.chat-box,
 #arena-chat-box,
 #tactics-chat-box,
 #general-chat-box {
@@ -134,6 +135,8 @@ header nav ul li button:active {
     border-radius: 10px;
     margin-bottom: 10px;
     max-width: 70%;
+    background-color: var(--chat-bg-color); /* Цвет фона для сообщений чата */
+    color: var(--chat-text-color); /* Цвет текста для сообщений чата */
 }
 
 .chat-message.right {
@@ -143,8 +146,8 @@ header nav ul li button:active {
 }
 
 .chat-message.left {
-    background-color: var(--button-border-color);
-    color: var(--text-color);
+    background-color: var(--chat-bg-color);
+    color: var(--chat-text-color);
 }
 
 .timestamp {

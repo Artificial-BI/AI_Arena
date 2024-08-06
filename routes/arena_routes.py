@@ -1,3 +1,4 @@
+# --- arena_routes.py ---
 from flask import Blueprint, render_template, jsonify, request, g
 from models import Character, ArenaChatMessage, GeneralChatMessage, TacticsChatMessage, User, Registrar, Arena
 import logging
@@ -5,10 +6,13 @@ import json
 from extensions import db
 import uuid
 from core import BattleManager
+from tactics_manager import TacticsManager  # Импорт нового модуля тактик
 from gemini import GeminiAssistant  # Assuming GeminiAssistant is the assistant used for tactics and fighters
+import asyncio
 
 arena_bp = Blueprint('arena', __name__)
 battle_manager = BattleManager()
+tactics_manager = TacticsManager()
 
 @arena_bp.before_request
 def before_request():
@@ -29,8 +33,29 @@ def before_request():
 
 @arena_bp.route('/')
 def arena():
+    selected_character = Character.query.filter_by(user_id=g.user.id).order_by(Character.id.desc()).first()
+    if not selected_character:
+        return "Пожалуйста выберите персонажа или создайте с помощью ассистента"
+    
     characters = Character.query.order_by(Character.id.desc()).limit(2).all()
-    return render_template('arena.html', characters=characters, enumerate=enumerate)
+    
+    # Register the selected character for the arena
+    user_id = g.user.id
+    arena_id = 1  # Assuming a single arena for simplicity
+    existing_registration = Registrar.query.filter_by(user_id=user_id, arena_id=arena_id).first()
+    
+    if existing_registration:
+        if existing_registration.character_id != selected_character.id:
+            existing_registration.character_id = selected_character.id
+            db.session.commit()
+            logging.info(f"Updated registration for user {user_id} with new character {selected_character.id} for arena {arena_id}")
+    else:
+        new_registration = Registrar(user_id=user_id, character_id=selected_character.id, arena_id=arena_id)
+        db.session.add(new_registration)
+        db.session.commit()
+        logging.info(f"User {user_id} registered character {selected_character.id} for arena {arena_id}")
+
+    return render_template('arena.html', characters=characters, selected_character=selected_character, enumerate=enumerate)
 
 @arena_bp.route('/get_characters')
 def get_characters():
@@ -131,7 +156,6 @@ def get_tactics_chat():
         logging.error(f"Error fetching tactics chat messages: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
-
 @arena_bp.route('/send_tactics_chat', methods=['POST'])
 def send_tactics_chat():
     try:
@@ -152,119 +176,65 @@ def send_tactics_chat():
 
 @arena_bp.route('/start_test_battle', methods=['POST'])
 async def start_test_battle():
-    logging.info("Received request to start test battle")
+    logging.info("Получен запрос на начало тестовой битвы")
     try:
+        asyncio.create_task(tactics_manager.generate_tactics())
         await battle_manager.start_test_battle()
-        logging.info("Test battle started successfully")
-        return jsonify({'status': 'Test battle started'}), 200
+        logging.info("Тестовая битва успешно началась")
+        return jsonify({'status': 'Тестовая битва началась'}), 200
     except Exception as e:
-        logging.error(f"Error starting test battle: {e}")
-        return jsonify({"error": "Internal server error"}), 500
-    
-    
-    
-@arena_bp.route('/start_tactics', methods=['POST'])
-async def start_tactics():
-    logging.info("Received request to start tactics")
-    try:
-        user_id = g.user.id
-        registrar = Registrar.query.filter_by(user_id=user_id).first()
-        if not registrar:
-            logging.error("User not registered for arena")
-            return jsonify({"error": "User not registered for arena"}), 400
-
-        character = Character.query.get(registrar.character_id)
-        arena = Arena.query.get(registrar.arena_id)
-        
-        if not character or not arena:
-            logging.error("Character or arena not found")
-            return jsonify({"error": "Character or arena not found"}), 400
-
-        # Получение непрочитанных сообщений
-        unread_tactics_messages = TacticsChatMessage.query.filter_by(user_id=user_id, read_status=0).all()
-        if not unread_tactics_messages:
-            # Fetch character and arena details
-            character = Character.query.get(registrar.character_id)
-            arena = Arena.query.get(registrar.arena_id)
-
-            # Construct the assistant prompt
-            prompt = f"Arena Description: {arena.description}\n"
-            prompt += f"Arena Parameters: {arena.parameters}\n\n"
-            prompt += f"Character Name: {character.name}\n"
-            prompt += f"Character Traits: {character.traits}\n\n"
-            prompt += "Generate tactical advice for the next move."
-
-            # Create assistant and get response
-            assistant = GeminiAssistant("tactician")
-            response = await assistant.send_message(prompt)
-
-            if not response.strip():
-                logging.error("Received empty response from assistant")
-                return jsonify({"error": "Received empty response from assistant"}), 500
-
-            # Save the tactics response to the tactics chat
-            tactics_message = TacticsChatMessage(content=response, sender="tactician", user_id=user_id)
-            db.session.add(tactics_message)
-            db.session.commit()
-
-            logging.info("Tactics generated successfully")
-            return jsonify({"status": "Tactics generated", "response": response}), 200
-        else:
-            logging.info("Unread tactics messages present")
-            return jsonify({"status": "Unread tactics messages present"}), 200
-    except Exception as e:
-        logging.error(f"Error generating tactics: {e}")
-        return jsonify({"error": str(e)}), 500
+        logging.error(f"Ошибка при запуске тестовой битвы: {e}")
+        return jsonify({"error": "Внутренняя ошибка сервера"}), 500
 
 @arena_bp.route('/generate_fighter_move', methods=['POST'])
 async def generate_fighter_move():
-    logging.info("Received request to generate fighter move")
+    logging.info("Получен запрос на создание хода бойца")
     try:
         user_id = g.user.id
         registrar = Registrar.query.filter_by(user_id=user_id).first()
         if not registrar:
-            logging.error("User not registered for arena")
-            return jsonify({"error": "User not registered for arena"}), 400
+            logging.error("Пользователь не зарегистрирован на арене")
+            return jsonify({"error": "Пользователь не зарегистрирован на арене"}), 400
 
         character = Character.query.get(registrar.character_id)
         arena = Arena.query.get(registrar.arena_id)
         
         if not character or not arena:
-            logging.error("Character or arena not found")
-            return jsonify({"error": "Character or arena not found"}), 400
+            logging.error("Персонаж или арена не найдены")
+            return jsonify({"error": "Персонаж или арена не найдены"}), 400
 
-        # Fetch the latest tactics message
+        # Получение последнего сообщения тактика
         tactics_message = TacticsChatMessage.query.filter_by(user_id=user_id).order_by(TacticsChatMessage.timestamp.desc()).first()
         tactics_content = tactics_message.content if tactics_message else ""
 
-        # Fetch the latest player message
+        # Получение последнего сообщения игрока
         player_message = GeneralChatMessage.query.filter_by(user_id=user_id).order_by(GeneralChatMessage.timestamp.desc()).first()
         player_content = player_message.content if player_message else ""
 
-        # Construct the assistant prompt
-        prompt = f"Arena Description: {arena.description}\n"
-        prompt += f"Arena Parameters: {arena.parameters}\n\n"
-        prompt += f"Character Name: {character.name}\n"
-        prompt += f"Character Traits: {character.traits}\n\n"
-        prompt += f"Tactics Advice: {tactics_content}\n"
-        prompt += f"Player Input: {player_content}\n\n"
-        prompt += "Generate the next move for the character based on the above information."
+        # Конструирование запроса для ассистента бойца
+        prompt = f"Атмосфера арены: {arena.description}\n"
+        prompt += f"Параметры арены: {arena.parameters}\n\n"
+        prompt += f"Имя персонажа: {character.name}\n"
+        prompt += f"Характеристики персонажа: {character.traits}\n\n"
+        prompt += f"Совет тактика: {tactics_content}\n"
+        prompt += f"Ввод игрока: {player_content}\n\n"
+        prompt += "Сгенерируйте следующий ход персонажа на основе вышеуказанной информации."
 
-        # Create assistant and get response
+        # Создание ассистента и получение ответа
         assistant = GeminiAssistant("fighter")
         response = await assistant.send_message(prompt)
 
         if not response.strip():
-            logging.error("Received empty response from assistant")
-            return jsonify({"error": "Received empty response from assistant"}), 500
+            logging.error("Получен пустой ответ от ассистента")
+            return jsonify({"error": "Получен пустой ответ от ассистента"}), 500
 
-        # Save the fighter's move to the arena chat
+        # Сохранение хода бойца в чат арены
         fighter_move = ArenaChatMessage(content=response, sender="fighter", user_id=user_id, arena_id=arena.id)
         db.session.add(fighter_move)
         db.session.commit()
 
-        logging.info("Fighter move generated successfully")
-        return jsonify({"status": "Fighter move generated", "response": response}), 200
+        logging.info("Ход бойца успешно создан")
+        return jsonify({"status": "Ход бойца успешно создан", "response": response}), 200
     except Exception as e:
-        logging.error(f"Error generating fighter move: {e}")
+        logging.error(f"Ошибка при создании хода бойца: {e}")
         return jsonify({"error": str(e)}), 500

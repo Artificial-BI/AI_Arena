@@ -11,6 +11,8 @@ import logging
 from utils import parse_character, save_to_json
 import uuid
 
+# --- player_routes.py ---
+
 player_bp = Blueprint('player_bp', __name__)
 
 # Logging setup
@@ -77,7 +79,26 @@ def player():
 
 @player_bp.route('/arena')
 def arena():
-    return render_template('arena.html')
+    selected_character = get_selected_character()
+    if not selected_character:
+        return render_template('error.html', error_message="Пожалуйста выберите персонажа или создайте с помощью ассистента")
+    
+    user_id = g.user.id
+    arena_id = 1  # Assuming a single arena for simplicity
+    existing_registration = Registrar.query.filter_by(user_id=user_id, arena_id=arena_id).first()
+    
+    if existing_registration:
+        if existing_registration.character_id != selected_character.id:
+            existing_registration.character_id = selected_character.id
+            db.session.commit()
+            logging.info(f"Updated registration for user {user_id} with new character {selected_character.id} for arena {arena_id}")
+    else:
+        new_registration = Registrar(user_id=user_id, character_id=selected_character.id, arena_id=arena_id)
+        db.session.add(new_registration)
+        db.session.commit()
+        logging.info(f"User {user_id} registered character {selected_character.id} for arena {arena_id}")
+
+    return render_template('arena.html', selected_character=selected_character, enumerate=enumerate)
 
 @player_bp.route('/select_character/<int:character_id>', methods=['POST'])
 def select_character(character_id):
@@ -185,13 +206,11 @@ def send_general_message():
     except Exception as e:
         logger.error(f"Error sending general message: {e}")
         return jsonify({"error": str(e)}), 500
-
+    
 @player_bp.route('/register_for_arena', methods=['POST'])
 def register_for_arena():
     try:
         data = request.get_json()
-        logger.info(f"Received data for registration: {data}")
-        
         character_id = data.get('character_id')
         
         if not character_id:
@@ -200,26 +219,23 @@ def register_for_arena():
         user_id = g.user.id
         arena_id = 1  # Assuming a single arena for simplicity
 
-        # Check if the user is already registered for the arena
         existing_registration = Registrar.query.filter_by(user_id=user_id, arena_id=arena_id).first()
         
         if existing_registration:
-            # If the character ID is different, update the existing registration
             if existing_registration.character_id != character_id:
                 existing_registration.character_id = character_id
                 db.session.commit()
-                logger.info(f"Updated registration for user {user_id} with new character {character_id} for arena {arena_id}")
+                logging.info(f"Updated registration for user {user_id} with new character {character_id} for arena {arena_id}")
                 return jsonify({"status": "updated"})
             else:
-                logger.info(f"User {user_id} already registered with character {character_id} for arena {arena_id}")
+                logging.info(f"User {user_id} already registered with character {character_id} for arena {arena_id}")
                 return jsonify({"status": "already_registered"})
         else:
-            # Create a new registration
             new_registration = Registrar(user_id=user_id, character_id=character_id, arena_id=arena_id)
             db.session.add(new_registration)
             db.session.commit()
-            logger.info(f"User {user_id} registered character {character_id} for arena {arena_id}")
+            logging.info(f"User {user_id} registered character {character_id} for arena {arena_id}")
             return jsonify({"status": "registered"})
     except Exception as e:
-        logger.error(f"Error registering for arena: {e}")
+        logging.error(f"Error registering for arena: {e}")
         return jsonify({"error": str(e)}), 500

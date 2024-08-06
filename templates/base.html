@@ -81,7 +81,8 @@
                         } else {
                             alert('Error registering for arena: ' + data.error);
                         }
-                    });
+                    })
+                    .catch(error => console.error('Error:', error));
                 });
             }
         });
