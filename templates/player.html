@@ -37,10 +37,12 @@
                 <ul id="character-list">
                     {% for character in characters %}
                     <li class="character-item">
-                        <button type="button" data-id="{{ character.id }}" data-name="{{ character.name }}" data-description="{{ character.description }}" data-traits="{{ character.traits }}">{{ character.name }}</button>
+                        <!-- <span class="character-name">{{ character.name }}</span> -->
+                        <button type="button" class="character-name"  data-id="{{ character.id }}" data-name="{{ character.name }}" data-description="{{ character.description }}" data-traits="{{ character.traits }}">{{ character.name }}</button>
                         <form method="post" action="{{ url_for('player_bp.delete_character', character_id=character.id) }}" class="delete-form">
                             <button type="submit">Delete</button>
                         </form>
+                        
                     {% endfor %}
                 </ul>
                 <p id="no-characters-message" style="display:none; color: red;">No characters available for participation in battles.</p>
@@ -59,7 +61,7 @@
                 </form>
             </div>
         </div>
-
+        
         <div class="chat-section">
             <h2>Chat with AI</h2>
             <div id="chat-box">

@@ -1,15 +1,15 @@
 {
-    "name": "Kaito ",
-    "type": "Ninja",
-    "strength": 45,
+    "name": "Elara Moonwhisper",
+    "type": "Mage",
+    "strength": 10,
     "agility": null,
-    "intelligence": 55,
+    "intelligence": 80,
     "endurance": null,
-    "speed": 85,
-    "magic": 10,
-    "defense": 40,
-    "attack": 60,
-    "charisma": 35,
-    "luck": 40,
-    "description": "Kaito is a highly skilled ninja, trained in the ancient art of shadow warfare. He is known for his exceptional speed and agility, allowing him to move silently and strike with deadly precision. Kaito's training began at a young age, honing his reflexes and reflexes through rigorous physical and mental exercises. He excels in stealth and infiltration, blending seamlessly into his surroundings and utilizing cunning tactics to outwit his opponents. Despite his martial prowess, Kaito is a solitary figure, rarely engaging in conversation or expressing his emotions. His loyalty lies solely with his clan, and he will stop at nothing to protect their secrets.  Kaito's preferred weapons are a katana and a set of throwing stars, which he wields with deadly accuracy. He also possesses knowledge of various poisons and traps, making him a formidable adversary in any situation. While he does not possess any magical abilities, Kaito's unwavering focus and calculated movements allow him to predict his opponent's moves, giving him an advantage in combat.  He is a master of disguise, often blending in with crowds and assuming new identities to achieve his objectives. Kaito's past is shrouded in mystery, known only to his clan. He has seen a great deal of violence and bloodshed, leaving him with a stoic and pragmatic outlook on life."
+    "speed": 25,
+    "magic": 90,
+    "defense": 15,
+    "attack": 40,
+    "charisma": 60,
+    "luck": 35,
+    "description": "Elara is a slender woman with long, silver hair that flows down her back like a shimmering waterfall. Her eyes are a deep, piercing blue, and her skin is pale as alabaster. She wears simple, flowing robes of midnight blue, adorned with intricate silver embroidery that reflects the moonlight. \n\nElara's magic is potent and versatile, drawing upon the raw power of the moon. She is a master of illusion, able to create dazzling displays of light and shadow that can both distract and disarm her enemies. Her spells are potent, capable of unleashing powerful blasts of energy or summoning ethereal creatures to fight alongside her. \n\nShe is a solitary figure, preferring the company of her books and her magic to the bustling crowds of the city. However, she is not without compassion, and she will use her powers to protect the innocent, even if it means putting herself in danger. \n\nElara was born into a family of powerful mages, and her talent for magic was evident from a young age. She spent her childhood studying ancient texts and practicing her spells, often to the detriment of her social skills. She has a deep understanding of the magical arts and is able to use her knowledge to create new spells and enchantments.\n\nElara's greatest strength lies in her unwavering belief in her own abilities. She is confident in her power and never doubts her ability to succeed. This unwavering self-belief gives her the courage to face any challenge, no matter how daunting."
 }
