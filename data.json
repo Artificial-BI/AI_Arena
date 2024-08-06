@@ -1,15 +1,15 @@
 {
-    "name": "Terra",
-    "type": "Earth Mage",
-    "strength": 20,
+    "name": "Kaito ",
+    "type": "Ninja",
+    "strength": 45,
     "agility": null,
-    "intelligence": 80,
+    "intelligence": 55,
     "endurance": null,
-    "speed": 30,
-    "magic": 95,
+    "speed": 85,
+    "magic": 10,
     "defense": 40,
-    "attack": 65,
-    "charisma": 25,
-    "luck": 15,
-    "description": "Terra is a stoic and reserved mage, her connection to the earth profound and unwavering.  She has dedicated her life to mastering the arcane arts, specifically those that draw upon the earth's raw power. Her intelligence is her greatest asset, allowing her to decipher complex spells and manipulate the elements with precision.  While her strength and speed are modest, she compensates with her powerful magic, capable of summoning massive earth golems, manipulating the ground to create treacherous terrain, and even controlling the very elements within the earth. Though she is not known for her charisma or luck, her dedication to her craft and her unwavering resolve have earned her respect among those who know her. Terra's past is shrouded in mystery, whispered tales of her family's ancient lineage, guardians of the earth's secrets. Though she rarely speaks of it, she carries the weight of her heritage, a responsibility to protect the balance of nature."
+    "attack": 60,
+    "charisma": 35,
+    "luck": 40,
+    "description": "Kaito is a highly skilled ninja, trained in the ancient art of shadow warfare. He is known for his exceptional speed and agility, allowing him to move silently and strike with deadly precision. Kaito's training began at a young age, honing his reflexes and reflexes through rigorous physical and mental exercises. He excels in stealth and infiltration, blending seamlessly into his surroundings and utilizing cunning tactics to outwit his opponents. Despite his martial prowess, Kaito is a solitary figure, rarely engaging in conversation or expressing his emotions. His loyalty lies solely with his clan, and he will stop at nothing to protect their secrets.  Kaito's preferred weapons are a katana and a set of throwing stars, which he wields with deadly accuracy. He also possesses knowledge of various poisons and traps, making him a formidable adversary in any situation. While he does not possess any magical abilities, Kaito's unwavering focus and calculated movements allow him to predict his opponent's moves, giving him an advantage in combat.  He is a master of disguise, often blending in with crowds and assuming new identities to achieve his objectives. Kaito's past is shrouded in mystery, known only to his clan. He has seen a great deal of violence and bloodshed, leaving him with a stoic and pragmatic outlook on life."
 }

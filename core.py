@@ -26,8 +26,7 @@ class ArenaManager:
     async def generate_arena(self, character_data):
         logging.info("Генерация арены")
         if self.assistant is None:
-            role_instructions = self.ccom.get_role_instructions('arena')
-            self.assistant = GeminiAssistant(role_instructions, False)
+            self.assistant = GeminiAssistant('arena')
 
         parameters = await self.assistant.send_message(f"Generate arena with the following character data: {character_data}")
         
@@ -98,7 +97,7 @@ class BattleManager:
     async def evaluate_moves(self, character_data, arena, moves):
         logging.info("Оценка ходов рефери")
         if self.referee_assistant is None:
-            self.referee_assistant = GeminiAssistant(self.ccom.get_role_instructions('referee'))
+            self.referee_assistant = GeminiAssistant('referee')
         evaluation_message = f"Оцените следующие ходы в арене {arena.id}: {moves}"
         if not evaluation_message.strip():
             logging.error("Пустое сообщение для оценки, пропуск оценки")
@@ -117,7 +116,7 @@ class BattleManager:
     async def generate_commentary(self, character_data, arena, moves, evaluation):
         logging.info("Генерация комментариев")
         if self.commentator_assistant is None:
-            self.commentator_assistant = GeminiAssistant(self.ccom.get_role_instructions('commentator'))
+            self.commentator_assistant = GeminiAssistant('commentator')
         commentary_message = f"Сгенерируйте комментарии для следующих ходов в арене {arena.id}: {moves} с оценкой {evaluation}"
         if not commentary_message.strip():
             logging.error("Пустое сообщение для комментариев, пропуск комментариев")

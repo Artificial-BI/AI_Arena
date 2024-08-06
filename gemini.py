@@ -24,10 +24,14 @@ class ChatMessageHistory:
         return self.messages
 
 class GeminiAssistant:
-    def __init__(self, role_instructions, use_history=False):
+    def __init__(self, role_name, use_history=False):
+               
         self.chat_history = []
         self.use_history = use_history
         conf = Config()
+        logger.info(f"GeminiAssistant key: {conf.GEMINI_API_TOKEN}")
+        role_instructions = self.get_instructions(role_name)
+        logger.info(f"role_instructions: {role_instructions}")
         genai.configure(api_key=conf.GEMINI_API_TOKEN)
         self.model = genai.GenerativeModel(
             'gemini-1.5-flash',
@@ -60,3 +64,14 @@ class GeminiAssistant:
                     logger.error(f"Error in send_message: {e}")
                     raise e
         raise Exception("Exceeded maximum retry attempts for send_message")
+    
+    def get_instructions(self, role_name):
+        try:
+            role = Role.query.filter_by(name=role_name).first()
+            if role:
+                return  role.instructions
+            else:
+                return ""
+        except Exception as e:
+            logger.error(f"Error fetching instructions: {e}")
+

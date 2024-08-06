@@ -1,4 +1,4 @@
-/* Основные переменные */
+/* --- player.css --- */
 :root {
     --bg-color: #f4f4f4;
     --text-color: #333;
@@ -12,7 +12,8 @@
     --input-border-color: #000;
     --input-focus-border-color: #66afe9;
     --input-focus-shadow-color: rgba(102, 175, 233, 0.6);
-    --chat-border-color: #000; /* Цвет бордюра для чатов */
+    --chat-border-color: #000;
+    --chat-box-bg-color: var(--bg-color); /* Установить фон чата в цвет фона страницы */
 }
 
 /* Настройки для светлой темы */
@@ -59,6 +60,17 @@ body {
     color: var(--text-color);
     margin: 0;
     padding: 0;
+}
+
+
+/* Применение фона сообщений */
+.chat-message {
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    max-width: 70%;
+    background-color: var(--bg-color); /* Устанавливаем фон сообщений таким же, как фон страницы */
+    color: var(--text-color); /* Устанавливаем цвет текста для лучшей видимости */
 }
 
 .player-container {
@@ -146,22 +158,15 @@ header nav ul li button:active {
     overflow-y: scroll;
 }
 
-.chat-message {
-    padding: 10px;
-    border-radius: 10px;
-    margin-bottom: 10px;
-    max-width: 70%;
-}
-
+/* Цвет для сообщений пользователя и AI */
 .chat-message.right {
-    background-color: var(--button-bg-color);
-    color: var(--button-text-color);
-    margin-left: auto;
+    background-color: var(--bg-color); /* Цвет фона сообщений пользователя */
+    color: var(--text-color); /* Цвет текста сообщений пользователя */
 }
 
 .chat-message.left {
-    background-color: var(--button-border-color);
-    color: var(--text-color);
+    background-color: var(--bg-color); /* Цвет фона сообщений AI */
+    color: var(--text-color); /* Цвет текста сообщений AI */
 }
 
 .timestamp {

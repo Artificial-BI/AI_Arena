@@ -118,7 +118,7 @@ def select_character(character_id):
 def send_message():
     try:
         content = request.form.get('message', '').strip()
-
+        logger.info(f"----------->>>: {content}")
         if not content:
             raise ValueError("Invalid input: 'content' argument must not be empty. Please provide a non-empty value.")
 

@@ -9,7 +9,7 @@ from flask import current_app
 class CharacterManager:
     def __init__(self):
         with current_app.app_context():
-            self.assistant = GeminiAssistant(self.get_role_instructions('character_creator'))
+            self.assistant = GeminiAssistant('character_creator')
 
     def get_role_instructions(self, role_name):
         role = Role.query.filter_by(name=role_name).first()

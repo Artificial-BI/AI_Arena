@@ -116,12 +116,12 @@ document.addEventListener('DOMContentLoaded', function() {
         event.preventDefault();
         const messageInput = document.getElementById('message');
         const message = messageInput.value.trim();
-
+    
         if (!message) {
             alert('Enter a message before sending.');
             return;
         }
-
+    
         fetch(chatForm.action, {
             method: 'POST',
             body: new FormData(chatForm),
@@ -133,15 +133,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 messageElement.className = 'chat-message right';
                 messageElement.innerHTML = `<p>${message}</p><span class="timestamp">${new Date().toLocaleString()}</span>`;
                 chatBox.appendChild(messageElement);
-
+    
                 const responseElement = document.createElement('div');
                 responseElement.className = 'chat-message left';
                 responseElement.innerHTML = `<p>${data.response}</p><span class="timestamp">${new Date().toLocaleString()}</span>`;
                 chatBox.appendChild(responseElement);
-
+    
                 messageInput.value = '';
                 chatBox.scrollTop = chatBox.scrollHeight;
-
+    
+                // Обновление характеристик персонажа если присутствуют
                 if (data.character) {
                     if (data.character.name) {
                         document.getElementById('name').value = data.character.name;
@@ -170,6 +171,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => console.error('Error:', error));
     });
+    
 
     if (lastCharacterId !== null) {
         selectCharacter(lastCharacterId);
