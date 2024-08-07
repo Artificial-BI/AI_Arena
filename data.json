@@ -1,15 +1,15 @@
 {
-    "name": "Elara Moonwhisper",
+    "name": "Aelrindel",
     "type": "Mage",
-    "strength": 10,
+    "strength": 15,
     "agility": null,
     "intelligence": 80,
     "endurance": null,
-    "speed": 25,
-    "magic": 90,
-    "defense": 15,
-    "attack": 40,
-    "charisma": 60,
+    "speed": 40,
+    "magic": 95,
+    "defense": 10,
+    "attack": 65,
+    "charisma": 55,
     "luck": 35,
-    "description": "Elara is a slender woman with long, silver hair that flows down her back like a shimmering waterfall. Her eyes are a deep, piercing blue, and her skin is pale as alabaster. She wears simple, flowing robes of midnight blue, adorned with intricate silver embroidery that reflects the moonlight. \n\nElara's magic is potent and versatile, drawing upon the raw power of the moon. She is a master of illusion, able to create dazzling displays of light and shadow that can both distract and disarm her enemies. Her spells are potent, capable of unleashing powerful blasts of energy or summoning ethereal creatures to fight alongside her. \n\nShe is a solitary figure, preferring the company of her books and her magic to the bustling crowds of the city. However, she is not without compassion, and she will use her powers to protect the innocent, even if it means putting herself in danger. \n\nElara was born into a family of powerful mages, and her talent for magic was evident from a young age. She spent her childhood studying ancient texts and practicing her spells, often to the detriment of her social skills. She has a deep understanding of the magical arts and is able to use her knowledge to create new spells and enchantments.\n\nElara's greatest strength lies in her unwavering belief in her own abilities. She is confident in her power and never doubts her ability to succeed. This unwavering self-belief gives her the courage to face any challenge, no matter how daunting."
+    "description": "Aelrindel is a wizened elf mage, her youthful features masked by years of intense study and the toll of her magic. Her piercing blue eyes gleam with arcane knowledge, and she carries herself with a quiet confidence born of decades spent mastering the arcane arts. Her weapon of choice is a beautifully crafted staff, imbued with ancient magic, that amplifies her spells and allows her to channel her power with greater precision. Aelrindel specializes in elemental magic, commanding fire, ice, and lightning with devastating accuracy. She's particularly skilled in manipulating ice, crafting formidable ice walls for defense and unleashing blizzards that can freeze her enemies solid. Although her physical strength is limited, she compensates with her cunning intellect and vast magical reserves. Aelrindel's knowledge of ancient lore and forgotten rituals is unmatched, making her a formidable adversary in any conflict. Despite her powerful magic, she remains calm and collected, rarely resorting to violence unless absolutely necessary. Her charisma, while subtle, is undeniable, earning her respect from both allies and enemies alike."
 }

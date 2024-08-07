@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const descriptionField = createCharacterForm.querySelector('#description');
     const characterButtons = document.querySelectorAll('#character-list .character-item button[data-name]');
     const noCharactersMessage = document.getElementById('no-characters-message');
-
+    // --- player.js ---
     let characterChart;
     let selectedCharacterId = null;
 
