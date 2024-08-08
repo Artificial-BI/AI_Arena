@@ -4,13 +4,13 @@ from extensions import db  # Import an instance of SQLAlchemy from extensions.py
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
-    role = db.Column(db.String(64))  # 'player', 'admin', 'viewer'
+    role = db.Column(db.String(64))
     characters = db.relationship('Character', backref='owner', lazy='dynamic')
     messages = db.relationship('Message', backref='author', lazy='dynamic')
-    name = db.Column(db.String(64))  # Add the name field
-    email = db.Column(db.String(120), unique=True)  # Adding an email field
-    password = db.Column(db.String(128))  # Add the password field
-    cookie_id = db.Column(db.String(36), unique=True, nullable=True)  # Field for cookie_id
+    name = db.Column(db.String(64))
+    email = db.Column(db.String(120), unique=True)
+    password = db.Column(db.String(128))
+    cookie_id = db.Column(db.String(36), unique=True, nullable=True)
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -44,13 +44,10 @@ class ArenaChatMessage(db.Model):
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     sender = db.Column(db.String(64), nullable=False)  # 'player1', 'player2', 'referee'
     arena_id = db.Column(db.Integer, db.ForeignKey('arena.id'), nullable=True)
-    read_status = db.Column(db.Integer, default=0)  # Add this line
+    read_status = db.Column(db.Integer, default=0)
 
     def __repr__(self):
         return f'<ArenaChatMessage {self.content[:15]}>'
-
-
-
 
 class GeneralChatMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -68,11 +65,10 @@ class TacticsChatMessage(db.Model):
     content = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     sender = db.Column(db.String(64), nullable=False)  # 'player', 'viewer', 'referee'
-    read_status = db.Column(db.Integer, default=0)  # Add this line
+    read_status = db.Column(db.Integer, default=0)
 
     def __repr__(self):
         return f'<TacticsChatMessage {self.content[:15]}>'
-
 
 class RefereePrompt(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -84,7 +80,7 @@ class CommentatorPrompt(db.Model):
 
 class Fight(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    character_id = db.Column(db.Integer)  # Fixed typo here
+    character_id = db.Column(db.Integer)
     arena_id = db.Column(db.Integer)
     result = db.Column(db.String(64))
     fight_date = db.Column(db.DateTime, default=datetime.utcnow)
@@ -93,7 +89,7 @@ class Arena(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String(256))
     parameters = db.Column(db.Text)
-    date_created = db.Column(db.DateTime, default=datetime.utcnow)  # Add this line
+    date_created = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Tournament(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -151,6 +147,20 @@ class Player(db.Model):
 
     def __repr__(self):
         return f'<Player {self.name}>'
+
+class PreRegistrar(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    character_id = db.Column(db.Integer, db.ForeignKey('character.id'), nullable=False)
+    arena_id = db.Column(db.Integer, db.ForeignKey('arena.id'), nullable=False)
+    registration_date = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', backref='pre_registrations')
+    character = db.relationship('Character', backref='pre_registrations')
+    arena = db.relationship('Arena', backref='pre_registrations')
+
+    def __repr__(self):
+        return f'<PreRegistrar User ID: {self.user_id}, Character ID: {self.character_id}, Arena ID: {self.arena_id}>'
 
 class Registrar(db.Model):
     id = db.Column(db.Integer, primary_key=True)

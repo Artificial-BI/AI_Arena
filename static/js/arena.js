@@ -1,127 +1,101 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const startTestBattleButton = document.getElementById('start-test-battle');
-    const startTacticsButton = document.getElementById('start-tactics');
+    const playersTable = document.getElementById('players-table');
     const tacticsChatForm = document.getElementById('tactics-chat-form');
     const tacticsChatBox = document.getElementById('tactics-chat-box');
     const generalChatForm = document.getElementById('general-chat-form');
     const generalChatBox = document.getElementById('general-chat-box');
-    const playersTable = document.getElementById('players-table');
     const arenaChatBox = document.getElementById('arena-chat-box');
     const tooltip = document.getElementById('tooltip');
+    let countdownInterval;
 
     console.log("Document loaded");
 
-    startTestBattleButton.addEventListener('click', function() {
-        fetch('/arena/start_test_battle', {
+    function startCountdown(remainingTime) {
+        let countdown = remainingTime;
+        const countdownElement = document.createElement('div');
+        countdownElement.id = 'countdown';
+        countdownElement.style.fontSize = '24px';
+        countdownElement.style.fontWeight = 'bold';
+        document.body.insertBefore(countdownElement, document.body.firstChild);
+
+        countdownInterval = setInterval(() => {
+            countdownElement.textContent = `Battle starts in: ${countdown.toFixed(1)} seconds`;
+            if (countdown <= 0) {
+                clearInterval(countdownInterval);
+                startBattle();
+            }
+            countdown -= 0.1;
+        }, 100);
+    }
+
+    function startBattle() {
+        fetch('/arena/start_battle', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(errorData => {
+                    throw new Error(errorData.error);
+                });
+            }
+            return response.json();
+        })
         .then(data => {
-            if (data.status === 'Test battle started') {
-                console.log('Test battle started successfully');
+            if (data.status === 'Битва началась') {
+                console.log('Battle started successfully');
             } else {
-                console.error('Failed to start test battle:', data.error);
+                console.error('Failed to start battle:', data.error);
             }
         })
         .catch(error => console.error('Error:', error));
-    });
+    }
 
-    startTacticsButton.addEventListener('click', function() {
-        fetch('/arena/start_tactics', {
-            method: 'POST',
+    function checkAndStartCountdown() {
+        fetch('/arena/check_registered_players', {
+            method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
             },
         })
         .then(response => response.json())
         .then(data => {
-            if (data.status === 'Tactics generated' || data.status === 'Unread tactics messages present') {
-                console.log('Tactics started successfully:', data.response || 'Unread messages present');
-            } else {
-                console.error('Failed to start tactics:', data.error);
+            if (data.battle_in_progress) {
+                console.log('Battle already in progress');
+                document.body.innerHTML = '<h2>Ожидание окончания битвы</h2>';
+            } else if (data.timer_in_progress) {
+                console.log('Timer already in progress');
+                startCountdown(data.remaining_time);
+            } else if (data.registered_players >= 2) {
+                fetch('/arena/start_timer', {  // Запуск таймера на сервере
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(errorData => {
+                            throw new Error(errorData.error);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'Таймер запущен') {
+                        startCountdown(30);  // Запуск нового таймера
+                    } else {
+                        console.error('Failed to start timer:', data.error);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
             }
         })
         .catch(error => console.error('Error:', error));
-    });
+    }
 
-    tacticsChatForm.addEventListener('submit', function(event) {
-        event.preventDefault();
-        const messageInput = document.getElementById('tactics-chat-input');
-        const message = messageInput.value.trim();
-
-        if (!message) {
-            alert('Введите сообщение перед отправкой.');
-            return;
-        }
-
-        fetch('/arena/send_tactics_chat', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ content: message, sender: 'user', user_id: user_id })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'Message sent') {
-                const messageElement = document.createElement('div');
-                messageElement.className = 'chat-message right';
-                messageElement.innerHTML = `<p>${message}</p><span class="timestamp">${new Date().toLocaleString()}</span>`;
-                tacticsChatBox.appendChild(messageElement);
-
-                const responseElement = document.createElement('div');
-                responseElement.className = 'chat-message left';
-                responseElement.innerHTML = `<p>${data.response}</p><span class="timestamp">${new Date().toLocaleString()}</span>`;
-                tacticsChatBox.appendChild(responseElement);
-
-                messageInput.value = '';
-                tacticsChatBox.scrollTop = tacticsChatBox.scrollHeight;
-            }
-        })
-        .catch(error => console.error('Error:', error));
-    });
-
-    generalChatForm.addEventListener('submit', function(event) {
-        event.preventDefault();
-        const messageInput = document.getElementById('general-chat-input');
-        const message = messageInput.value.trim();
-
-        if (!message) {
-            alert('Введите сообщение перед отправкой.');
-            return;
-        }
-
-        fetch('/arena/send_general_chat', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ content: message, sender: 'user', user_id: user_id })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'Message sent') {
-                const messageElement = document.createElement('div');
-                messageElement.className = 'chat-message right';
-                messageElement.innerHTML = `<p>${message}</p><span class="timestamp">${new Date().toLocaleString()}</span>`;
-                generalChatBox.appendChild(messageElement);
-
-                const responseElement = document.createElement('div');
-                responseElement.className = 'chat-message left';
-                responseElement.innerHTML = `<p>${data.response}</p><span class="timestamp">${new Date().toLocaleString()}</span>`;
-                generalChatBox.appendChild(responseElement);
-
-                messageInput.value = '';
-                generalChatBox.scrollTop = generalChatBox.scrollHeight;
-            }
-        })
-        .catch(error => console.error('Error:', error));
-    });
-
-    // Function to create chart for character traits
     function createChart(ctx, traits) {
         return new Chart(ctx, {
             type: 'bar',
@@ -188,36 +162,127 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function loadCharacterCharts() {
         document.querySelectorAll('tbody tr').forEach((row, index) => {
-            const traits = JSON.parse(row.dataset.traits);
-            const canvas = document.getElementById(`traits-chart-${index + 1}`);
-            createChart(canvas.getContext('2d'), traits);
+            const traitsData = row.dataset.traits;
+            if (traitsData) {
+                try {
+                    const traits = JSON.parse(traitsData);
+                    const canvas = document.getElementById(`traits-chart-${index + 1}`);
+                    if (canvas) {
+                        createChart(canvas.getContext('2d'), traits);
+                    }
+                } catch (e) {
+                    console.error('Error parsing traits data:', e);
+                }
+            }
         });
     }
 
-    playersTable.addEventListener('mouseover', function(event) {
-        if (event.target.tagName === 'IMG' && event.target.classList.contains('character-image')) {
-            const description = event.target.dataset.description;
-            tooltip.innerHTML = description;
-            tooltip.style.display = 'block';
-            tooltip.style.left = `${event.pageX + 10}px`;
-            tooltip.style.top = `${event.pageY + 10}px`;
-        }
-    });
+    checkAndStartCountdown();
+    loadCharacterCharts();
 
-    playersTable.addEventListener('mouseout', function(event) {
-        if (event.target.tagName === 'IMG' && event.target.classList.contains('character-image')) {
-            tooltip.style.display = 'none';
-        }
-    });
+    if (tacticsChatForm) {
+        tacticsChatForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const messageInput = document.getElementById('tactics-chat-input');
+            const message = messageInput.value.trim();
 
-    playersTable.addEventListener('mousemove', function(event) {
-        if (tooltip.style.display === 'block') {
-            tooltip.style.left = `${event.pageX + 10}px`;
-            tooltip.style.top = `${event.pageY + 10}px`;
-        }
-    });
+            if (!message) {
+                alert('Введите сообщение перед отправкой.');
+                return;
+            }
 
-    // Initial load of chat messages
+            fetch('/arena/send_tactics_chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ content: message, sender: 'user', user_id: user_id })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'Message sent') {
+                    const messageElement = document.createElement('div');
+                    messageElement.className = 'chat-message right';
+                    messageElement.innerHTML = `<p>${message}</p><span class="timestamp">${new Date().toLocaleString()}</span>`;
+                    tacticsChatBox.appendChild(messageElement);
+
+                    const responseElement = document.createElement('div');
+                    responseElement.className = 'chat-message left';
+                    responseElement.innerHTML = `<p>${data.response}</p><span class="timestamp">${new Date().toLocaleString()}</span>`;
+                    tacticsChatBox.appendChild(responseElement);
+
+                    messageInput.value = '';
+                    tacticsChatBox.scrollTop = tacticsChatBox.scrollHeight;
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    }
+
+    if (generalChatForm) {
+        generalChatForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const messageInput = document.getElementById('general-chat-input');
+            const message = messageInput.value.trim();
+
+            if (!message) {
+                alert('Введите сообщение перед отправкой.');
+                return;
+            }
+
+            fetch('/arena/send_general_chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ content: message, sender: 'user', user_id: user_id })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'Message sent') {
+                    const messageElement = document.createElement('div');
+                    messageElement.className = 'chat-message right';
+                    messageElement.innerHTML = `<p>${message}</p><span class="timestamp">${new Date().toLocaleString()}</span>`;
+                    generalChatBox.appendChild(messageElement);
+
+                    const responseElement = document.createElement('div');
+                    responseElement.className = 'chat-message left';
+                    responseElement.innerHTML = `<p>${data.response}</p><span class="timestamp">${new Date().toLocaleString()}</span>`;
+                    generalChatBox.appendChild(responseElement);
+
+                    messageInput.value = '';
+                    generalChatBox.scrollTop = generalChatBox.scrollHeight;
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    }
+
+    if (playersTable) {
+        playersTable.addEventListener('mouseover', function(event) {
+            if (event.target.tagName === 'IMG' && event.target.classList.contains('character-image')) {
+                const description = event.target.dataset.description;
+                tooltip.innerHTML = description;
+                tooltip.style.display = 'block';
+                tooltip.style.left = `${event.pageX + 10}px`;
+                tooltip.style.top = `${event.pageY + 10}px`;
+            }
+        });
+
+        playersTable.addEventListener('mouseout', function(event) {
+            if (event.target.tagName === 'IMG' && event.target.classList.contains('character-image')) {
+                tooltip.style.display = 'none';
+            }
+        });
+
+        playersTable.addEventListener('mousemove', function(event) {
+            if (tooltip.style.display === 'block') {
+                tooltip.style.left = `${event.pageX + 10}px`;
+                tooltip.style.top = `${event.pageY + 10}px`;
+            }
+        });
+    }
+
     function loadChatMessages() {
         fetch('/arena/get_arena_chat')
         .then(response => response.json())
@@ -231,24 +296,7 @@ document.addEventListener('DOMContentLoaded', function() {
             arenaChatBox.scrollTop = arenaChatBox.scrollHeight;
         })
         .catch(error => console.error('Error loading arena chat messages:', error));
-
-        fetch('/arena/get_tactics_chat')
-        .then(response => response.json())
-        .then(data => {
-            if (Array.isArray(data)) {
-                data.forEach(msg => {
-                    const messageElement = document.createElement('div');
-                    messageElement.className = `chat-message ${msg.sender === 'user' ? 'right' : 'left'}`;
-                    messageElement.innerHTML = `<p>${msg.content}</p><span class="timestamp">${new Date(msg.timestamp).toLocaleString()}</span>`;
-                    tacticsChatBox.appendChild(messageElement);
-                });
-                tacticsChatBox.scrollTop = tacticsChatBox.scrollHeight;
-            } else {
-                console.error('Unexpected data format:', data);
-            }
-        })
-        .catch(error => console.error('Error loading tactics chat messages:', error));
-
+    
         fetch('/arena/get_general_chat')
         .then(response => response.json())
         .then(data => {
@@ -261,8 +309,20 @@ document.addEventListener('DOMContentLoaded', function() {
             generalChatBox.scrollTop = generalChatBox.scrollHeight;
         })
         .catch(error => console.error('Error loading general chat messages:', error));
+    
+        fetch('/arena/get_tactics_chat')
+        .then(response => response.json())
+        .then(data => {
+            data.forEach(msg => {
+                const messageElement = document.createElement('div');
+                messageElement.className = `chat-message ${msg.sender === 'user' ? 'right' : 'left'}`;
+                messageElement.innerHTML = `<p>${msg.content}</p><span class="timestamp">${new Date(msg.timestamp).toLocaleString()}</span>`;
+                tacticsChatBox.appendChild(messageElement);
+            });
+            tacticsChatBox.scrollTop = tacticsChatBox.scrollHeight;
+        })
+        .catch(error => console.error('Error loading tactics chat messages:', error));
     }
-
+    
     loadChatMessages();
-    loadCharacterCharts();
 });

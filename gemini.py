@@ -1,11 +1,12 @@
+# --- gemini.py ---
+
 import google.generativeai as genai
 from config import Config
 import logging
 import json
 from models import Role
 import asyncio
-import time
-# --- gemini.py ---
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -25,20 +26,16 @@ class ChatMessageHistory:
 
 class GeminiAssistant:
     def __init__(self, role_name, use_history=False):
-               
         self.chat_history = []
         self.use_history = use_history
         conf = Config()
-        logger.info(f"GeminiAssistant key: {conf.GEMINI_API_TOKEN}")
         role_instructions = self.get_instructions(role_name)
-        logger.info(f"role_instructions: {role_instructions}")
         genai.configure(api_key=conf.GEMINI_API_TOKEN)
         self.model = genai.GenerativeModel(
             'gemini-1.5-flash',
             system_instruction=role_instructions
         )
         self.chat = self.model.start_chat(history=[])
-        #logger.info("GeminiAssistant initialized with instructions from database")
 
     async def send_message(self, msg, max_retries=5):
         self.chat_history.append({"role": "user", "content": msg})
@@ -69,9 +66,8 @@ class GeminiAssistant:
         try:
             role = Role.query.filter_by(name=role_name).first()
             if role:
-                return  role.instructions
+                return role.instructions
             else:
                 return ""
         except Exception as e:
             logger.error(f"Error fetching instructions: {e}")
-

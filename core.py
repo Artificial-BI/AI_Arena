@@ -1,5 +1,5 @@
 from datetime import datetime
-from models import db, Arena, Tournament, TournamentMatch, Fight, Role, Player, ArenaChatMessage, Score, Character, Registrar, TacticsChatMessage, GeneralChatMessage  # Добавлен импорт GeneralChatMessage
+from models import db, Arena, Tournament, TournamentMatch, Fight, Role, Player, ArenaChatMessage, Score, Character, PreRegistrar, Registrar, TacticsChatMessage, GeneralChatMessage  # Добавлен импорт GeneralChatMessage
 from gemini import GeminiAssistant
 import asyncio
 from flask import current_app
@@ -7,7 +7,7 @@ import logging
 from utils import parse_arena
 import json
 from tactics_manager import TacticsManager  # Добавлен импорт TacticsManager
-
+import time
 # --- core.py ---
 class CoreCommon:
     def get_role_instructions(self, role_name):
@@ -46,7 +46,7 @@ class ArenaManager:
         logging.info(f"Арена сгенерирована с ID: {new_arena.id}")
         return new_arena
 
-
+# --- core.py ---
 class BattleManager:
     def __init__(self):
         self.ccom = CoreCommon()
@@ -56,6 +56,18 @@ class BattleManager:
         self.battle_count = 0
         self.round_count = 0
         self.tactics_manager = TacticsManager()
+        self.timer_in_progress = False
+        self.battle_in_progress = False
+        self.timer_start_time = None
+        self.countdown_duration = 30  # Продолжительность таймера в секундах
+
+    def is_battle_in_progress(self):
+        return self.battle_in_progress
+
+    def is_timer_in_progress(self):
+        return self.timer_in_progress
+
+    # ... (остальные методы остаются неизменными)
 
     async def manage_battle_round(self, character_data, arena):
         self.round_count += 1
@@ -112,7 +124,6 @@ class BattleManager:
         
         return evaluation
 
-
     async def generate_commentary(self, character_data, arena, moves, evaluation):
         logging.info("Генерация комментариев")
         if self.commentator_assistant is None:
@@ -131,42 +142,62 @@ class BattleManager:
         
         return commentary
 
-    async def start_test_battle(self):
-        self.battle_count += 1
-        logging.info(f"--- Начало битвы {self.battle_count} ---")
+    async def start_battle(self):
+        logging.info(f"--- Начало битвы {self.battle_count + 1} ---")
         try:
-            # Очистка чатов перед началом битвы
+            self.battle_in_progress = True
+            self.battle_count += 1
             ArenaChatMessage.query.delete()
             TacticsChatMessage.query.delete()
             db.session.commit()
 
-            # Отправка сообщения о начале битвы
             battle_start_message = ArenaChatMessage(content=f"--- Битва № {self.battle_count} ---", sender='system', user_id=None, read_status=0)
             db.session.add(battle_start_message)
             db.session.commit()
 
-            # Запуск процесса тактика
             asyncio.create_task(self.tactics_manager.generate_tactics())
 
-            # Получение данных зарегистрированных персонажей
             character_data = await self.get_registered_character_data()
-
-            # Генерация арены
             arena = await self.arena_manager.generate_arena(character_data)
 
-            # Старт цикла раундов
             for round_number in range(2):
-                # Отправка сообщения о начале раунда
                 round_start_message = ArenaChatMessage(content=f"--- Раунд № {round_number + 1} ---", sender='system', user_id=None, arena_id=arena.id, read_status=0)
                 db.session.add(round_start_message)
                 db.session.commit()
 
-                #logging.info(f"--- Начало раунда {round_number + 1} ---")
                 await self.manage_battle_round(character_data, arena)
-            logging.info("Тестовая битва завершена")
+
+            logging.info("Битва завершена")
         except Exception as e:
-            logging.error(f"Ошибка в тестовой битве: {e}")
+            logging.error(f"Ошибка в битве: {e}", exc_info=True)
             raise
+        finally:
+            self.battle_in_progress = False
+            self.stop_timer()
+            await self.handle_post_battle_registration()
+
+    async def handle_post_battle_registration(self):
+        with current_app.app_context():
+            # Очистка таблицы регистрации
+            Registrar.query.delete()
+            db.session.commit()
+
+            # Перемещение данных из предварительной регистрации в основную регистрацию
+            pre_registrations = PreRegistrar.query.all()
+            for pre_reg in pre_registrations:
+                new_registration = Registrar(
+                    user_id=pre_reg.user_id,
+                    character_id=pre_reg.character_id,
+                    arena_id=pre_reg.arena_id
+                )
+                db.session.add(new_registration)
+            db.session.commit()
+
+            # Очистка таблицы предварительной регистрации
+            PreRegistrar.query.delete()
+            db.session.commit()
+
+            logging.info("Таблица регистрации обновлена данными из предварительной регистрации")
 
     async def get_registered_character_data(self):
         logging.info("Получение данных зарегистрированных персонажей")
@@ -210,7 +241,6 @@ class BattleManager:
         prompt += f"Ввод игрока: {player_content}\n\n"
         prompt += "Сгенерируйте следующий ход персонажа на основе вышеуказанной информации."
 
-        # Создание ассистента и получение ответа
         assistant = GeminiAssistant("fighter")
         response = await assistant.send_message(prompt)
 
@@ -218,10 +248,27 @@ class BattleManager:
             logging.error("Получен пустой ответ от ассистента")
             return "Получен пустой ответ от ассистента"
 
-        # Сохранение хода бойца в чат арены
         fighter_move = ArenaChatMessage(content=response, sender="fighter", user_id=character.user_id, arena_id=arena.id)
         db.session.add(fighter_move)
         db.session.commit()
 
         logging.info(f"Ход бойца для {character.name} успешно создан")
         return "Ход бойца успешно создан"
+
+    def start_timer(self, duration):
+        self.timer_in_progress = True
+        self.timer_start_time = time.time()
+        self.countdown_duration = duration
+        logging.info(f"Таймер запущен на {duration} секунд")
+
+    def stop_timer(self):
+        self.timer_in_progress = False
+        self.timer_start_time = None
+        logging.info("Таймер остановлен")
+
+    def get_remaining_time(self):
+        if not self.timer_in_progress:
+            return 0
+        elapsed_time = time.time() - self.timer_start_time
+        remaining_time = self.countdown_duration - elapsed_time
+        return max(0, remaining_time)

@@ -19,7 +19,7 @@ def load_dotenv(dotenv_path):
 
 class Config:
     key_env = load_dotenv('.env')
-    print('Config:',key_env)
+    #print('Config:',key_env)
     
     # Secret key for session data protection
     # SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'

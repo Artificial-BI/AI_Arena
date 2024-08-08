@@ -5,6 +5,8 @@ import logging
 import asyncio
 from flask import current_app
 
+# --- tactics_manager.py ---
+
 class TacticsManager:
     def __init__(self):
         self.assistant = None
@@ -23,27 +25,31 @@ class TacticsManager:
                 for registration in registered_characters:
                     character = Character.query.get(registration.character_id)
                     if character:
-                        await self.generate_tactic_for_character(character, arena)
+                        try:
+                            await self.generate_tactic_for_character(character, arena)
+                        except Exception as e:
+                            logging.error(f"Ошибка при генерации тактики для {character.name}: {e}")
             await asyncio.sleep(10)  # Периодическое выполнение
 
     async def generate_tactic_for_character(self, character, arena):
         logging.info(f"Генерация тактической рекомендации для персонажа {character.name}")
-        # Конструирование запроса для ассистента тактика
         prompt = f"Атмосфера арены: {arena.description}\n"
         prompt += f"Параметры арены: {arena.parameters}\n\n"
         prompt += f"Имя персонажа: {character.name}\n"
         prompt += f"Характеристики персонажа: {character.traits}\n\n"
         prompt += "Сгенерируйте тактические рекомендации для следующего хода."
 
-        # Создание ассистента и получение ответа
         assistant = GeminiAssistant("tactician")
-        response = await assistant.send_message(prompt)
+        try:
+            response = await assistant.send_message(prompt)
+        except Exception as e:
+            logging.error(f"Ошибка при отправке сообщения для {character.name}: {e}")
+            return "Ошибка при отправке сообщения"
 
         if not response.strip():
             logging.error("Получен пустой ответ от ассистента")
             return "Получен пустой ответ от ассистента"
 
-        # Сохранение рекомендации тактика в чат тактики
         tactics_message = TacticsChatMessage(content=response, sender="tactician", user_id=character.user_id)
         db.session.add(tactics_message)
         db.session.commit()

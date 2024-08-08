@@ -1,29 +1,22 @@
 from flask import Blueprint, render_template, jsonify, request, g
-from models import Character, ArenaChatMessage, GeneralChatMessage, User  # Добавляем импорт модели User
+from models import Character, ArenaChatMessage, GeneralChatMessage, User
 import logging
 import json
 from extensions import db
-import uuid
+from load_user import load_user
 
-
+# --- viewer_routes.py ---
 viewer_bp = Blueprint('viewer', __name__)
+
+# Logging setup
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 @viewer_bp.before_request
 def before_request():
-    user_id = request.cookies.get('user_id')
-    if not user_id:
-        user_id = str(uuid.uuid4())
-        new_user = User(cookie_id=user_id)
-        db.session.add(new_user)
-        db.session.commit()
-        g.user = new_user
-    else:
-        g.user = User.query.filter_by(cookie_id=user_id).first()
-        if not g.user:
-            new_user = User(cookie_id=user_id)
-            db.session.add(new_user)
-            db.session.commit()
-            g.user = new_user
+    response = load_user()
+    if response:
+        return response
 
 @viewer_bp.route('/')
 def viewer():
@@ -57,7 +50,7 @@ def get_characters():
             })
         return jsonify(characters_data)
     except Exception as e:
-        logging.error(f"Error fetching characters: {e}")
+        logger.error(f"Error fetching characters: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
 @viewer_bp.route('/get_arena_chat')
@@ -67,7 +60,7 @@ def get_arena_chat():
         chat_data = [{'content': msg.content, 'timestamp': msg.timestamp, 'sender': msg.sender, 'user_id': msg.user_id} for msg in messages]
         return jsonify(chat_data)
     except Exception as e:
-        logging.error(f"Error fetching arena chat messages: {e}")
+        logger.error(f"Error fetching arena chat messages: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
 @viewer_bp.route('/get_general_chat')
@@ -77,7 +70,7 @@ def get_general_chat():
         chat_data = [{'content': msg.content, 'timestamp': msg.timestamp, 'sender': msg.sender, 'user_id': msg.user_id} for msg in messages]
         return jsonify(chat_data)
     except Exception as e:
-        logging.error(f"Error fetching general chat messages: {e}")
+        logger.error(f"Error fetching general chat messages: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
 @viewer_bp.route('/send_arena_chat', methods=['POST'])
@@ -95,7 +88,7 @@ def send_arena_chat():
         db.session.commit()
         return jsonify({"status": "Message sent"}), 200
     except Exception as e:
-        logging.error(f"Error saving arena chat message: {e}")
+        logger.error(f"Error saving arena chat message: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
 @viewer_bp.route('/send_general_chat', methods=['POST'])
@@ -113,5 +106,5 @@ def send_general_chat():
         db.session.commit()
         return jsonify({"status": "Message sent"}), 200
     except Exception as e:
-        logging.error(f"Error saving general chat message: {e}")
+        logger.error(f"Error saving general chat message: {e}")
         return jsonify({"error": "Internal server error"}), 500

@@ -9,12 +9,7 @@
 {% block content %}
 <h1>Arena Interface</h1>
 
-<!-- Arena Name -->
 <h2>Magic Arena</h2>
-
-<!-- Button to start test battle -->
-<button id="start-test-battle">Start Test Battle</button>
-<button id="start-tactics">Начать бой</button>
 
 <!-- Player Table -->
 <table id="players-table">
@@ -28,32 +23,32 @@
         </tr>
     </thead>
     <tbody>
-        <tr data-traits="{{ selected_character.traits }}">
-            <td>1</td>
-            <td>{{ selected_character.user_id }}</td>
-            <td>{{ selected_character.name }}</td>
+        {% for character in characters %}
+        <tr data-traits="{{ character.traits | tojson }}">
+            <td>{{ loop.index }}</td>
+            <td>{{ character.user_id }}</td>
+            <td>{{ character.name }}</td>
             <td>
                 <div class="chart-container">
-                    <canvas id="traits-chart-1" class="chart-canvas"></canvas>
+                    <canvas id="traits-chart-{{ loop.index }}" class="chart-canvas"></canvas>
                 </div>
             </td>
             <td>
-                <img src="{{ url_for('static', filename=selected_character.image_url) }}" alt="Character Image" class="character-image" data-description="{{ selected_character.description }}">
+                <img src="{{ url_for('static', filename=character.image_url) }}" alt="Character Image" class="character-image" data-description="{{ character.description }}">
             </td>
         </tr>
+        {% endfor %}
     </tbody>
 </table>
 
 <!-- Arena Chat -->
 <h2>Arena Chat</h2>
 <div id="arena-chat-box">
-    <!-- Chat messages will be added here using JavaScript -->
 </div>
 
 <!-- Tactics AI Chat -->
 <h2>Tactics AI Chat</h2>
 <div id="tactics-chat-box">
-    <!-- Chat messages will be added here using JavaScript -->
 </div>
 <form id="tactics-chat-form">
     <input type="text" id="tactics-chat-input" placeholder="Enter message...">
@@ -63,7 +58,6 @@
 <!-- General Chat for Players, Spectators, and AI -->
 <h2>General Chat</h2>
 <div id="general-chat-box">
-    <!-- Chat messages will be added here using JavaScript -->
 </div>
 <form id="general-chat-form">
     <input type="text" id="general-chat-input" placeholder="Enter message...">
@@ -74,7 +68,6 @@
 
 <script>
     const user_id = "{{ g.user.id }}";
-    const selectedCharacterTraits = {{ selected_character.traits | tojson }};
 </script>
 <script src="{{ url_for('static', filename='js/arena.js') }}"></script>
 {% endblock %}

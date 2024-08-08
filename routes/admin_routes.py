@@ -1,11 +1,11 @@
 import json
 import asyncio
-import uuid
 from flask import Blueprint, request, jsonify, render_template, g
 from extensions import db
 from models import Message, Role, User
 from gemini import GeminiAssistant
 import logging
+from load_user import load_user
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -15,20 +15,9 @@ logger = logging.getLogger(__name__)
 
 @admin_bp.before_request
 def before_request():
-    user_id = request.cookies.get('user_id')
-    if not user_id:
-        user_id = str(uuid.uuid4())
-        new_user = User(cookie_id=user_id)
-        db.session.add(new_user)
-        db.session.commit()
-        g.user = new_user
-    else:
-        g.user = User.query.filter_by(cookie_id=user_id).first()
-        if not g.user:
-            new_user = User(cookie_id=user_id)
-            db.session.add(new_user)
-            db.session.commit()
-            g.user = new_user
+    response = load_user()
+    if response:
+        return response
 
 @admin_bp.route('/')
 def admin():

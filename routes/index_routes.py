@@ -1,28 +1,23 @@
 from flask import Blueprint, render_template, current_app, request, g, make_response
 from models import Tournament, TopPlayer, User
 from default import default_tournaments, default_top_players
-import uuid
 from extensions import db
 import traceback
+import logging
+from load_user import load_user
 
+# --- index_routes.py ---
 index_bp = Blueprint('index_bp', __name__)
+
+# Logging setup
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 @index_bp.before_request
 def before_request():
-    user_id = request.cookies.get('user_id')
-    if not user_id:
-        user_id = str(uuid.uuid4())
-        new_user = User(cookie_id=user_id)
-        db.session.add(new_user)
-        db.session.commit()
-        g.user = new_user
-    else:
-        g.user = User.query.filter_by(cookie_id=user_id).first()
-        if not g.user:
-            new_user = User(cookie_id=user_id)
-            db.session.add(new_user)
-            db.session.commit()
-            g.user = new_user
+    response = load_user()
+    if response:
+        return response
 
 @index_bp.route('/')
 def index():

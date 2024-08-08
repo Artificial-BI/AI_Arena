@@ -1,15 +1,15 @@
 {
-    "name": "Aelrindel",
-    "type": "Mage",
-    "strength": 15,
+    "name": "Grog Smashfist",
+    "type": "Orc Warrior",
+    "strength": 85,
     "agility": null,
-    "intelligence": 80,
+    "intelligence": 15,
     "endurance": null,
-    "speed": 40,
-    "magic": 95,
-    "defense": 10,
-    "attack": 65,
-    "charisma": 55,
-    "luck": 35,
-    "description": "Aelrindel is a wizened elf mage, her youthful features masked by years of intense study and the toll of her magic. Her piercing blue eyes gleam with arcane knowledge, and she carries herself with a quiet confidence born of decades spent mastering the arcane arts. Her weapon of choice is a beautifully crafted staff, imbued with ancient magic, that amplifies her spells and allows her to channel her power with greater precision. Aelrindel specializes in elemental magic, commanding fire, ice, and lightning with devastating accuracy. She's particularly skilled in manipulating ice, crafting formidable ice walls for defense and unleashing blizzards that can freeze her enemies solid. Although her physical strength is limited, she compensates with her cunning intellect and vast magical reserves. Aelrindel's knowledge of ancient lore and forgotten rituals is unmatched, making her a formidable adversary in any conflict. Despite her powerful magic, she remains calm and collected, rarely resorting to violence unless absolutely necessary. Her charisma, while subtle, is undeniable, earning her respect from both allies and enemies alike."
+    "speed": 35,
+    "magic": 0,
+    "defense": 75,
+    "attack": 80,
+    "charisma": 10,
+    "luck": 25,
+    "description": "Grog Smashfist is a hulking Orc warrior, known for his brute strength and unwavering loyalty to his clan. Raised in the harsh conditions of the Orcish wilderness, Grog learned to fight from a young age, mastering the art of wielding a massive two-handed axe with devastating force.  His thick hide and imposing stature make him a formidable opponent in any battle.  Despite his intimidating appearance, Grog is surprisingly simple-minded, often preferring a direct approach to any problem, even if it means charging headlong into danger. He has little interest in diplomacy or strategy, trusting his instincts and his axe to see him through. His loyalty to his clan is unwavering, and he would gladly sacrifice himself for their well-being.  His only ambition is to prove his worth in battle, gaining recognition as a mighty warrior and earning the respect of his tribe."
 }
