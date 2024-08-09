@@ -17,10 +17,10 @@ def uuid_to_int(uuid_str):
 def load_user():
     try:
         user_id = request.cookies.get('user_id')
-        current_app.logger.info(f"User ID from cookies: {user_id}")
+        #current_app.logger.info(f"User ID from cookies: {user_id}")
         if not user_id:
             user_id = str(uuid.uuid4())
-            current_app.logger.info(f"Generated new User ID: {user_id}")
+            #current_app.logger.info(f"Generated new User ID: {user_id}")
             new_user = User(cookie_id=user_id, id=uuid_to_int(user_id))
             db.session.add(new_user)
             db.session.commit()
@@ -31,7 +31,7 @@ def load_user():
             return response
 
         g.user = User.query.filter_by(cookie_id=user_id).first()
-        current_app.logger.info(f"User from database: {g.user}")
+        #current_app.logger.info(f"User from database: {g.user}")
         if not g.user:
             new_user = User(cookie_id=user_id, id=uuid_to_int(user_id))
             db.session.add(new_user)

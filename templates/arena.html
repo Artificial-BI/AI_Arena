@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+<!-- arena.html -->
 {% block head %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/arena.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
@@ -22,7 +22,7 @@
             <th>Character Image</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody id="players-table-body">
         {% for character in characters %}
         <tr data-traits="{{ character.traits | tojson }}">
             <td>{{ loop.index }}</td>

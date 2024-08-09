@@ -6,14 +6,20 @@ from flask import current_app
 import logging
 from utils import parse_arena
 import json
-from tactics_manager import TacticsManager  # Добавлен импорт TacticsManager
+from tactics_manager import TacticsManager, FighterManager  # Добавлен импорт TacticsManager
 import time
+
+# Logging setup
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
 # --- core.py ---
 class CoreCommon:
     def get_role_instructions(self, role_name):
         with current_app.app_context():
             role = Role.query.filter_by(name=role_name).first()
-            logging.info(f"Получены инструкции для роли: {role}")
+            logger.info(f"Получены инструкции для роли: {role}")
             if not role:
                 raise ValueError(f"Роль '{role_name}' не найдена в базе данных")
             return role.instructions
@@ -24,26 +30,29 @@ class ArenaManager:
         self.ccom = CoreCommon()
 
     async def generate_arena(self, character_data):
-        logging.info("Генерация арены")
+        logger.info("Генерация арены")
         if self.assistant is None:
             self.assistant = GeminiAssistant('arena')
 
         parameters = await self.assistant.send_message(f"Generate arena with the following character data: {character_data}")
         
         if not parameters.strip():
-            logging.error("Получены пустые параметры от ассистента")
+            logger.error("Получены пустые параметры от ассистента")
             raise ValueError("Недопустимые параметры: 'parameters' не должны быть пустыми. Пожалуйста, предоставьте ненулевое значение.")
 
-        arena_description = "Сгенерированная арена на основе характеристик персонажей"
-        #logging.info(f"Параметры арены: {parameters}")
-
+        arena_description = parameters
         parsed_parameters = parse_arena(parameters)
 
         new_arena = Arena(description=arena_description, parameters=json.dumps(parsed_parameters))
         db.session.add(new_arena)
         db.session.commit()
 
-        logging.info(f"Арена сгенерирована с ID: {new_arena.id}")
+        # Добавляем описание арены в чат арены
+        arena_chat_message = ArenaChatMessage(content=f"Описание арены: {arena_description}\nПараметры: {parsed_parameters}", sender='system', user_id=None, arena_id=new_arena.id, read_status=0)
+        db.session.add(arena_chat_message)
+        db.session.commit()
+
+        logger.info(f"Арена сгенерирована с ID: {new_arena.id}")
         return new_arena
 
 # --- core.py ---
@@ -56,6 +65,7 @@ class BattleManager:
         self.battle_count = 0
         self.round_count = 0
         self.tactics_manager = TacticsManager()
+        self.fighter_manager = FighterManager()  # Добавлен FighterManager
         self.timer_in_progress = False
         self.battle_in_progress = False
         self.timer_start_time = None
@@ -67,15 +77,9 @@ class BattleManager:
     def is_timer_in_progress(self):
         return self.timer_in_progress
 
-    # ... (остальные методы остаются неизменными)
-
     async def manage_battle_round(self, character_data, arena):
         self.round_count += 1
-        logging.info(f"--- Начало раунда {self.round_count} ---")
-
-        # Генерация ходов бойцов
-        for character in character_data:
-            await self.generate_fighter_move(character['id'], arena.id)
+        logger.info(f"--- Начало раунда {self.round_count} ---")
 
         # Ожидание получения ходов от всех участников
         await self.wait_for_moves(arena.id, len(character_data))
@@ -95,27 +99,32 @@ class BattleManager:
         # Генерация комментариев комментатора
         commentary = await self.generate_commentary(character_data, arena, moves, referee_evaluation)
 
-        logging.info(f"--- Раунд {self.round_count} завершен ---")
+        # Сохранение комментариев в общий чат
+        general_chat_message = GeneralChatMessage(content=f"Комментатор: {commentary}")
+        db.session.add(general_chat_message)
+        db.session.commit()
+        
+        logger.info(f"--- Раунд {self.round_count} завершен ---")
 
     async def wait_for_moves(self, arena_id, num_participants):
-        logging.info("Ожидание ходов от участников")
+        logger.info("Ожидание ходов от участников")
         while True:
             unread_count = ArenaChatMessage.query.filter_by(arena_id=arena_id, read_status=0, sender='fighter').count()
             if unread_count >= num_participants:
                 break
             await asyncio.sleep(1)
-        logging.info("Все ходы получены")
+        logger.info("Все ходы получены")
 
     async def evaluate_moves(self, character_data, arena, moves):
-        logging.info("Оценка ходов рефери")
+        logger.info("Оценка ходов рефери")
         if self.referee_assistant is None:
             self.referee_assistant = GeminiAssistant('referee')
         evaluation_message = f"Оцените следующие ходы в арене {arena.id}: {moves}"
         if not evaluation_message.strip():
-            logging.error("Пустое сообщение для оценки, пропуск оценки")
+            logger.error("Пустое сообщение для оценки, пропуск оценки")
             return "Оценка не предоставлена"
         evaluation = await self.referee_assistant.send_message(evaluation_message)
-        logging.info(f"Оценка рефери: {evaluation}")
+        logger.info(f"Оценка рефери: {evaluation}")
     
         # Сохранение результатов судейства в чат арены
         evaluation_message = ArenaChatMessage(content=evaluation, sender='referee', user_id=None, arena_id=arena.id, read_status=0)
@@ -125,15 +134,15 @@ class BattleManager:
         return evaluation
 
     async def generate_commentary(self, character_data, arena, moves, evaluation):
-        logging.info("Генерация комментариев")
+        logger.info("Генерация комментариев")
         if self.commentator_assistant is None:
             self.commentator_assistant = GeminiAssistant('commentator')
         commentary_message = f"Сгенерируйте комментарии для следующих ходов в арене {arena.id}: {moves} с оценкой {evaluation}"
         if not commentary_message.strip():
-            logging.error("Пустое сообщение для комментариев, пропуск комментариев")
+            logger.error("Пустое сообщение для комментариев, пропуск комментариев")
             return "Комментарии не предоставлены"
         commentary = await self.commentator_assistant.send_message(commentary_message)
-        logging.info(f"Комментарии: {commentary}")
+        logger.info(f"Комментарии: {commentary}")
         
         # Сохранение комментариев в общий чат
         commentary_message = ArenaChatMessage(content=commentary, sender='commentator', user_id=None, arena_id=arena.id, read_status=0)
@@ -143,7 +152,7 @@ class BattleManager:
         return commentary
 
     async def start_battle(self):
-        logging.info(f"--- Начало битвы {self.battle_count + 1} ---")
+        logger.info(f"--- Начало битвы {self.battle_count + 1} ---")
         try:
             self.battle_in_progress = True
             self.battle_count += 1
@@ -155,7 +164,10 @@ class BattleManager:
             db.session.add(battle_start_message)
             db.session.commit()
 
-            asyncio.create_task(self.tactics_manager.generate_tactics())
+            user_id = g.user.id  # Получение текущего user_id
+
+            tactics_task = asyncio.create_task(self.tactics_manager.generate_tactics(user_id))
+            fighter_task = asyncio.create_task(self.fighter_manager.generate_move(user_id))
 
             character_data = await self.get_registered_character_data()
             arena = await self.arena_manager.generate_arena(character_data)
@@ -167,13 +179,15 @@ class BattleManager:
 
                 await self.manage_battle_round(character_data, arena)
 
-            logging.info("Битва завершена")
+            logger.info("Битва завершена")
         except Exception as e:
-            logging.error(f"Ошибка в битве: {e}", exc_info=True)
+            logger.error(f"Ошибка в битве: {e}", exc_info=True)
             raise
         finally:
             self.battle_in_progress = False
             self.stop_timer()
+            self.tactics_manager.stop()
+            self.fighter_manager.stop()  # Остановка FighterManager
             await self.handle_post_battle_registration()
 
     async def handle_post_battle_registration(self):
@@ -197,10 +211,10 @@ class BattleManager:
             PreRegistrar.query.delete()
             db.session.commit()
 
-            logging.info("Таблица регистрации обновлена данными из предварительной регистрации")
+            logger.info("Таблица регистрации обновлена данными из предварительной регистрации")
 
     async def get_registered_character_data(self):
-        logging.info("Получение данных зарегистрированных персонажей")
+        logger.info("Получение данных зарегистрированных персонажей")
         with current_app.app_context():
             registrations = Registrar.query.all()
             character_data = []
@@ -216,59 +230,3 @@ class BattleManager:
                     })
             return character_data
 
-    async def generate_fighter_move(self, character_id, arena_id):
-        character = Character.query.get(character_id)
-        arena = Arena.query.get(arena_id)
-        
-        if not character or not arena:
-            logging.error("Персонаж или арена не найдены")
-            return "Персонаж или арена не найдены"
-
-        # Получение последнего сообщения тактика
-        tactics_message = TacticsChatMessage.query.filter_by(user_id=character.user_id).order_by(TacticsChatMessage.timestamp.desc()).first()
-        tactics_content = tactics_message.content if tactics_message else ""
-
-        # Получение последнего сообщения игрока
-        player_message = GeneralChatMessage.query.filter_by(user_id=character.user_id).order_by(GeneralChatMessage.timestamp.desc()).first()
-        player_content = player_message.content if player_message else ""
-
-        # Конструирование запроса для ассистента бойца
-        prompt = f"Атмосфера арены: {arena.description}\n"
-        prompt += f"Параметры арены: {arena.parameters}\n\n"
-        prompt += f"Имя персонажа: {character.name}\n"
-        prompt += f"Характеристики персонажа: {character.traits}\n\n"
-        prompt += f"Совет тактика: {tactics_content}\n"
-        prompt += f"Ввод игрока: {player_content}\n\n"
-        prompt += "Сгенерируйте следующий ход персонажа на основе вышеуказанной информации."
-
-        assistant = GeminiAssistant("fighter")
-        response = await assistant.send_message(prompt)
-
-        if not response.strip():
-            logging.error("Получен пустой ответ от ассистента")
-            return "Получен пустой ответ от ассистента"
-
-        fighter_move = ArenaChatMessage(content=response, sender="fighter", user_id=character.user_id, arena_id=arena.id)
-        db.session.add(fighter_move)
-        db.session.commit()
-
-        logging.info(f"Ход бойца для {character.name} успешно создан")
-        return "Ход бойца успешно создан"
-
-    def start_timer(self, duration):
-        self.timer_in_progress = True
-        self.timer_start_time = time.time()
-        self.countdown_duration = duration
-        logging.info(f"Таймер запущен на {duration} секунд")
-
-    def stop_timer(self):
-        self.timer_in_progress = False
-        self.timer_start_time = None
-        logging.info("Таймер остановлен")
-
-    def get_remaining_time(self):
-        if not self.timer_in_progress:
-            return 0
-        elapsed_time = time.time() - self.timer_start_time
-        remaining_time = self.countdown_duration - elapsed_time
-        return max(0, remaining_time)

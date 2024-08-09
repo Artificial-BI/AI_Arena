@@ -5,11 +5,28 @@ document.addEventListener('DOMContentLoaded', function() {
     const createCharacterForm = document.getElementById('create-character-form');
     const nameField = createCharacterForm.querySelector('#name');
     const descriptionField = createCharacterForm.querySelector('#description');
+    const characterImage = document.querySelector('.selected-character img');
     const characterButtons = document.querySelectorAll('#character-list .character-item button[data-name]');
     const noCharactersMessage = document.getElementById('no-characters-message');
-    // --- player.js ---
+    const loadingMessage = document.createElement('div');
+
     let characterChart;
     let selectedCharacterId = null;
+
+    // Создание и стилизация элемента для сообщения "Generating..."
+    loadingMessage.id = 'loading-message';
+    loadingMessage.style.display = 'none';
+    loadingMessage.style.position = 'fixed';
+    loadingMessage.style.top = '50%';
+    loadingMessage.style.left = '50%';
+    loadingMessage.style.transform = 'translate(-50%, -50%)';
+    loadingMessage.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+    loadingMessage.style.color = 'white';
+    loadingMessage.style.padding = '20px';
+    loadingMessage.style.borderRadius = '5px';
+    loadingMessage.style.zIndex = '1000';
+    loadingMessage.textContent = 'Generating...';
+    document.body.appendChild(loadingMessage);
 
     function displayCharacterStats(traits) {
         console.log('Received traits:', traits);
@@ -91,15 +108,23 @@ document.addEventListener('DOMContentLoaded', function() {
         selectedCharacterId = characterId;
         const button = document.querySelector(`#character-list .character-item button[data-id='${characterId}']`);
         if (button) {
-            const user_id = button.dataset.user_id;
             nameField.value = button.dataset.name;
             descriptionField.value = button.dataset.description;
-
+    
             const traits = JSON.parse(button.dataset.traits);
-            console.log('Selected character traits:', traits);
             displayCharacterStats(traits);
+    
+            // Обновляем изображение персонажа, используя корректный относительный путь
+            const imageUrl = button.dataset.imageUrl.replace(/ /g, "_");
+            if (imageUrl && characterImage) {
+                characterImage.src = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
+            } else {
+                characterImage.src = '/static/images/default/character.png';
+            }
         }
     }
+    
+    
 
     if (characterButtons.length === 0) {
         noCharactersMessage.style.display = 'block';
@@ -116,12 +141,15 @@ document.addEventListener('DOMContentLoaded', function() {
         event.preventDefault();
         const messageInput = document.getElementById('message');
         const message = messageInput.value.trim();
-    
+
         if (!message) {
             alert('Enter a message before sending.');
             return;
         }
-    
+
+        // Показать сообщение "Generating..."
+        loadingMessage.style.display = 'block';
+
         fetch(chatForm.action, {
             method: 'POST',
             body: new FormData(chatForm),
@@ -133,15 +161,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 messageElement.className = 'chat-message right';
                 messageElement.innerHTML = `<p>${message}</p><span class="timestamp">${new Date().toLocaleString()}</span>`;
                 chatBox.appendChild(messageElement);
-    
+
                 const responseElement = document.createElement('div');
                 responseElement.className = 'chat-message left';
                 responseElement.innerHTML = `<p>${data.response}</p><span class="timestamp">${new Date().toLocaleString()}</span>`;
                 chatBox.appendChild(responseElement);
-    
+
                 messageInput.value = '';
                 chatBox.scrollTop = chatBox.scrollHeight;
-    
+
                 // Обновление характеристик персонажа если присутствуют
                 if (data.character) {
                     if (data.character.name) {
@@ -163,20 +191,29 @@ document.addEventListener('DOMContentLoaded', function() {
                             "Endurance": data.character.endurance,
                             "Luck": data.character.luck
                         };
-                        console.log('Updated character traits:', traits);
                         displayCharacterStats(traits);
+                    }
+
+                    // Обновление изображения персонажа сразу после создания
+                    // if (data.image_url) {
+                    //     characterImage.src = `/${data.image_url}`;
+                    // }
+                    if (data.image_url) {
+                        characterImage.src = `/static/${data.image_url.replace(/ /g, "_")}`;
                     }
                 }
             }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => console.error('Error:', error))
+        .finally(() => {
+            // Скрыть сообщение "Generating..."
+            loadingMessage.style.display = 'none';
+        });
     });
-    
 
     if (lastCharacterId !== null) {
         selectCharacter(lastCharacterId);
     } else if (selectedCharacterTraits) {
-        console.log('Initial selected character traits:', selectedCharacterTraits);
         displayCharacterStats(selectedCharacterTraits);
     }
 });

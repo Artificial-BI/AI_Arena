@@ -1,15 +1,16 @@
 {
-    "name": "Grog Smashfist",
-    "type": "Orc Warrior",
-    "strength": 85,
+    "name": "Ursus the Mighty",
+    "type": "Bear Warrior",
+    "strength": 90,
     "agility": null,
     "intelligence": 15,
     "endurance": null,
-    "speed": 35,
+    "speed": 40,
     "magic": 0,
     "defense": 75,
     "attack": 80,
-    "charisma": 10,
+    "charisma": 5,
     "luck": 25,
-    "description": "Grog Smashfist is a hulking Orc warrior, known for his brute strength and unwavering loyalty to his clan. Raised in the harsh conditions of the Orcish wilderness, Grog learned to fight from a young age, mastering the art of wielding a massive two-handed axe with devastating force.  His thick hide and imposing stature make him a formidable opponent in any battle.  Despite his intimidating appearance, Grog is surprisingly simple-minded, often preferring a direct approach to any problem, even if it means charging headlong into danger. He has little interest in diplomacy or strategy, trusting his instincts and his axe to see him through. His loyalty to his clan is unwavering, and he would gladly sacrifice himself for their well-being.  His only ambition is to prove his worth in battle, gaining recognition as a mighty warrior and earning the respect of his tribe."
+    "description": "Ursus the Mighty is a massive brown bear, a hulking warrior born of the wild. His strength is legendary, allowing him to crush stone and cleave through steel with his bare paws. He is a master of combat, wielding a heavy axe with brutal efficiency. His thick fur and tough hide provide him with natural armor, making him incredibly difficult to harm.  While he may not be the quickest or the most cunning, Ursus's sheer strength and unyielding determination make him a formidable force on the battlefield. Ursus was raised by the ancient spirit of the forest, imbued with the primal power of the wild. He is a protector of nature and its inhabitants, standing against any who would threaten the balance of the forest. His loyalty is unwavering, and his rage is as fierce as a raging storm.",
+    "image_url": "images/user_3672255442/Ursus_the_Mighty.png"
 }

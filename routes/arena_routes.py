@@ -51,6 +51,24 @@ def arena():
     
     return render_template('arena.html', characters=characters, selected_character=selected_character, enumerate=enumerate)
 
+@arena_bp.route('/get_registered_characters')
+def get_registered_characters():
+    try:
+        registrations = Registrar.query.all()
+        characters = [
+            {
+                "user_id": registration.user_id,
+                "name": Character.query.get(registration.character_id).name,
+                "traits": json.loads(Character.query.get(registration.character_id).traits),
+                "image_url": Character.query.get(registration.character_id).image_url,
+                "description": Character.query.get(registration.character_id).description
+            }
+            for registration in registrations if Character.query.get(registration.character_id) is not None
+        ]
+        return jsonify(characters)
+    except Exception as e:
+        logger.error(f"Error fetching registered characters: {e}", exc_info=True)
+        return jsonify({"error": "Internal server error"}), 500
 
 @arena_bp.route('/get_arena_chat')
 def get_arena_chat():
@@ -114,10 +132,12 @@ def start_timer():
         return jsonify({"error": "Внутренняя ошибка сервера"}), 500
 
 @arena_bp.route('/start_battle', methods=['POST'])
-async def start_battle():
+def start_battle():
     logger.info("Запрос на старт битвы получен")
     try:
-        await battle_manager.start_battle()
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(battle_manager.start_battle())
         return jsonify({'status': 'Битва началась'}), 200
     except Exception as e:
         logger.error(f"Ошибка при запуске битвы: {e}", exc_info=True)

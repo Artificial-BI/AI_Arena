@@ -10,6 +10,7 @@ from gemini import GeminiAssistant
 import logging
 from utils import parse_character, save_to_json
 from load_user import load_user
+from open_ai import AIDesigner
 
 # --- player_routes.py ---
 player_bp = Blueprint('player_bp', __name__)
@@ -102,40 +103,57 @@ def select_character(character_id):
     logger.error(f"Character not found or access denied: {character_id}")
     return jsonify({"error": "Character not found or access denied"}), 404
 
+
+
 @player_bp.route('/send_message', methods=['POST'])
 def send_message():
     try:
         content = request.form.get('message', '').strip()
-        logger.info(f"----------->>>: {content}")
         if not content:
             raise ValueError("Invalid input: 'content' argument must not be empty. Please provide a non-empty value.")
 
-        user_id = g.user.id  # Use the current user's ID
+        user_id = g.user.id  # Используем ID текущего пользователя
 
-        # Create assistant on each call
+        # Создаем ассистента
         assistant = GeminiAssistant("Character Generator")
-        # Use asyncio.run to execute the async function
-        logger.info(f"Sending message to assistant: {content}")
+        logger.info(f"Отправка сообщения ассистенту: {content}")
         response = asyncio.run(assistant.send_message(content))
-        logger.info(f"Received response from assistant: {response}")
+        logger.info(f"Ответ от ассистента: {response}")
 
-        # Save message and response to the database
+        # Сохраняем сообщение и ответ в базе данных
         message = Message(content=content, user_id=user_id)
         response_message = Message(content=response, user_id=user_id)
         db.session.add(message)
-        db.session.add(response_message)
         db.session.commit()
 
-        # Parse response and return character data if present
+        # Парсим ответ и возвращаем данные персонажа, если они присутствуют
         parsed_character = parse_character(response)
-        if (parsed_character["name"]):
+        if parsed_character["name"]:
+            # Генерация изображения персонажа
+            designer = AIDesigner()
+            
+            # Очистка имени файла от недопустимых символов
+            filename = re.sub(r'[\\/*?:"<>|]', "", parsed_character['name'].replace(" ", "_"))
+            
+            image_filename = f"{filename}.png"
+            path_img_file = designer.create_image(parsed_character['description'], f"user_{user_id}", image_filename)
+
+            # Обновляем URL изображения в структуре персонажа
+            parsed_character['image_url'] = f"images/user_{user_id}/{image_filename}"
             save_to_json(parsed_character)
-            return jsonify({"status": "Message sent", "response": response, "character": parsed_character})
-        
+
+            return jsonify({
+                "status": "Message sent",
+                "response": response,
+                "character": parsed_character,
+                "image_url": parsed_character['image_url']
+            })
+
         return jsonify({"status": "Message sent", "response": response})
     except Exception as e:
-        logger.error(f"Error sending message: {e}")
+        logger.error(f"Ошибка при отправке сообщения: {e}")
         return jsonify({"error": str(e)}), 500
+
 
 @player_bp.route('/delete_character/<int:character_id>', methods=['POST'])
 def delete_character(character_id):

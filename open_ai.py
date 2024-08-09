@@ -1,69 +1,36 @@
-# import openai
-# import base64
-# from config import Config
-
-# conf = Config()
-
-# openai.api_key = conf.OPENAI_API_KEY
-
-
-
-# _prompt="""Kindom is a warrior of unmatched strength and ferocity. He was raised in a small village on the fringes of the kingdom, 
-# where he learned to fight from a young age. His village was constantly under threat from raiders and monsters, and Kindom honed his 
-# skills in the harsh environment.  Kindom is a master of the sword, able to swing it with terrifying speed and power. 
-# He is also incredibly strong, able to lift and throw objects far heavier than any normal man.  
-# While his intelligence is not his strong point, his instinct and experience in combat make him a formidable opponent. 
-# Kindom is fiercely loyal to his friends and family and will fight tooth and nail to protect them. 
-# His fierce nature makes him intimidating to most, and he rarely speaks, letting his actions do the talking.  
-# Though he may not be eloquent, he commands respect with every swing of his sword."""
-
-
-# # Generate an image from text using DALL-E
-# try:
-#     response = openai.Image.create(
-#         prompt=_prompt,
-#         n=1,
-#         size="1024x1024"
-#     )
-
-#     # Print the URL of the generated image
-#     image_url = response['data'][0]['url']
-#     print("Generated Image URL:", image_url)
-# except Exception as e:
-#     print(f"Error generating image: {e}")
-
-import openai
-import requests
+import os
+from openai import OpenAI
 from config import Config
-conf = Config()
-# Set your OpenAI API key
-openai.api_key = conf.OPENAI_API_KEY
+import requests
+# --- open_ai.py ---
+class AIDesigner:
+    def __init__(self):
+        self.conf = Config()
 
-# Define the prompt
-prompt = "A futuristic city with flying cars"
+        oai_api_key = self.conf.OPENAI_API_KEY
+        self.client = OpenAI(api_key=oai_api_key)
+    
+    def create_image(self, _prompt, folder, filename=''):
+        path = os.path.join(self.conf.IMAGE_UPLOADS, folder)
+        # Замена пробелов в имени файла на подчеркивания
 
-try:
-    # Generate an image from the text prompt
-    response = openai.Image.create(
-        prompt=prompt,
-        n=1,
-        size="1024x1024"
-    )
-
-    # Extract the URL of the generated image
-    image_url = response['data'][0]['url']
-    print("Generated Image URL:", image_url)
-
-    # Download the image
-    image_response = requests.get(image_url)
-    if image_response.status_code == 200:
-        with open('generated_image.png', 'wb') as f:
-            f.write(image_response.content)
-        print("Image downloaded and saved as 'generated_image.png'")
-    else:
-        print("Failed to download the image")
-
-except Exception as e:
-    print(f"Error generating image: {e}")
-
-
+        if not os.path.exists(path):
+            os.makedirs(path)
+        
+        response = self.client.images.generate(
+            model="dall-e-3",
+            prompt=_prompt,
+            size=self.conf.IMAGE_SIZE,
+            quality=self.conf.IMAGE_QUALITY,
+            n=1,
+        )
+        image_url = response.data[0].url
+        file_path = ''
+        if filename != '':
+            image_data = requests.get(image_url).content
+            file_path = os.path.join(path, filename)
+            with open(file_path, 'wb') as handler:
+                handler.write(image_data)
+            print(f"Image saved as {file_path}")
+        
+        return file_path

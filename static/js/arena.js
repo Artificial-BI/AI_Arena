@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const arenaChatBox = document.getElementById('arena-chat-box');
     const tooltip = document.getElementById('tooltip');
     let countdownInterval;
+    let playersTableInterval;
+    let chatIntervals = [];
 
     console.log("Document loaded");
 
@@ -23,6 +25,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (countdown <= 0) {
                 clearInterval(countdownInterval);
                 startBattle();
+                startChatUpdates();
+                stopPlayersTableUpdate();
             }
             countdown -= 0.1;
         }, 100);
@@ -177,8 +181,68 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    function updatePlayersTable() {
+        fetch('/arena/get_registered_characters')
+        .then(response => response.json())
+        .then(data => {
+            const tbody = playersTable.querySelector('tbody');
+            tbody.innerHTML = '';
+            data.forEach((character, index) => {
+                const row = document.createElement('tr');
+                row.dataset.traits = JSON.stringify(character.traits);
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${character.user_id}</td>
+                    <td>${character.name}</td>
+                    <td>
+                        <div class="chart-container">
+                            <canvas id="traits-chart-${index + 1}" class="chart-canvas"></canvas>
+                        </div>
+                    </td>
+                    <td>
+                        <img src="/static/${character.image_url}" alt="Character Image" class="character-image" data-description="${character.description}">
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            loadCharacterCharts();
+        })
+        .catch(error => console.error('Error updating players table:', error));
+    }
+
+    function startPlayersTableUpdate() {
+        updatePlayersTable();
+        playersTableInterval = setInterval(updatePlayersTable, 5000);  // Обновление таблицы каждые 5 секунд
+    }
+
+    function stopPlayersTableUpdate() {
+        clearInterval(playersTableInterval);
+    }
+
+    function updateChat(chatUrl, chatBox) {
+        fetch(chatUrl)
+        .then(response => response.json())
+        .then(data => {
+            chatBox.innerHTML = '';
+            data.forEach(msg => {
+                const messageElement = document.createElement('div');
+                messageElement.className = `chat-message ${msg.sender === 'user' ? 'right' : 'left'}`;
+                messageElement.innerHTML = `<p>${msg.content}</p><span class="timestamp">${new Date(msg.timestamp).toLocaleString()}</span>`;
+                chatBox.appendChild(messageElement);
+            });
+            chatBox.scrollTop = chatBox.scrollHeight;
+        })
+        .catch(error => console.error(`Error loading ${chatUrl} messages:`, error));
+    }
+
+    function startChatUpdates() {
+        chatIntervals.push(setInterval(() => updateChat('/arena/get_arena_chat', arenaChatBox), 5000));
+        chatIntervals.push(setInterval(() => updateChat('/arena/get_general_chat', generalChatBox), 5000));
+        chatIntervals.push(setInterval(() => updateChat('/arena/get_tactics_chat', tacticsChatBox), 5000));
+    }
+
     checkAndStartCountdown();
-    loadCharacterCharts();
+    startPlayersTableUpdate();
 
     if (tacticsChatForm) {
         tacticsChatForm.addEventListener('submit', function(event) {

@@ -41,6 +41,9 @@ class Config:
     # Folder for storing uploaded images
     IMAGE_UPLOADS = os.path.join('static', 'images')
     
+    IMAGE_QUALITY = 'standard'
+    IMAGE_SIZE = '1024x1024'
+    
     # Logging configuration
     LOG_DIR = 'logs'
     if not os.path.exists(LOG_DIR):
