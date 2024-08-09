@@ -1,6 +1,12 @@
 # --- config.py ---
 
 import os
+import logging
+
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def load_dotenv(dotenv_path):
     res = {}
@@ -11,13 +17,20 @@ def load_dotenv(dotenv_path):
                     key, value = line.strip().split('=', 1)
                     res[key] = value
     except FileNotFoundError:
-        print(f"Error: The file {dotenv_path} was not found.")
+        logger.error(f"Error: The file {dotenv_path} was not found.")
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logger.error(f"An error occurred: {e}")
     return res
        
 
 class Config:
+    
+    # Logging configuration
+    LOG_DIR = 'logs'
+    if not os.path.exists(LOG_DIR):
+        os.makedirs(LOG_DIR)
+    LOG_FILE = os.path.join(LOG_DIR, 'app.log')
+    
     key_env = load_dotenv('.env')
     #print('Config:',key_env)
     
@@ -44,11 +57,7 @@ class Config:
     IMAGE_QUALITY = 'standard'
     IMAGE_SIZE = '1024x1024'
     
-    # Logging configuration
-    LOG_DIR = 'logs'
-    if not os.path.exists(LOG_DIR):
-        os.makedirs(LOG_DIR)
-    LOG_FILE = os.path.join(LOG_DIR, 'app.log')
+    logger.info(f"LOG_FILE {LOG_FILE} cur path: {key_env}")
     
 
     
