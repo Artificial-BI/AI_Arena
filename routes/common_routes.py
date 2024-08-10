@@ -4,16 +4,18 @@ import logging
 from load_user import load_user
 
 common_bp = Blueprint('common_bp', __name__)
-
+# -- common_routes.py --
 # Logging setup
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-@common_bp.before_app_request
-def before_request():
+@common_bp.route('/some_route')
+def some_route():
     response = load_user()
-    if response:
-        return response
+    if response.status_code != 200 and response.status_code != 201:
+        return response  # Вернуть ответ, если что-то пошло не так
+    user_data = response.get_json()
+    user_id = user_data.get('user_id')
 
 @common_bp.route('/initialize_user')
 def initialize_user():

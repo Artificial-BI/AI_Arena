@@ -5,16 +5,28 @@ from config import Config
 from logging_config import configure_logging
 from initialization import init_extensions_and_db  # Import the unified initialization function
 from extensions import db
+from models import Registrar  # Добавляем импорт модели Registrar
 import traceback
 
 app = Flask(__name__)
 app.config.from_object(Config)
+
 
 if not app.debug:
     configure_logging(app)
 
 # Initialize extensions and the database
 init_extensions_and_db(app)
+
+# Очищаем таблицу Registrar
+with app.app_context():
+    try:
+        Registrar.query.delete()
+        db.session.commit()
+        app.logger.info("Таблица Registrar была успешно очищена.")
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Ошибка при очистке таблицы Registrar: {e}")
 
 # Import and register blueprints
 from routes.index_routes import index_bp

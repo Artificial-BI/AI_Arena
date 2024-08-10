@@ -60,7 +60,12 @@ body {
     color: var(--text-color);
     margin: 0;
     padding: 0;
+    background-image: url("{{ url_for('static', filename='images/fone.png') }}");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
 }
+
 
 nav ul {
     list-style: none;
@@ -88,7 +93,12 @@ nav ul li a:hover {
 
 .container {
     padding: 20px;
+   /* background-image: url('/images/fone.png'); */
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
 }
+
 
 form label {
     display: block;

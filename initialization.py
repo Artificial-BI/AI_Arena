@@ -1,3 +1,6 @@
+
+# --- initialization.py --
+
 from extensions import db, migrate
 from default import add_default_values
 

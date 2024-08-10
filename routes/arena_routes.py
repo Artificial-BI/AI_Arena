@@ -1,14 +1,14 @@
 import nest_asyncio
 import asyncio
 from flask import Blueprint, render_template, jsonify, request, g
-from models import Character, ArenaChatMessage, GeneralChatMessage, TacticsChatMessage, User, Registrar, PreRegistrar, Arena
+from models import Character, ArenaChatMessage, GeneralChatMessage, TacticsChatMessage, User, Registrar, Arena
 import logging
 import json
 from extensions import db
 from core import BattleManager
-from tactics_manager import TacticsManager
 from load_user import load_user
 
+# --- arena_routes.py ---
 nest_asyncio.apply()
 
 arena_bp = Blueprint('arena', __name__)
@@ -21,16 +21,21 @@ logger = logging.getLogger(__name__)
 @arena_bp.before_request
 def before_request():
     response = load_user()
-    if response:
+    if response.status_code != 200 and response.status_code != 201:
         return response
+    
+    # Извлекаем данные пользователя из ответа
+    user_data = response.get_json()
+    g.user_id = user_data.get('user_id')
+    g.cookie_id = user_data.get('cookie_id')
 
 @arena_bp.route('/')
 def arena():
-    selected_character = Character.query.filter_by(user_id=g.user.id).order_by(Character.id.desc()).first()
+    selected_character = Character.query.filter_by(user_id=g.user_id).order_by(Character.id.desc()).first()
     if not selected_character:
         return "Пожалуйста выберите персонажа или создайте с помощью ассистента"
     
-    user_id = g.user.id
+    user_id = g.user_id
     logger.info(f"Current user_id: {user_id}")
     arena_id = 1
     existing_registration = Registrar.query.filter_by(user_id=user_id, arena_id=arena_id).first()
@@ -70,6 +75,7 @@ def get_registered_characters():
         logger.error(f"Error fetching registered characters: {e}", exc_info=True)
         return jsonify({"error": "Internal server error"}), 500
 
+
 @arena_bp.route('/get_arena_chat')
 def get_arena_chat():
     try:
@@ -103,8 +109,8 @@ def get_tactics_chat():
 @arena_bp.route('/check_registered_players', methods=['GET'])
 def check_registered_players():
     try:
-        battle_in_progress = battle_manager.is_battle_in_progress()
-        timer_in_progress = battle_manager.is_timer_in_progress()
+        battle_in_progress = battle_manager.battle_in_progress
+        timer_in_progress = battle_manager.timer_in_progress
         remaining_time = battle_manager.get_remaining_time()
         registered_players = Registrar.query.count()
         
@@ -120,24 +126,30 @@ def check_registered_players():
 
 @arena_bp.route('/start_timer', methods=['POST'])
 def start_timer():
-    logger.info("Запрос на старт таймера получен")
-    try:
-        if battle_manager.is_battle_in_progress() or battle_manager.is_timer_in_progress():
-            return jsonify({"error": "Битва уже идет или таймер уже запущен"}), 400
+    if battle_manager.battle_in_progress or battle_manager.timer_in_progress:
+        return jsonify({"error": "Битва уже идет или таймер уже запущен"}), 400
+    
+    battle_manager.start_timer(30)
+    return jsonify({'status': 'Таймер запущен'}), 200
 
-        battle_manager.start_timer(30)
-        return jsonify({'status': 'Таймер запущен'}), 200
-    except Exception as e:
-        logger.error(f"Ошибка при запуске таймера: {e}", exc_info=True)
-        return jsonify({"error": "Внутренняя ошибка сервера"}), 500
+@arena_bp.route('/get_timer', methods=['GET'])
+def get_timer():
+    remaining_time = battle_manager.get_remaining_time()
+    return jsonify({'remaining_time': remaining_time}), 200
 
 @arena_bp.route('/start_battle', methods=['POST'])
 def start_battle():
     logger.info("Запрос на старт битвы получен")
     try:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(battle_manager.start_battle())
+        # Вместо создания нового событийного цикла, используем текущий
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            # Если цикл уже запущен, просто создаем задачу
+            asyncio.create_task(battle_manager.start_battle(g.user_id))
+        else:
+            # Если цикл не запущен, запускаем его
+            loop.run_until_complete(battle_manager.start_battle(g.user_id))
+        
         return jsonify({'status': 'Битва началась'}), 200
     except Exception as e:
         logger.error(f"Ошибка при запуске битвы: {e}", exc_info=True)

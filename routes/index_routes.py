@@ -15,9 +15,17 @@ logger = logging.getLogger(__name__)
 
 @index_bp.before_request
 def before_request():
+    # Получаем ответ от load_user
     response = load_user()
-    if response:
-        return response
+    
+    # Проверяем статус ответа
+    if response.status_code != 200 and response.status_code != 201:
+        return response  # Если статус не 200 или 201, возвращаем ответ как есть
+    
+    # Извлекаем данные пользователя из JSON ответа
+    user_data = response.get_json()
+    g.user_id = user_data.get('user_id')
+    g.cookie_id = user_data.get('cookie_id')
 
 @index_bp.route('/')
 def index():
@@ -33,7 +41,7 @@ def index():
             top_players = [player.to_dict() for player in top_players]
 
         response = make_response(render_template('index.html', tournaments=tournaments, top_players=top_players))
-        response.set_cookie('user_id', g.user.cookie_id, max_age=60*60*24*365)  # Cookie for one year
+        response.set_cookie('user_id', g.cookie_id, max_age=60*60*24*365)  # Cookie for one year
         return response
     except Exception as e:
         current_app.logger.error(f"Error in index view: {e}")

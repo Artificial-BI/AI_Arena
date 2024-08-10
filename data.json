@@ -1,16 +1,16 @@
 {
-    "name": "Ursus the Mighty",
-    "type": "Bear Warrior",
-    "strength": 90,
+    "name": "Aerius \"The Maelstrom\" Vance",
+    "type": "Aerial Ace ",
+    "strength": 20,
     "agility": null,
-    "intelligence": 15,
+    "intelligence": 35,
     "endurance": null,
-    "speed": 40,
-    "magic": 0,
-    "defense": 75,
+    "speed": 95,
+    "magic": 10,
+    "defense": 25,
     "attack": 80,
-    "charisma": 5,
-    "luck": 25,
-    "description": "Ursus the Mighty is a massive brown bear, a hulking warrior born of the wild. His strength is legendary, allowing him to crush stone and cleave through steel with his bare paws. He is a master of combat, wielding a heavy axe with brutal efficiency. His thick fur and tough hide provide him with natural armor, making him incredibly difficult to harm.  While he may not be the quickest or the most cunning, Ursus's sheer strength and unyielding determination make him a formidable force on the battlefield. Ursus was raised by the ancient spirit of the forest, imbued with the primal power of the wild. He is a protector of nature and its inhabitants, standing against any who would threaten the balance of the forest. His loyalty is unwavering, and his rage is as fierce as a raging storm.",
-    "image_url": "images/user_3672255442/Ursus_the_Mighty.png"
+    "charisma": 15,
+    "luck": 65,
+    "description": "Aerius Vance, a man driven to the brink of madness by the thrill of aerial combat,  is a living embodiment of chaos in the skies.  He was once a promising pilot in the Imperial Navy, renowned for his precision maneuvers and unwavering focus. But after a devastating battle that left him scarred and haunted by the ghosts of fallen comrades, he embraced a reckless, near-suicidal style of fighting.  He now flies a heavily modified, near-derelict fighter craft he affectionately calls \"The Maelstrom\",  a patchwork of salvaged parts and salvaged weaponry.  The Maelstrom is a testament to his unconventional tactics, its weapons haphazardly mounted, its shields barely functioning. \n\nAerius utilizes his unparalleled speed and maneuverability to weave a chaotic dance through the skies,  leaving his opponents dazed and disoriented. He fires bursts of energy at unpredictable angles, relies on his innate intuition and a desperate hope for survival.  His unpredictability makes him a terrifying foe,  as he throws himself into the fray with reckless abandon,  his laughter echoing through the vacuum of space.  While his mental state is precarious,  he possesses an almost uncanny ability to sense his opponent\u2019s weakness and exploit them.  He is a force of nature, a whirlwind of destruction, and the embodiment of a warrior\u2019s madness.",
+    "image_url": "images/user_6667399111781586842/Aerius_The_Maelstrom_Vance.png"
 }

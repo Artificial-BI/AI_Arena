@@ -7,6 +7,7 @@ from gemini import GeminiAssistant
 import logging
 from load_user import load_user
 
+# --- admin_routes.py ---
 admin_bp = Blueprint('admin', __name__)
 
 # Logging setup
@@ -16,8 +17,13 @@ logger = logging.getLogger(__name__)
 @admin_bp.before_request
 def before_request():
     response = load_user()
-    if response:
+    if response.status_code != 200 and response.status_code != 201:
         return response
+    
+    # Извлекаем данные пользователя из ответа
+    user_data = response.get_json()
+    g.user_id = user_data.get('user_id')
+    g.cookie_id = user_data.get('cookie_id')
 
 @admin_bp.route('/')
 def admin():
@@ -35,16 +41,16 @@ def update_settings():
 def send_message():
     try:
         content = request.form['message']
-        role_name = request.form['role']  # Get role name from the form
-        user_id = g.user.id  # Use the current user's ID
+        role_name = request.form['role']  # Получаем имя роли из формы
+        user_id = g.user_id  # Используем ID текущего пользователя
 
-        # Create an assistant using the selected role
+        # Создаем ассистента с выбранной ролью
         assistant = GeminiAssistant(role_name)
         
-        # Use asyncio.run to execute the asynchronous function
+        # Используем asyncio.run для выполнения асинхронной функции
         response = asyncio.run(assistant.send_message(content))
 
-        # Save the message and response to the database
+        # Сохраняем сообщение и ответ в базе данных
         message = Message(content=content, user_id=user_id)
         response_message = Message(content=response, user_id=0)
         db.session.add(message)
@@ -67,7 +73,7 @@ def get_instructions():
             return jsonify({"instructions": ""})
     except Exception as e:
         logger.error(f"Error fetching instructions: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Internal server error"}), 500
 
 @admin_bp.route('/save_instructions', methods=['POST'])
 def save_instructions():

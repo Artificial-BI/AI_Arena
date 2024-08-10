@@ -1,3 +1,6 @@
+
+// -- arena.js --
+
 document.addEventListener('DOMContentLoaded', function() {
     const playersTable = document.getElementById('players-table');
     const tacticsChatForm = document.getElementById('tactics-chat-form');
@@ -13,24 +16,27 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log("Document loaded");
 
     function startCountdown(remainingTime) {
-        let countdown = remainingTime;
         const countdownElement = document.createElement('div');
         countdownElement.id = 'countdown';
         countdownElement.style.fontSize = '24px';
         countdownElement.style.fontWeight = 'bold';
         document.body.insertBefore(countdownElement, document.body.firstChild);
-
+    
         countdownInterval = setInterval(() => {
-            countdownElement.textContent = `Battle starts in: ${countdown.toFixed(1)} seconds`;
-            if (countdown <= 0) {
-                clearInterval(countdownInterval);
-                startBattle();
-                startChatUpdates();
-                stopPlayersTableUpdate();
-            }
-            countdown -= 0.1;
-        }, 100);
+            fetch('/arena/get_timer')
+            .then(response => response.json())
+            .then(data => {
+                if (data.remaining_time <= 0) {
+                    clearInterval(countdownInterval);
+                    startBattle();
+                } else {
+                    countdownElement.textContent = `Battle starts in: ${data.remaining_time.toFixed(1)} seconds`;
+                }
+            })
+            .catch(error => console.error('Error fetching timer:', error));
+        }, 1000);
     }
+    
 
     function startBattle() {
         fetch('/arena/start_battle', {
@@ -186,10 +192,10 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             const tbody = playersTable.querySelector('tbody');
-            tbody.innerHTML = '';
+            tbody.innerHTML = '';  // Очищаем текущую таблицу перед заполнением новыми данными
             data.forEach((character, index) => {
                 const row = document.createElement('tr');
-                row.dataset.traits = JSON.stringify(character.traits);
+                row.dataset.traits = JSON.stringify(character.traits);  // Заполняем данные для отображения характеристик
                 row.innerHTML = `
                     <td>${index + 1}</td>
                     <td>${character.user_id}</td>
@@ -203,12 +209,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         <img src="/static/${character.image_url}" alt="Character Image" class="character-image" data-description="${character.description}">
                     </td>
                 `;
-                tbody.appendChild(row);
+                tbody.appendChild(row);  // Добавляем строку в таблицу
             });
-            loadCharacterCharts();
+            loadCharacterCharts();  // Загружаем и отображаем графики характеристик
         })
         .catch(error => console.error('Error updating players table:', error));
     }
+    
 
     function startPlayersTableUpdate() {
         updatePlayersTable();

@@ -12,6 +12,7 @@
 
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/player.css') }}">
+<!-- Обязательно загружаем Chart.js до пользовательского скрипта -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}
 
@@ -52,8 +53,6 @@
                             <button type="submit">Delete</button>
                         </form>
                     </li>
-                    
-                        
                     {% endfor %}
                 </ul>
                 <p id="no-characters-message" style="display:none; color: red;">No characters available for participation in battles.</p>
@@ -96,5 +95,6 @@
     const lastCharacterId = {{ last_character_id if last_character_id else 'null' }};
 </script>
 
+<!-- Ваш пользовательский скрипт -->
 <script src="{{ url_for('static', filename='js/player.js') }}"></script>
 {% endblock %}

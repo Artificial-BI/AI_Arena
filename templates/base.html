@@ -7,6 +7,19 @@
     <title>AI Arena</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            background-image: url("{{ url_for('static', filename='images/fone.png') }}");
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+    </style>
     {% block head %}
     {% endblock %}
 </head>

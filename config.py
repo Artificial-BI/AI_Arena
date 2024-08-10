@@ -32,16 +32,12 @@ class Config:
     LOG_FILE = os.path.join(LOG_DIR, 'app.log')
     
     key_env = load_dotenv('.env')
-    #print('Config:',key_env)
     
     # Secret key for session data protection
-    # SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
     SECRET_KEY = key_env['SECRET_KEY']
+    
     # API token for accessing Gemini
-   # GEMINI_API_TOKEN = os.getenv('GEMINI_API_TOKEN')
     GEMINI_API_TOKEN = key_env['GEMINI_API_TOKEN']
-   
-    #OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
     OPENAI_API_KEY = key_env['OPENAI_API_KEY']
     
     # Define the base directory of the project
@@ -51,13 +47,16 @@ class Config:
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(BASE_DIR, 'instance', 'aiarena.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
+    # Increase SQLite timeout to prevent database lock errors
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'connect_args': {'timeout': 30}  # Set timeout to 30 seconds
+    }
+    
     # Folder for storing uploaded images
     IMAGE_UPLOADS = os.path.join('static', 'images')
     
     IMAGE_QUALITY = 'standard'
     IMAGE_SIZE = '1024x1024'
-    
-    logger.info(f"LOG_FILE {LOG_FILE} cur path: {key_env}")
     
 
     

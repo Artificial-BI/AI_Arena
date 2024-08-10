@@ -1,3 +1,5 @@
+# --- managers ---
+
 from core import BattleManager, ArenaManager, TournamentManager
 
 # Initialization of managers

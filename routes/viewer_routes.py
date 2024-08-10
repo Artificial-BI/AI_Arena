@@ -15,8 +15,13 @@ logger = logging.getLogger(__name__)
 @viewer_bp.before_request
 def before_request():
     response = load_user()
-    if response:
+    if response.status_code != 200 and response.status_code != 201:
         return response
+    
+    # Извлекаем данные пользователя из ответа
+    user_data = response.get_json()
+    g.user_id = user_data.get('user_id')
+    g.cookie_id = user_data.get('cookie_id')
 
 @viewer_bp.route('/')
 def viewer():
@@ -79,7 +84,8 @@ def send_arena_chat():
         data = request.get_json()
         content = data.get('content')
         sender = data.get('sender')
-        user_id = data.get('user_id')
+        user_id = g.user_id  # Используем текущий user_id
+
         if not content or not sender or not user_id:
             return jsonify({"error": "Invalid data"}), 400
 
@@ -97,7 +103,8 @@ def send_general_chat():
         data = request.get_json()
         content = data.get('content')
         sender = data.get('sender')
-        user_id = data.get('user_id')
+        user_id = g.user_id  # Используем текущий user_id
+
         if not content or not sender or not user_id:
             return jsonify({"error": "Invalid data"}), 400
 

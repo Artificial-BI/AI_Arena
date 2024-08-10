@@ -1,3 +1,6 @@
+
+# --- models.py ---
+
 from datetime import datetime
 from extensions import db  # Import an instance of SQLAlchemy from extensions.py
 
@@ -11,22 +14,34 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True)
     password = db.Column(db.String(128))
     cookie_id = db.Column(db.String(36), unique=True, nullable=True)
+    
+    # Связь с Player (удаляем player_id, поскольку Player уже связан с User через user_id)
+    player = db.relationship('Player', backref='user', uselist=False)
 
     def __repr__(self):
         return f'<User {self.username}>'
 
-class Character(db.Model):
-    __tablename__ = 'character'
+class Player(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    player_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=True)  # Adding a foreign key
-    name = db.Column(db.String(64))
-    description = db.Column(db.Text, nullable=False)
-    image_url = db.Column(db.String(256))
-    traits = db.Column(db.Text, nullable=False)  # List of features in JSON format
+    name = db.Column(db.String(50), unique=True, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Связь с User
+    characters = db.relationship('Character', backref='player', lazy=True)  # Связь с Character
+    
+    def __repr__(self):
+        return f'<Player {self.name}>'
+
+class Character(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    traits = db.Column(db.Text, nullable=True)
+    image_url = db.Column(db.String(200), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    player_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=True)  # Связь с Player
 
     def __repr__(self):
         return f'<Character {self.name}>'
+
 
 class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -80,8 +95,8 @@ class CommentatorPrompt(db.Model):
 
 class Fight(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    character_id = db.Column(db.Integer)
-    arena_id = db.Column(db.Integer)
+    character_id = db.Column(db.Integer, db.ForeignKey('character.id'), nullable=False)
+    arena_id = db.Column(db.Integer, db.ForeignKey('arena.id'), nullable=False)
     result = db.Column(db.String(64))
     fight_date = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -139,14 +154,6 @@ class Role(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), unique=True, nullable=False)
     instructions = db.Column(db.Text, nullable=False)
-
-class Player(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), unique=True, nullable=False)
-    characters = db.relationship('Character', backref='player', lazy=True)
-
-    def __repr__(self):
-        return f'<Player {self.name}>'
 
 class PreRegistrar(db.Model):
     id = db.Column(db.Integer, primary_key=True)

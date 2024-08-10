@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const characterButtons = document.querySelectorAll('#character-list .character-item button[data-name]');
     const noCharactersMessage = document.getElementById('no-characters-message');
     const loadingMessage = document.createElement('div');
+    const arenaButton = document.querySelector('a[href="/arena"]'); // Находим кнопку Arena
 
     let characterChart;
     let selectedCharacterId = null;
@@ -29,6 +30,11 @@ document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(loadingMessage);
 
     function displayCharacterStats(traits) {
+        if (typeof Chart === 'undefined') {
+            console.error('Chart.js is not loaded');
+            return;
+        }
+
         console.log('Received traits:', traits);
 
         const ctx = document.getElementById('character-chart').getContext('2d');
@@ -114,7 +120,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const traits = JSON.parse(button.dataset.traits);
             displayCharacterStats(traits);
     
-            // Обновляем изображение персонажа, используя корректный относительный путь
             const imageUrl = button.dataset.imageUrl.replace(/ /g, "_");
             if (imageUrl && characterImage) {
                 characterImage.src = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
@@ -194,10 +199,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         displayCharacterStats(traits);
                     }
 
-                    // Обновление изображения персонажа сразу после создания
-                    // if (data.image_url) {
-                    //     characterImage.src = `/${data.image_url}`;
-                    // }
                     if (data.image_url) {
                         characterImage.src = `/static/${data.image_url.replace(/ /g, "_")}`;
                     }
@@ -211,6 +212,41 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // При нажатии на кнопку Arena
+if (arenaButton) {
+    arenaButton.addEventListener('click', function(event) {
+        event.preventDefault(); // Отменяем переход по ссылке
+
+        if (selectedCharacterId !== null) {
+            fetch('/player/register_for_arena', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ character_id: selectedCharacterId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.error('Ошибка:', data.error);
+                    alert('Ошибка при регистрации персонажа на арену');
+                } else {
+                    console.log('Персонаж успешно зарегистрирован для арены:', data);
+                    window.location.href = '/arena';
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                alert('Произошла ошибка при попытке зарегистрировать персонажа на арену');
+            });
+        } else {
+            alert('Пожалуйста, выберите персонажа перед регистрацией на арену.');
+        }
+    });
+}
+    
+
+    // Загружаем выбранного персонажа при открытии страницы
     if (lastCharacterId !== null) {
         selectCharacter(lastCharacterId);
     } else if (selectedCharacterTraits) {

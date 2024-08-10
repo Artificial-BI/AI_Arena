@@ -1,3 +1,6 @@
+
+// -- viewer.js --
+
 document.getElementById('general-chat-form').addEventListener('submit', function (event) {
     event.preventDefault();
     const messageInput = document.getElementById('general-chat-input');
