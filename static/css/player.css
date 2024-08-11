@@ -109,6 +109,32 @@ header nav ul li button:active {
     background-color: var(--button-active-bg-color);
 }
 
+#character-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+}
+
+#character-chart-container, .selected-character {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#character-chart {
+    max-width: 100%;
+    height: auto;
+}
+
+.selected-character img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+
+
 .characters-section,
 .create-character,
 .selected-character,

@@ -1,16 +1,16 @@
 {
-    "name": "Rhinotron",
-    "type": "Cyborg Rhino Warrior",
-    "strength": 90,
-    "agility": null,
-    "intelligence": 15,
-    "endurance": null,
-    "speed": 30,
+    "name": "Brother Corvus",
+    "type": "Space Marine",
+    "strength": 80,
+    "agility": 40,
+    "intelligence": 30,
+    "stamina": 70,
+    "speed": 50,
     "magic": 0,
-    "defense": 75,
-    "attack": 65,
+    "defense": 90,
+    "attack": 60,
     "charisma": 10,
-    "luck": 5,
-    "description": "Rhinotron is a fearsome warrior, a fusion of advanced cybernetics and the raw power of a rhinoceros. He was once a captive of the tyrannical corporation, CyberCorp, who subjected him to brutal experiments. Their goal was to create a weapon, a living tank capable of crushing any opposition. Rhinotron's mind was partially rewired, his natural ferocity amplified and channeled into a single, unwavering purpose - to fight.  He was implanted with a powerful energy core and a laser blade, giving him the ability to cut through steel and fire devastating blasts.  His thick, armored hide is further reinforced with cybernetic implants, making him virtually impenetrable. Though his intelligence and charisma are limited, Rhinotron is a loyal and devoted soldier, fighting with unwavering courage and brutal efficiency. He despises CyberCorp and is now dedicated to fighting for freedom and justice.",
-    "image_url": "images/user_3319637112614658465/Rhinotron.png"
+    "luck": 20,
+    "description": "Brother Corvus is a veteran Space Marine of the Ultramarines Chapter, renowned for his unwavering loyalty and brutal efficiency in battle. He carries the weight of countless battles on his heavily augmented frame, his power armor bearing the scars of past conflicts. Despite his fierce nature, Corvus possesses a surprisingly stoic demeanor, rarely displaying emotion even in the face of overwhelming odds. His years of service have honed his combat skills to a razor-sharp edge, making him a deadly adversary in close combat. His bolter is an extension of his arm, firing with pinpoint accuracy, while his chain sword is capable of cleaving through even the toughest foes. Corvus's dedication to the Emperor and the Chapter is absolute, his unwavering faith a source of strength in the darkest hours. He is a symbol of the Ultramarines Chapter's unwavering commitment to the defense of humanity, a testament to the unwavering spirit of the Adeptus Astartes.",
+    "image_url": "images/user_6891146277248205439/Brother_Corvus.png"
 }

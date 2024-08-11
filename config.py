@@ -49,7 +49,7 @@ class Config:
     
     # Increase SQLite timeout to prevent database lock errors
     SQLALCHEMY_ENGINE_OPTIONS = {
-        'connect_args': {'timeout': 30}  # Set timeout to 30 seconds
+        'connect_args': {'timeout': 1}  # Set timeout to 1 seconds
     }
     
     # Folder for storing uploaded images

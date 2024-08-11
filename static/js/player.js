@@ -9,12 +9,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const characterButtons = document.querySelectorAll('#character-list .character-item button[data-name]');
     const noCharactersMessage = document.getElementById('no-characters-message');
     const loadingMessage = document.createElement('div');
-    const arenaButton = document.querySelector('a[href="/arena"]'); // Находим кнопку Arena
+    const arenaButton = document.querySelector('a[href="/arena"]');
 
     let characterChart;
     let selectedCharacterId = null;
 
-    // Создание и стилизация элемента для сообщения "Generating..."
     loadingMessage.id = 'loading-message';
     loadingMessage.style.display = 'none';
     loadingMessage.style.position = 'fixed';
@@ -34,43 +33,53 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Chart.js is not loaded');
             return;
         }
-
+    
         console.log('Received traits:', traits);
-
+    
         const ctx = document.getElementById('character-chart').getContext('2d');
+    
         const chartData = {
             labels: Object.keys(traits),
             datasets: [{
                 label: 'Attributes',
                 data: Object.values(traits),
-                backgroundColor: 'rgba(34, 139, 34, 0.8)',
-                borderColor: 'rgba(34, 139, 34, 1)',
+                backgroundColor: Object.keys(traits).map(key => {
+                    if (key === 'Life') return 'rgba(64, 224, 208, 0.8)'; // Бирюзовый для Life
+                    if (key === 'Combat') return 'rgba(255, 100, 30, 0.8)'; // Оранжевый для Combat
+                    if (key === 'Damage') return 'rgba(255, 255, 0, 0.8)'; // Желтый для Damage
+                    return 'rgba(34, 139, 34, 0.8)'; // Зеленый для остальных атрибутов
+                }),
+                borderColor: Object.keys(traits).map(key => {
+                    if (key === 'Life') return 'rgba(64, 224, 208, 1)';
+                    if (key === 'Combat') return 'rgba(255, 100, 30, 1)';
+                    if (key === 'Damage') return 'rgba(255, 255, 0, 1)';
+                    return 'rgba(34, 139, 34, 1)';
+                }),
                 borderWidth: 1
             }]
         };
-
+    
         if (characterChart) {
             characterChart.destroy();
         }
-
+    
         characterChart = new Chart(ctx, {
             type: 'bar',
             data: chartData,
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 scales: {
                     x: {
                         beginAtZero: true,
                         title: {
-                            display: true,
-                            text: 'Attributes'
+                            display: false
                         }
                     },
                     y: {
                         beginAtZero: true,
                         title: {
-                            display: true,
-                            text: 'Values'
+                            display: false
                         }
                     }
                 },
@@ -91,8 +100,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 afterDatasetsDraw: function(chart) {
                     const ctx = chart.ctx;
                     ctx.font = '8px Arial';
-                    ctx.fillStyle = 'rgba(0, 0, 0, 1)';
-
+                    ctx.fillStyle = 'white';
+    
                     chart.data.datasets.forEach(function(dataset, i) {
                         const meta = chart.getDatasetMeta(i);
                         meta.data.forEach(function(bar, index) {
@@ -105,10 +114,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }]
         });
-
+    
         const traitsString = Object.entries(traits).map(([key, value]) => `${key}:${value}`).join(', ');
         extraInput.value = traitsString;
     }
+    
 
     function selectCharacter(characterId) {
         selectedCharacterId = characterId;
@@ -129,8 +139,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    
-
     if (characterButtons.length === 0) {
         noCharactersMessage.style.display = 'block';
     } else {
@@ -152,7 +160,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Показать сообщение "Generating..."
         loadingMessage.style.display = 'block';
 
         fetch(chatForm.action, {
@@ -175,7 +182,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 messageInput.value = '';
                 chatBox.scrollTop = chatBox.scrollHeight;
 
-                // Обновление характеристик персонажа если присутствуют
                 if (data.character) {
                     if (data.character.name) {
                         document.getElementById('name').value = data.character.name;
@@ -185,7 +191,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     if (data.character.strength !== undefined) {
                         const traits = {
-                            "Health": data.character.health,
+                            "Life": data.character.life,
                             "Intelligence": data.character.intelligence,
                             "Strength": data.character.strength,
                             "Magic": data.character.magic,
@@ -193,8 +199,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             "Defense": data.character.defense,
                             "Speed": data.character.speed,
                             "Agility": data.character.agility,
-                            "Endurance": data.character.endurance,
-                            "Luck": data.character.luck
+                            "Stamina": data.character.endurance,
+                            "Luck": data.character.luck,
+                            "Combat": data.character.combat,
+                            "Damage": data.character.damage
                         };
                         displayCharacterStats(traits);
                     }
@@ -207,46 +215,42 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => console.error('Error:', error))
         .finally(() => {
-            // Скрыть сообщение "Generating..."
             loadingMessage.style.display = 'none';
         });
     });
 
-    // При нажатии на кнопку Arena
-if (arenaButton) {
-    arenaButton.addEventListener('click', function(event) {
-        event.preventDefault(); // Отменяем переход по ссылке
+    if (arenaButton) {
+        arenaButton.addEventListener('click', function(event) {
+            event.preventDefault();
 
-        if (selectedCharacterId !== null) {
-            fetch('/player/register_for_arena', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ character_id: selectedCharacterId })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    console.error('Ошибка:', data.error);
-                    alert('Ошибка при регистрации персонажа на арену');
-                } else {
-                    console.log('Персонаж успешно зарегистрирован для арены:', data);
-                    window.location.href = '/arena';
-                }
-            })
-            .catch(error => {
-                console.error('Ошибка:', error);
-                alert('Произошла ошибка при попытке зарегистрировать персонажа на арену');
-            });
-        } else {
-            alert('Пожалуйста, выберите персонажа перед регистрацией на арену.');
-        }
-    });
-}
+            if (selectedCharacterId !== null) {
+                fetch('/player/register_for_arena', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ character_id: selectedCharacterId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error('Ошибка:', data.error);
+                        alert('Ошибка при регистрации персонажа на арену');
+                    } else {
+                        console.log('Персонаж успешно зарегистрирован для арены:', data);
+                        window.location.href = '/arena';
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка:', error);
+                    alert('Произошла ошибка при попытке зарегистрировать персонажа на арену');
+                });
+            } else {
+                alert('Пожалуйста, выберите персонажа перед регистрацией на арену.');
+            }
+        });
+    }
     
-
-    // Загружаем выбранного персонажа при открытии страницы
     if (lastCharacterId !== null) {
         selectCharacter(lastCharacterId);
     } else if (selectedCharacterTraits) {

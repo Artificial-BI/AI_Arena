@@ -114,7 +114,20 @@ header nav ul li button:active {
     background-color: var(--button-active-bg-color);
 }
 
-.arena-chat-section,
+.arena-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.arena-image {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto; /* Центрирование изображения */
+    border-radius: 10px;
+}
+
+
 .chat-box,
 #arena-chat-box,
 #tactics-chat-box,
@@ -125,10 +138,13 @@ header nav ul li button:active {
     border-radius: 4px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     margin-bottom: 20px;
-    border: 1px solid var(--chat-border-color); /* Добавлен бордюр */
-    height: 300px; /* Фиксированная высота */
-    overflow-y: scroll; /* Добавлен скроллбар */
+    border: 1px solid var(--chat-border-color);
+    height: 300px;
+    overflow-y: scroll;
+    margin-left: 40px;  /* Отступ слева */
+    margin-right: 40px; /* Отступ справа */
 }
+
 
 .chat-message {
     padding: 10px;
@@ -161,6 +177,36 @@ header nav ul li button:active {
     display: flex;
     margin-top: 10px;
 }
+
+#tactics-chat-form,
+#general-chat-form {
+    display: flex;
+    align-items: center;
+    margin-left: 40px;  /* Отступ слева */
+    margin-right: 40px; /* Отступ справа */
+}
+
+#tactics-chat-input,
+#general-chat-input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid var(--input-border-color);
+    border-radius: 4px;
+    margin-right: 10px; /* Отступ между полем ввода и кнопкой */
+}
+
+#tactics-chat-form button,
+#general-chat-form button {
+    padding: 8px 20px;
+    background-color: var(--button-bg-color);
+    color: var(--button-text-color);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
 
 #chat-form input[type="text"] {
     flex: 1;
@@ -246,6 +292,26 @@ table {
     flex: 1 1 auto;
 }
 
+table th:nth-child(1), /* Заголовок колонки "N" */
+table td:nth-child(1) {
+    width: auto; /* Автоматическая ширина */
+    white-space: nowrap; /* Запретить перенос текста, чтобы ширина соответствовала тексту */
+    text-align: center; /* Центровка текста */
+}
+table th:nth-child(2), /* Заголовок колонки "Player Name/ID" */
+table td:nth-child(2) {
+    width: 15%; /* Начальная ширина */
+    min-width: 100px; /* Минимальная ширина, при которой колонка начнет сжиматься */
+    word-break: break-all; /* Перенос текста по символам */
+    hyphens: auto; /* Добавление дефиса при переносе */
+    white-space: normal; /* Разрешить перенос текста */
+    text-align: center; /* Центровка текста в заголовке */
+}
+
+table td:nth-child(2) {
+    text-align: left; /* Выравнивание текста в ячейках */
+}
+
 /* Устанавливаем адаптивные размеры для изображений */
 .character-image {
     max-width: 100%;
@@ -272,4 +338,24 @@ table {
     header nav ul li {
         margin-bottom: 10px;
     }
+}
+
+table th:nth-child(1), /* Колонка "Number" */
+table td:nth-child(1) {
+    width: 5%; /* Уменьшена ширина в 4 раза */
+}
+
+table th:nth-child(2), /* Колонка "Player Name/ID" */
+table td:nth-child(2) {
+    width: 15%; /* Уменьшена ширина в 2 раза */
+}
+
+table th:nth-child(3), /* Колонка "Character Name" */
+table td:nth-child(3) {
+    width: 15%; /* Уменьшена ширина в 2 раза */
+}
+
+table th:nth-child(4), /* Колонка "Character Traits" */
+table td:nth-child(4) {
+    width: 40%; /* Увеличена ширина в 2 раза */
 }

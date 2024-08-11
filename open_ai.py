@@ -24,7 +24,7 @@ class AIDesigner:
         
         try:
             logger.info(f"DEBUG: {self.conf.DEBUG}")
-            if self.conf.DEBUG == False:
+            if self.conf.DEBUG == True:
                 raise Exception("RANDOM IMAGE")  # Исключение для тестирования fallback
             
             response = self.client.images.generate(
@@ -38,12 +38,14 @@ class AIDesigner:
             if filename:
                 image_data = requests.get(image_url).content
                 file_path = os.path.join(path, filename)
+                file_path = file_path.replace("\\", "/").replace('"', '')
+                logger.info(f"file_path: {file_path}")
                 with open(file_path, 'wb') as handler:
                     handler.write(image_data)
                 print(f"Image saved as {file_path}")
 
                 # Приведение путей к стандартному виду (с прямыми слэшами)
-                file_path = file_path.replace("\\", "/")
+               
 
                 # Убираем дублирование 'static' и добавляем только один раз
                 if file_path.startswith("static/"):
@@ -76,4 +78,4 @@ class AIDesigner:
         random_image_path = os.path.join("images/arena", random_image)
         print(f"Выбрано случайное изображение арены: {random_image_path}")
         
-        return random_image_path.replace("\\", "/")
+        return random_image_path.replace("\\", "/").replace('"', '')

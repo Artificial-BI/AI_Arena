@@ -38,9 +38,14 @@ class Character(db.Model):
     image_url = db.Column(db.String(200), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     player_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=True)  # Связь с Player
+    
+    combat = db.Column(db.Integer, default=0)
+    damage = db.Column(db.Integer, default=0)
+    life = db.Column(db.Integer, default=100)  # Поле для жизни (life)
 
     def __repr__(self):
         return f'<Character {self.name}>'
+
 
 
 class Message(db.Model):

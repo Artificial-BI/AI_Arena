@@ -10,10 +10,11 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class TacticsManager:
-    def __init__(self):
+    def __init__(self, fighter_instance):
         self.assistant = None
         self.running = False
         self.fighters = {}
+        self.fighter = fighter_instance  # Передаем экземпляр Fighter
 
     def add_fighter(self, user_id):
         self.fighters[user_id] = None  # Инициализируем без данных о персонаже
@@ -63,6 +64,7 @@ class TacticsManager:
                     return
 
                 arena, character, opponent_moves_text = await self.gather_arena_info(registration.arena_id, user_id)
+                
                 if not arena or not character:
                     return
 
@@ -83,8 +85,9 @@ class TacticsManager:
                     logger.error("Получен пустой ответ от ассистента")
                     await asyncio.sleep(10)
                     continue
-
+               
                 tactics_message = TacticsChatMessage(content=response, sender="tactician", user_id=user_id)
+                #logger.info(f"tactics_message: {tactics_message} -----------.")
                 db.session.add(tactics_message)
                 db.session.commit()
 
@@ -105,14 +108,78 @@ class TacticsManager:
     def stop(self):
         self.running = False
         logger.info("Процесс генерации тактических рекомендаций остановлен")
+        
+    async def generate_tactics_and_moves(self, user_id, num_moves, arena):
+        logger.info(f"Запуск генерации тактик и ходов для пользователя {user_id}")
 
+        self._initialize_assistant()
+        self.running = True
 
+        for _ in range(num_moves):
+            if not self.running:
+                break
+            
+            # Получение информации об арене и персонаже
+            arena, character, opponent_moves_text = await self.gather_arena_info(arena.id, user_id)
+            if not arena or not character:
+                return
+
+            # Генерация тактики
+            prompt = f"Атмосфера арены: {arena.description}\nПараметры арены: {arena.parameters}\n\n"
+            prompt += f"Имя персонажа: {character.name}\nХарактеристики персонажа: {character.traits}\n\n"
+            if opponent_moves_text:
+                prompt += f"Последние ходы противников:\n{opponent_moves_text}\n\n"
+            prompt += "Сгенерируйте тактические рекомендации для следующего хода персонажа."
+
+            try:
+                response = await self.assistant.send_message(prompt)
+            except Exception as e:
+                logger.error(f"Ошибка при отправке сообщения для {character.name}: {e}")
+                await asyncio.sleep(10)
+                continue
+
+            if not response.strip():
+                logger.error("Получен пустой ответ от ассистента")
+                await asyncio.sleep(10)
+                continue
+            
+            # Сохранение тактического сообщения
+            tactics_message = TacticsChatMessage(content=response, sender="tactician", user_id=user_id)
+            db.session.add(tactics_message)
+            db.session.commit()
+
+            # Получение пожеланий игрока
+            player_message = await self.get_player_input(user_id)
+            player_content = player_message.content if player_message else ""
+
+            # Генерация хода бойца через экземпляр Fighter
+            await self.fighter.generate_fighter_move(character, arena, response, player_content)
+
+            # Помечаем сообщения как прочитанные
+            tactics_message.read_status = 1
+            if player_message:
+                player_message.read_status = 1
+            db.session.commit()
+
+        logger.info(f"Боец {character.name} завершил свои ходы.")
+        #self.stop()
+    
+    async def get_player_input(self, user_id):
+        """Получает пожелания игрока, если они есть."""
+        with current_app.app_context():
+            player_message = TacticsChatMessage.query.filter_by(
+                user_id=user_id, sender='user', read_status=0
+            ).order_by(TacticsChatMessage.timestamp.desc()).first()
+            if player_message:
+                logger.info(f"Получено пожелание игрока для пользователя {user_id}: {player_message.content}")
+                return player_message
+            return None
+        
 class Fighter:
     def __init__(self):
         self.assistant = None
         self.running = False
         self.fighters = {}
-        self.max_moves = 3
         self.moves_count = {}
 
     def add_fighter(self, user_id):
@@ -143,7 +210,7 @@ class Fighter:
                 user_id=user_id, sender='user', read_status=0
             ).order_by(TacticsChatMessage.timestamp.desc()).first()
             if player_message:
-                logger.info(f"Получено пожелание игрока для пользователя {user_id}: {player_message.content}")
+                logger.info(f"Получено пожелание игрока для бойца {user_id}: {player_message.content}")
                 return player_message
             return None
 
@@ -175,13 +242,22 @@ class Fighter:
             db.session.add(fighter_move)
             db.session.commit()
 
-        logger.info(f"Ход бойца для {character.name} успешно создан")
+            # Проверка, что запись сохранена
+            saved_move = ArenaChatMessage.query.filter_by(content=response, user_id=character.user_id, arena_id=arena.id).first()
+            if saved_move:
+                logger.info(f"Ход бойца для {character.name} успешно сохранен в базе данных.")
+            else:
+                logger.error(f"Ошибка: Ход бойца для {character.name} не был найден в базе данных после коммита!")
+
         return "Ход бойца успешно создан"
 
-    async def generate_move(self, user_id):
-        logger.info("Запуск бойца")
+    async def generate_move(self, user_id, num_moves):
+        logger.info(f"Запуск бойца для user_id: {user_id} с количеством ходов: {num_moves}")
         self.running = True
-        while self.running:
+        for _ in range(num_moves):  # Используем num_moves для ограничения количества циклов
+            if not self.running:
+                break
+            
             with current_app.app_context():
                 registration = Registrar.query.filter_by(user_id=user_id).first()
                 if not registration:
@@ -209,19 +285,8 @@ class Fighter:
                     self.moves_count[user_id] += 1
                     logger.info(f"Боец {character.name} сделал {self.moves_count[user_id]} ходов")
 
-                    self.controler()
-
-            await asyncio.sleep(10)
-
         logger.info(f"Боец {character.name} завершил свои ходы.")
-
-    def controler(self):
-        for uid, count in self.moves_count.items():
-            logger.info(f"user_id: {uid} сделал {count} ходов")
-            if count > 2:
-                logger.info(f"Остановка бойцов, так как пользователь {uid} сделал более 2 ходов.")
-                self.stop()
-                break
+        self.stop()
 
     def stop(self):
         self.running = False

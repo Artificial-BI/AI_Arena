@@ -29,14 +29,14 @@ def parse_referi(text):
     }
     return grade
 
-def parse_character(text):
+def parse_character(text): # Strength: 80 Dexterity: 65 Intelligence: 45 Stamina: 90 Speed: 70 Magic: 10 Defense: 85 Attack: 90 Charisma: 30 Luck: 25 
     # Define regular expressions for each field
     name_pattern = re.compile(r"Name:\s*(.*)")
     type_pattern = re.compile(r"Type:\s*(.*)")
     strength_pattern = re.compile(r"Strength:\s*(\d+)")
     agility_pattern = re.compile(r"Agility:\s*(\d+)")
     intelligence_pattern = re.compile(r"Intelligence:\s*(\d+)")
-    endurance_pattern = re.compile(r"Endurance:\s*(\d+)")
+    stamina_pattern = re.compile(r"Stamina:\s*(\d+)")
     speed_pattern = re.compile(r"Speed:\s*(\d+)")
     magic_pattern = re.compile(r"Magic:\s*(\d+)")
     defense_pattern = re.compile(r"Defense:\s*(\d+)")
@@ -51,7 +51,7 @@ def parse_character(text):
     strength = strength_pattern.search(text)
     agility = agility_pattern.search(text)
     intelligence = intelligence_pattern.search(text)
-    endurance = endurance_pattern.search(text)
+    stamina = stamina_pattern.search(text)
     speed = speed_pattern.search(text)
     magic = magic_pattern.search(text)
     defense = defense_pattern.search(text)
@@ -67,7 +67,7 @@ def parse_character(text):
         "strength": int(strength.group(1)) if strength else None,
         "agility": int(agility.group(1)) if agility else None,
         "intelligence": int(intelligence.group(1)) if intelligence else None,
-        "endurance": int(endurance.group(1)) if endurance else None,
+        "stamina": int(stamina.group(1)) if stamina else None,
         "speed": int(speed.group(1)) if speed else None,
         "magic": int(magic.group(1)) if magic else None,
         "defense": int(defense.group(1)) if defense else None,

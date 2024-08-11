@@ -1,16 +1,9 @@
-
-// -- arena.js --
-
 document.addEventListener('DOMContentLoaded', function() {
     const playersTable = document.getElementById('players-table');
-    const tacticsChatForm = document.getElementById('tactics-chat-form');
     const tacticsChatBox = document.getElementById('tactics-chat-box');
-    const generalChatForm = document.getElementById('general-chat-form');
     const generalChatBox = document.getElementById('general-chat-box');
     const arenaChatBox = document.getElementById('arena-chat-box');
-    const tooltip = document.getElementById('tooltip');
     let countdownInterval;
-    let playersTableInterval;
     let chatIntervals = [];
 
     console.log("Document loaded");
@@ -36,7 +29,6 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => console.error('Error fetching timer:', error));
         }, 1000);
     }
-    
 
     function startBattle() {
         fetch('/arena/start_battle', {
@@ -79,7 +71,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log('Timer already in progress');
                 startCountdown(data.remaining_time);
             } else if (data.registered_players >= 2) {
-                fetch('/arena/start_timer', {  // Запуск таймера на сервере
+                fetch('/arena/start_timer', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -95,7 +87,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .then(data => {
                     if (data.status === 'Таймер запущен') {
-                        startCountdown(30);  // Запуск нового таймера
+                        startCountdown(30);
                     } else {
                         console.error('Failed to start timer:', data.error);
                     }
@@ -107,34 +99,53 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function createChart(ctx, traits) {
+        // Используем данные, которые поступают из базы данных
+        // Обновляем цвета для баров
+        const backgroundColors = [];
+        const borderColors = [];
+    
+        for (const key of Object.keys(traits)) {
+            if (key === 'Life') {
+                backgroundColors.push('rgba(64, 224, 208, 0.8)'); // Бирюзовый для Life
+                borderColors.push('rgba(64, 224, 208, 1)');
+            } else if (key === 'Combat') {
+                backgroundColors.push('rgba(255, 100, 30, 0.8)'); // Оранжевый для Combat
+                borderColors.push('rgba(255, 100, 30, 1)');
+            } else if (key === 'Damage') {
+                backgroundColors.push('rgba(255, 255, 0, 0.8)'); // Желтый для Damage
+                borderColors.push('rgba(255, 255, 0, 1)');
+            } else {
+                backgroundColors.push('rgba(34, 139, 34, 0.8)'); // Зеленый для остальных
+                borderColors.push('rgba(34, 139, 34, 1)');
+            }
+        }
+    
         return new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: Object.keys(traits),
                 datasets: [{
-                    label: 'Attributes',
+                    label: '', // Убираем название графика
                     data: Object.values(traits),
-                    backgroundColor: 'rgba(34, 139, 34, 0.8)',
-                    borderColor: 'rgba(34, 139, 34, 1)',
+                    backgroundColor: backgroundColors,
+                    borderColor: borderColors,
                     borderWidth: 1
                 }]
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false,
+                maintainAspectRatio: false, // График адаптируется по высоте
                 scales: {
                     x: {
                         beginAtZero: true,
                         title: {
-                            display: true,
-                            text: 'Attributes'
+                            display: false // Убираем подпись оси X
                         }
                     },
                     y: {
                         beginAtZero: true,
                         title: {
-                            display: true,
-                            text: 'Values'
+                            display: false // Убираем подпись оси Y
                         }
                     }
                 },
@@ -147,7 +158,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     },
                     legend: {
-                        display: false
+                        display: false // Убираем легенду графика
                     }
                 }
             },
@@ -155,13 +166,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 afterDatasetsDraw: function(chart) {
                     const ctx = chart.ctx;
                     ctx.font = '8px Arial';
-                    ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+                    ctx.fillStyle = 'white'; // Изменяем цвет текста на белый
                     chart.data.datasets.forEach(function(dataset, i) {
                         const meta = chart.getDatasetMeta(i);
                         meta.data.forEach(function(bar, index) {
                             const data = dataset.data[index];
                             if (data !== 0) {
-                                ctx.fillText(data, bar.x, bar.y - 5);
+                                ctx.fillText(data, bar.x - 5, bar.y - 5); // Выводим значение на белом фоне
                             }
                         });
                     });
@@ -169,7 +180,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }]
         });
     }
-
+    
     function loadCharacterCharts() {
         document.querySelectorAll('tbody tr').forEach((row, index) => {
             const traitsData = row.dataset.traits;
@@ -219,50 +230,10 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => console.error('Error updating players table:', error));
     }
-    
-    function updateArenaImage() {
-        fetch('/arena/get_arena_image_url')
-        .then(response => response.json())
-        .then(data => {
-            const arenaImageElement = document.querySelector('.arena-image');
-            if (arenaImageElement && data.image_url) {
-                arenaImageElement.src = `/static/${data.image_url}`;
-            }
-        })
-        .catch(error => console.error('Ошибка обновления изображения арены:', error));
-    }
-    
-    // Вызовите эту функцию после генерации арены или в нужный момент
-    document.addEventListener('DOMContentLoaded', function() {
-        // Другие функции и инициализации
-    
-        // Обновление изображения арены после генерации
-        updateArenaImage();
-    });
-    
-    // JavaScript для периодического обновления изображения арены
-    setInterval(() => {
-        fetch('/arena/get_latest_arena_image')
-            .then(response => response.json())
-            .then(data => {
-                if (data.arena_image_url) {
-                    const arenaImage = document.querySelector('.arena-image');
-                    if (arenaImage.src !== data.arena_image_url) {
-                        arenaImage.src = data.arena_image_url;
-                    }
-                }
-            })
-            .catch(error => console.error('Error fetching arena image:', error));
-    }, 5000); // Обновление каждые 5 секунд
-
 
     function startPlayersTableUpdate() {
         updatePlayersTable();
-        playersTableInterval = setInterval(updatePlayersTable, 5000);  // Обновление таблицы каждые 5 секунд
-    }
-
-    function stopPlayersTableUpdate() {
-        clearInterval(playersTableInterval);
+        setInterval(updatePlayersTable, 5000);  // Обновление таблицы каждые 5 секунд
     }
 
     function updateChat(chatUrl, chatBox) {
@@ -288,7 +259,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     checkAndStartCountdown();
-    startPlayersTableUpdate();
+    startPlayersTableUpdate(); // Обновление таблицы и графиков
+    startChatUpdates(); // Обновление чатов
 
     if (tacticsChatForm) {
         tacticsChatForm.addEventListener('submit', function(event) {
@@ -367,72 +339,4 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => console.error('Error:', error));
         });
     }
-
-    if (playersTable) {
-        playersTable.addEventListener('mouseover', function(event) {
-            if (event.target.tagName === 'IMG' && event.target.classList.contains('character-image')) {
-                const description = event.target.dataset.description;
-                tooltip.innerHTML = description;
-                tooltip.style.display = 'block';
-                tooltip.style.left = `${event.pageX + 10}px`;
-                tooltip.style.top = `${event.pageY + 10}px`;
-            }
-        });
-
-        playersTable.addEventListener('mouseout', function(event) {
-            if (event.target.tagName === 'IMG' && event.target.classList.contains('character-image')) {
-                tooltip.style.display = 'none';
-            }
-        });
-
-        playersTable.addEventListener('mousemove', function(event) {
-            if (tooltip.style.display === 'block') {
-                tooltip.style.left = `${event.pageX + 10}px`;
-                tooltip.style.top = `${event.pageY + 10}px`;
-            }
-        });
-    }
-
-    function loadChatMessages() {
-        fetch('/arena/get_arena_chat')
-        .then(response => response.json())
-        .then(data => {
-            data.forEach(msg => {
-                const messageElement = document.createElement('div');
-                messageElement.className = `chat-message ${msg.sender === 'user' ? 'right' : 'left'}`;
-                messageElement.innerHTML = `<p>${msg.content}</p><span class="timestamp">${new Date(msg.timestamp).toLocaleString()}</span>`;
-                arenaChatBox.appendChild(messageElement);
-            });
-            arenaChatBox.scrollTop = arenaChatBox.scrollHeight;
-        })
-        .catch(error => console.error('Error loading arena chat messages:', error));
-    
-        fetch('/arena/get_general_chat')
-        .then(response => response.json())
-        .then(data => {
-            data.forEach(msg => {
-                const messageElement = document.createElement('div');
-                messageElement.className = `chat-message ${msg.sender === 'user' ? 'right' : 'left'}`;
-                messageElement.innerHTML = `<p>${msg.content}</p><span class="timestamp">${new Date(msg.timestamp).toLocaleString()}</span>`;
-                generalChatBox.appendChild(messageElement);
-            });
-            generalChatBox.scrollTop = generalChatBox.scrollHeight;
-        })
-        .catch(error => console.error('Error loading general chat messages:', error));
-    
-        fetch('/arena/get_tactics_chat')
-        .then(response => response.json())
-        .then(data => {
-            data.forEach(msg => {
-                const messageElement = document.createElement('div');
-                messageElement.className = `chat-message ${msg.sender === 'user' ? 'right' : 'left'}`;
-                messageElement.innerHTML = `<p>${msg.content}</p><span class="timestamp">${new Date(msg.timestamp).toLocaleString()}</span>`;
-                tacticsChatBox.appendChild(messageElement);
-            });
-            tacticsChatBox.scrollTop = tacticsChatBox.scrollHeight;
-        })
-        .catch(error => console.error('Error loading tactics chat messages:', error));
-    }
-    
-    loadChatMessages();
 });

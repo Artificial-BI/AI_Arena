@@ -87,34 +87,14 @@ class BattleManager:
         self.arena_manager = ArenaManager()
         self.battle_count = 0
         self.round_count = 0
-        self.tactics_manager = TacticsManager()
         self.fighter = Fighter()
+        self.tactics_manager = TacticsManager(fighter_instance=self.fighter)
         self.timer_in_progress = False
         self.battle_in_progress = False
         self.timer_start_time = None
         self.countdown_duration = 30
         self.moves_count = {}
 
-    def start_timer(self, duration):
-        self.countdown_duration = duration
-        self.timer_start_time = time.time()
-        self.timer_in_progress = True
-        logger.info(f"Таймер запущен на {duration} секунд")
-
-    def get_remaining_time(self):
-        if not self.timer_in_progress:
-            return 0
-        elapsed_time = time.time() - self.timer_start_time
-        remaining_time = self.countdown_duration - elapsed_time
-        if remaining_time <= 0:
-            self.timer_in_progress = False
-            return 0
-        return remaining_time
-
-    def stop_timer(self):
-        self.timer_in_progress = False
-        self.timer_start_time = None
-        logger.info("Таймер остановлен")
 
     async def start_battle(self, user_id):
         logger.info(f"--- Начало битвы {self.battle_count + 1} ---")
@@ -137,11 +117,12 @@ class BattleManager:
                 self.fighter.add_fighter(character['user_id'])
 
             logger.info("-------------- STARTING MAIN BATTLE CYCLE ---------------")
-            max_rounds = 3
+            max_rounds = 2  # Устанавливаем максимальное количество раундов в битве
             for round_number in range(max_rounds):
                 if not self.battle_in_progress:
                     break
-                await self.manage_battle_round(character_data, arena)
+                logger.info(f"Начало раунда {round_number + 1}")
+                await self.manage_battle_round(character_data, arena, max_moves=3)
 
             logger.info("Битва завершена")
         except Exception as e:
@@ -153,6 +134,59 @@ class BattleManager:
             self.tactics_manager.stop()
             self.fighter.stop()
             await self.handle_post_battle_registration()
+
+    # async def manage_battle_round(self, character_data, arena, max_moves):
+    #     self.round_count += 1
+    #     logger.info(f"--- Начало раунда {self.round_count} ---")
+
+    #     # Запускаем генерацию тактик и ходов для всех бойцов одновременно
+    #     tasks = [asyncio.create_task(
+    #         self.tactics_manager.generate_tactics_and_moves(char['user_id'], max_moves, arena)
+    #     ) for char in character_data]
+
+    #     logger.info("---------- Все задачи тактик и ходов запущены -----------")
+
+    #     await asyncio.gather(*tasks)  # Ожидаем завершения всех задач
+
+    #     logger.info("Все бойцы завершили свои ходы, начинаем оценку и генерацию комментариев.")
+    #     await self.evaluate_and_comment_round(character_data, arena)
+    #     logger.info("Раунд завершен, проверка на окончание битвы.")
+
+    async def manage_battle_round(self, character_data, arena, max_moves):
+        self.round_count += 1
+        logger.info(f"--- Начало раунда {self.round_count} ---")
+
+        for char in character_data:
+            logger.info("Начало обработки действий для бойца ")
+            await self.tactics_manager.generate_tactics_and_moves(char['user_id'], max_moves, arena)
+            logger.info("Действия для бойца завершены")
+
+        logger.info("Все бойцы завершили свои ходы, начинаем оценку и генерацию комментариев.")
+        await self.evaluate_and_comment_round(character_data, arena)
+        logger.info("Раунд завершен, проверка на окончание битвы.")
+
+
+
+    def start_timer(self, duration):
+        self.countdown_duration = duration
+        self.timer_start_time = time.time()
+        self.timer_in_progress = True
+        logger.info(f"Таймер запущен на {duration} секунд")
+
+    def get_remaining_time(self):
+        if not self.timer_in_progress:
+            return 0
+        elapsed_time = time.time() - self.timer_start_time
+        remaining_time = self.countdown_duration - elapsed_time
+        if remaining_time <= 0:
+            self.timer_in_progress = False
+            return 0
+        return remaining_time
+
+    def stop_timer(self):
+        self.timer_in_progress = False
+        self.timer_start_time = None
+        logger.info("Таймер остановлен")
 
     async def _clear_previous_battle(self):
         with current_app.app_context():
@@ -177,36 +211,18 @@ class BattleManager:
                     })
             return character_data
 
-    async def manage_battle_round(self, character_data, arena):
-        self.round_count += 1
-        logger.info(f"--- Начало раунда {self.round_count} ---")
+   
 
-        round_start_message = ArenaChatMessage(
-            content=f"--- Раунд № {self.round_count} ---", sender='system', user_id=None, arena_id=arena.id, read_status=0
-        )
-        db.session.add(round_start_message)
-        db.session.commit()
-
-        # Запускаем генерацию тактик и ходов для всех бойцов одновременно
-        tactics_tasks = [asyncio.create_task(self.tactics_manager.generate_tactics(char['user_id'])) for char in character_data]
-        fighter_tasks = [asyncio.create_task(self.fighter.generate_move(char['user_id'])) for char in character_data]
-
-        await asyncio.gather(*tactics_tasks, *fighter_tasks)  # Ожидаем завершения всех задач
-
-        # После завершения всех задач проверяем, что бой продолжается
-        logger.info("Все бойцы завершили свои ходы, начинаем оценку и генерацию комментариев.")
-        await self.evaluate_and_comment_round(character_data, arena)
-        logger.info("Раунд завершен, проверка на окончание битвы.")
 
     async def evaluate_and_comment_round(self, character_data, arena):
         # Оценка ходов бойцов
         unread_messages = ArenaChatMessage.query.filter_by(arena_id=arena.id, read_status=0, sender='fighter').all()
 
-        logger.info(f"GET CHAT: {unread_messages}")
+        logger.info("GET CHAT")
 
         moves = [(msg.user_id, msg.content) for msg in unread_messages]
 
-        logger.info(f"GET MOVE: {moves}")
+        logger.info("GET MOVE")
 
         for msg in unread_messages:
             msg.read_status = 1
@@ -216,7 +232,7 @@ class BattleManager:
         logger.info(f"Оценка рефери завершена: {referee_evaluation}")
 
         commentary = await self.generate_commentary(character_data, arena, moves, referee_evaluation)
-        logger.info(f"Комментарий завершен: {commentary}")
+        logger.info("Комментарий завершен: ")
 
         general_chat_message = GeneralChatMessage(content=commentary, sender='commentator', user_id=None)
         db.session.add(general_chat_message)
@@ -242,9 +258,14 @@ class BattleManager:
             return "Оценка не предоставлена"
         evaluation = await self.referee_assistant.send_message(evaluation_message)
 
+        # Парсим сообщение рефери
         parsed_grade = parse_referi(evaluation)
+
         if parsed_grade["name"]:
-            logger.info(f"Оценка рефери: {parsed_grade['Name']} |  {parsed_grade['Combat']} |  {parsed_grade['Damage']}")
+            logger.info(f"Оценка рефери: {parsed_grade['name']} | Combat: {parsed_grade['combat']} | Damage: {parsed_grade['damage']}")
+
+            # Обновление боевых характеристик персонажа
+            self.update_character_combat_and_damage(parsed_grade)
 
         evaluation_message = ArenaChatMessage(
             content=evaluation, sender='referee', user_id=None, arena_id=arena.id, read_status=0
@@ -252,10 +273,28 @@ class BattleManager:
         db.session.add(evaluation_message)
         db.session.commit()
 
-        # Обновляем здоровье персонажей на основе оценки рефери
-        self.update_character_health(evaluation)
-
         return evaluation
+
+    def update_character_combat_and_damage(self, parsed_grade):
+        """Обновляет Combat, Damage и Life персонажей на основе оценки рефери."""
+        with current_app.app_context():
+            character = Character.query.filter_by(name=parsed_grade['name']).first()
+            if character:
+                character.combat = parsed_grade['combat'] if parsed_grade['combat'] is not None else character.combat
+                character.damage = parsed_grade['damage'] if parsed_grade['damage'] is not None else character.damage
+                
+                # Уменьшаем жизнь персонажа на величину damage
+                if parsed_grade['damage'] is not None:
+                    character.life = max(0, character.life - parsed_grade['damage'])
+                
+                db.session.commit()
+
+                logger.info(f"Характеристики {character.name} обновлены: Combat: {character.combat}, Damage: {character.damage}, Life: {character.life}")
+
+                # Проверяем, если жизнь упала до нуля, персонаж выбывает с арены
+                if character.life <= 0:
+                    self.remove_character_from_arena(character)
+
 
     def update_character_health(self, evaluation):
         """Обновляет здоровье персонажей на основе оценки рефери."""

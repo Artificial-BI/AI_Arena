@@ -19,22 +19,19 @@
 {% block content %}
 <div class="player-container">
     <main>
-        <div class="character-info">
-            {% if selected_character %}
-            <div class="selected-character">
-                <h3 id="character-name">{{ selected_character.name }}</h3>
-                <img src="{% if selected_character %}{{ url_for('static', filename=selected_character.image_url.replace('\\', '/')) }}{% endif %}" alt="Character Image">
-            </div>
-            {% endif %}
-
-            <div class="character-stats">
-                <h2>Character Stats</h2>
+        <div id="character-container" style="display: flex; flex-direction: row; justify-content: space-between;">
+            <div id="character-chart-container" style="flex: 1; padding-right: 10px;">
                 <canvas id="character-chart"></canvas>
             </div>
+            <div class="selected-character" style="flex: 1; padding-left: 10px; display: flex; justify-content: center; align-items: center;">
+                <img src="{% if selected_character %}{{ url_for('static', filename=selected_character.image_url.replace('\\', '/')) }}{% endif %}" alt="Character Image" style="max-width: 100%; height: auto;">
+            </div>
         </div>
+
         <div id="loading-message" style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(0, 0, 0, 0.7); color: white; padding: 20px; border-radius: 5px; z-index: 1000;">
             Generating...
         </div>
+
         <div class="character-management">
             <div class="characters-section">
                 <ul id="character-list">
