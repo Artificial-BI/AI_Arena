@@ -148,21 +148,6 @@ def start_battle():
         logger.error(f"Ошибка при запуске битвы: {e}", exc_info=True)
         return jsonify({"error": "Внутренняя ошибка сервера"}), 500
     
-# @arena_bp.route('/get_arena_image_url', methods=['GET'])
-# def get_arena_image_url():
-#     try:
-#         arena_id = 1  # Предположим, что используется одна арена для простоты
-#         arena = Arena.query.get(arena_id)
-#         if arena and arena.image_url:
-#             return jsonify({"image_url": arena.image_url}), 200
-#         else:
-#             return jsonify({"error": "Arena image not found"}), 404
-#     except Exception as e:
-#         logger.error(f"Error fetching arena image URL: {e}", exc_info=True)
-#         return jsonify({"error": "Internal server error"}), 500
-    
-
-
 @arena_bp.route('/get_arena_image_url/<int:arena_id>', methods=['GET'])
 def get_arena_image_url(arena_id):
     try:
