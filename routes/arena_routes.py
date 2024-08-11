@@ -1,6 +1,6 @@
 import nest_asyncio
 import asyncio
-from flask import Blueprint, render_template, jsonify, request, g
+from flask import Blueprint, render_template, jsonify, request, g,  url_for
 from models import Character, ArenaChatMessage, GeneralChatMessage, TacticsChatMessage, User, Registrar, Arena
 import logging
 import json
@@ -34,27 +34,20 @@ def arena():
     selected_character = Character.query.filter_by(user_id=g.user_id).order_by(Character.id.desc()).first()
     if not selected_character:
         return "Пожалуйста выберите персонажа или создайте с помощью ассистента"
-    
+
     user_id = g.user_id
     logger.info(f"Current user_id: {user_id}")
     arena_id = 1
-    existing_registration = Registrar.query.filter_by(user_id=user_id, arena_id=arena_id).first()
     
-    if existing_registration:
-        if existing_registration.character_id != selected_character.id:
-            existing_registration.character_id = selected_character.id
-            db.session.commit()
-            logger.info(f"Updated registration for user {user_id} with new character {selected_character.id} for arena {arena_id}")
-    else:
-        new_registration = Registrar(user_id=user_id, character_id=selected_character.id, arena_id=arena_id)
-        db.session.add(new_registration)
-        db.session.commit()
-        logger.info(f"User {user_id} registered character {selected_character.id} for arena {arena_id}")
+    # Получение самой последней арены по дате создания
+    arena = Arena.query.order_by(Arena.date_created.desc()).first()
+    arena_image_url = arena.image_url if arena else None
 
     registrations = Registrar.query.all()
     characters = [Character.query.get(registration.character_id) for registration in registrations]
     
-    return render_template('arena.html', characters=characters, selected_character=selected_character, enumerate=enumerate)
+    return render_template('arena.html', characters=characters, selected_character=selected_character, arena_image_url=arena_image_url, enumerate=enumerate)
+
 
 @arena_bp.route('/get_registered_characters')
 def get_registered_characters():
@@ -65,7 +58,7 @@ def get_registered_characters():
                 "user_id": registration.user_id,
                 "name": Character.query.get(registration.character_id).name,
                 "traits": json.loads(Character.query.get(registration.character_id).traits),
-                "image_url": Character.query.get(registration.character_id).image_url,
+                "image_url": Character.query.get(registration.character_id).image_url,  # Используем URL из базы данных
                 "description": Character.query.get(registration.character_id).description
             }
             for registration in registrations if Character.query.get(registration.character_id) is not None
@@ -154,3 +147,44 @@ def start_battle():
     except Exception as e:
         logger.error(f"Ошибка при запуске битвы: {e}", exc_info=True)
         return jsonify({"error": "Внутренняя ошибка сервера"}), 500
+    
+# @arena_bp.route('/get_arena_image_url', methods=['GET'])
+# def get_arena_image_url():
+#     try:
+#         arena_id = 1  # Предположим, что используется одна арена для простоты
+#         arena = Arena.query.get(arena_id)
+#         if arena and arena.image_url:
+#             return jsonify({"image_url": arena.image_url}), 200
+#         else:
+#             return jsonify({"error": "Arena image not found"}), 404
+#     except Exception as e:
+#         logger.error(f"Error fetching arena image URL: {e}", exc_info=True)
+#         return jsonify({"error": "Internal server error"}), 500
+    
+
+
+@arena_bp.route('/get_arena_image_url/<int:arena_id>', methods=['GET'])
+def get_arena_image_url(arena_id):
+    try:
+        arena = Arena.query.get(arena_id)
+        if arena and arena.image_url:
+            # Преобразование пути к изображению
+            #image_url = arena.image_url.replace("\\", "/")
+            image_url = arena.image_url if arena else None
+            
+            # Если путь уже включает 'static', избегаем его дублирования
+            if image_url and image_url.startswith("static/"):
+                image_url = image_url[len("static/"):]
+            
+            return jsonify({"image_url": image_url}), 200
+        else:
+            return jsonify({"error": "Arena image not found"}), 404
+    except Exception as e:
+        logger.error(f"Error fetching arena image URL: {e}", exc_info=True)
+        return jsonify({"error": "Internal server error"}), 500
+
+@arena_bp.route('/get_latest_arena_image')
+def get_latest_arena_image():
+    arena = Arena.query.order_by(Arena.date_created.desc()).first()
+    arena_image_url = arena.image_url if arena else None
+    return jsonify({"arena_image_url": url_for('static', filename=arena_image_url)}) if arena_image_url else jsonify({"arena_image_url": None})

@@ -13,6 +13,21 @@ def convert_hash_mini(original_code):
     short_code = hash_code[:8]
     return short_code
 
+def parse_referi(text):
+    name_pattern = re.compile(r"Name:\s*(.*)")
+    combat_pattern = re.compile(r"Combat:\s*(\d+)")
+    damage_pattern = re.compile(r"Damage:\s*(\d+)")
+    
+    name = name_pattern.search(text)
+    combat = combat_pattern.search(text)
+    damage = damage_pattern.search(text)
+    
+    grade = {
+        "name": name.group(1) if name else None,
+        "combat": int(combat.group(1)) if combat else None,
+        "damage": int(damage.group(1)) if damage else None,
+    }
+    return grade
 
 def parse_character(text):
     # Define regular expressions for each field

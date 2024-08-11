@@ -58,6 +58,7 @@ class Config:
     IMAGE_QUALITY = 'standard'
     IMAGE_SIZE = '1024x1024'
     
+    DEBUG = False
 
     
     

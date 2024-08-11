@@ -192,10 +192,12 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             const tbody = playersTable.querySelector('tbody');
-            tbody.innerHTML = '';  // Очищаем текущую таблицу перед заполнением новыми данными
+            tbody.innerHTML = ''; // Очищаем таблицу перед заполнением
+    
             data.forEach((character, index) => {
                 const row = document.createElement('tr');
-                row.dataset.traits = JSON.stringify(character.traits);  // Заполняем данные для отображения характеристик
+                row.dataset.traits = JSON.stringify(character.traits);
+    
                 row.innerHTML = `
                     <td>${index + 1}</td>
                     <td>${character.user_id}</td>
@@ -209,13 +211,50 @@ document.addEventListener('DOMContentLoaded', function() {
                         <img src="/static/${character.image_url}" alt="Character Image" class="character-image" data-description="${character.description}">
                     </td>
                 `;
-                tbody.appendChild(row);  // Добавляем строку в таблицу
+    
+                tbody.appendChild(row);
             });
-            loadCharacterCharts();  // Загружаем и отображаем графики характеристик
+    
+            loadCharacterCharts(); // Обновляем диаграммы характеристик
         })
         .catch(error => console.error('Error updating players table:', error));
     }
     
+    function updateArenaImage() {
+        fetch('/arena/get_arena_image_url')
+        .then(response => response.json())
+        .then(data => {
+            const arenaImageElement = document.querySelector('.arena-image');
+            if (arenaImageElement && data.image_url) {
+                arenaImageElement.src = `/static/${data.image_url}`;
+            }
+        })
+        .catch(error => console.error('Ошибка обновления изображения арены:', error));
+    }
+    
+    // Вызовите эту функцию после генерации арены или в нужный момент
+    document.addEventListener('DOMContentLoaded', function() {
+        // Другие функции и инициализации
+    
+        // Обновление изображения арены после генерации
+        updateArenaImage();
+    });
+    
+    // JavaScript для периодического обновления изображения арены
+    setInterval(() => {
+        fetch('/arena/get_latest_arena_image')
+            .then(response => response.json())
+            .then(data => {
+                if (data.arena_image_url) {
+                    const arenaImage = document.querySelector('.arena-image');
+                    if (arenaImage.src !== data.arena_image_url) {
+                        arenaImage.src = data.arena_image_url;
+                    }
+                }
+            })
+            .catch(error => console.error('Error fetching arena image:', error));
+    }, 5000); // Обновление каждые 5 секунд
+
 
     function startPlayersTableUpdate() {
         updatePlayersTable();

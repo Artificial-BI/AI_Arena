@@ -1,16 +1,16 @@
 {
-    "name": "Aerius \"The Maelstrom\" Vance",
-    "type": "Aerial Ace ",
-    "strength": 20,
+    "name": "Rhinotron",
+    "type": "Cyborg Rhino Warrior",
+    "strength": 90,
     "agility": null,
-    "intelligence": 35,
+    "intelligence": 15,
     "endurance": null,
-    "speed": 95,
-    "magic": 10,
-    "defense": 25,
-    "attack": 80,
-    "charisma": 15,
-    "luck": 65,
-    "description": "Aerius Vance, a man driven to the brink of madness by the thrill of aerial combat,  is a living embodiment of chaos in the skies.  He was once a promising pilot in the Imperial Navy, renowned for his precision maneuvers and unwavering focus. But after a devastating battle that left him scarred and haunted by the ghosts of fallen comrades, he embraced a reckless, near-suicidal style of fighting.  He now flies a heavily modified, near-derelict fighter craft he affectionately calls \"The Maelstrom\",  a patchwork of salvaged parts and salvaged weaponry.  The Maelstrom is a testament to his unconventional tactics, its weapons haphazardly mounted, its shields barely functioning. \n\nAerius utilizes his unparalleled speed and maneuverability to weave a chaotic dance through the skies,  leaving his opponents dazed and disoriented. He fires bursts of energy at unpredictable angles, relies on his innate intuition and a desperate hope for survival.  His unpredictability makes him a terrifying foe,  as he throws himself into the fray with reckless abandon,  his laughter echoing through the vacuum of space.  While his mental state is precarious,  he possesses an almost uncanny ability to sense his opponent\u2019s weakness and exploit them.  He is a force of nature, a whirlwind of destruction, and the embodiment of a warrior\u2019s madness.",
-    "image_url": "images/user_6667399111781586842/Aerius_The_Maelstrom_Vance.png"
+    "speed": 30,
+    "magic": 0,
+    "defense": 75,
+    "attack": 65,
+    "charisma": 10,
+    "luck": 5,
+    "description": "Rhinotron is a fearsome warrior, a fusion of advanced cybernetics and the raw power of a rhinoceros. He was once a captive of the tyrannical corporation, CyberCorp, who subjected him to brutal experiments. Their goal was to create a weapon, a living tank capable of crushing any opposition. Rhinotron's mind was partially rewired, his natural ferocity amplified and channeled into a single, unwavering purpose - to fight.  He was implanted with a powerful energy core and a laser blade, giving him the ability to cut through steel and fire devastating blasts.  His thick, armored hide is further reinforced with cybernetic implants, making him virtually impenetrable. Though his intelligence and charisma are limited, Rhinotron is a loyal and devoted soldier, fighting with unwavering courage and brutal efficiency. He despises CyberCorp and is now dedicated to fighting for freedom and justice.",
+    "image_url": "images/user_3319637112614658465/Rhinotron.png"
 }

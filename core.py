@@ -4,11 +4,13 @@ from gemini import GeminiAssistant
 import asyncio
 from flask import current_app, g
 import logging
-from utils import parse_arena
+from utils import parse_arena, parse_referi
 import json
 from tactics_manager import TacticsManager, Fighter
 import time
-
+from open_ai import AIDesigner  
+import re
+import os
 # --- core.py ---
 # Logging setup
 logging.basicConfig(level=logging.INFO)
@@ -22,7 +24,6 @@ class CoreCommon:
             if not role:
                 raise ValueError(f"Роль '{role_name}' не найдена в базе данных")
             return role.instructions
-
 class ArenaManager:
     def __init__(self):
         self.assistant = None
@@ -42,8 +43,19 @@ class ArenaManager:
         arena_description = parameters
         parsed_parameters = parse_arena(parameters)
 
+        # Сначала создаем запись арены в базе данных, чтобы получить ID
         new_arena = Arena(description=arena_description, parameters=json.dumps(parsed_parameters))
         db.session.add(new_arena)
+        db.session.commit()
+
+        # Затем генерируем изображение арены
+        designer = AIDesigner()
+        filename = re.sub(r'[\\/*?:"<>|]', "", f"arena_{new_arena.id}")
+        image_filename = f"{filename}.png"
+        image_url = designer.create_image(arena_description, "arena", image_filename)
+
+        # Обновляем запись арены с URL изображения
+        new_arena.image_url = image_url
         db.session.commit()
 
         # Добавляем описание арены в чат арены
@@ -51,8 +63,9 @@ class ArenaManager:
         db.session.add(arena_chat_message)
         db.session.commit()
 
-        logger.info(f"Арена сгенерирована с ID: {new_arena.id}")
+        logger.info(f"Арена сгенерирована с ID: {new_arena.id} и изображением {image_url}")
         return new_arena
+
 class BattleManager:
     def __init__(self):
         self.ccom = CoreCommon()
@@ -67,6 +80,7 @@ class BattleManager:
         self.battle_in_progress = False
         self.timer_start_time = None
         self.countdown_duration = 30
+        self.moves_count = {}
 
     def start_timer(self, duration):
         self.countdown_duration = duration
@@ -94,8 +108,8 @@ class BattleManager:
         try:
             self.battle_in_progress = True
             self.battle_count += 1
-            ArenaChatMessage.query.delete()  # Очищаем чат арены перед началом новой битвы
-            TacticsChatMessage.query.delete()  # Очищаем чат тактика перед началом новой битвы
+            ArenaChatMessage.query.delete()
+            TacticsChatMessage.query.delete()
             db.session.commit()
 
             battle_start_message = ArenaChatMessage(
@@ -107,28 +121,17 @@ class BattleManager:
             character_data = await self.get_registered_character_data()
             arena = await self.arena_manager.generate_arena(character_data)
 
-            # Инициализация боя для каждого бойца
             for character in character_data:
                 self.tactics_manager.add_fighter(character['user_id'])
                 self.fighter.add_fighter(character['user_id'])
-            num = 0
-            
-            logger.info("-------------- BASE CICLE ---------------")  
-            
-            while self.battle_in_progress:  # Основной цикл битвы
-                num +=1
-                await self.manage_battle_round(character_data, arena)
-                
-                logger.info(f"-------------- STEP {num} ---------------")
-                
-                if self.check_battle_end(character_data):
+
+            logger.info("-------------- STARTING MAIN BATTLE CYCLE ---------------")
+            max_rounds = 3
+            for round_number in range(max_rounds):
+                if not self.battle_in_progress:
                     break
-                if num >=2:
-                    self.battle_in_progress = False
-                   
-                    
-                    
-                
+                await self.manage_battle_round(character_data, arena)
+
             logger.info("Битва завершена")
         except Exception as e:
             logger.error(f"Ошибка в битве: {e}", exc_info=True)
@@ -139,7 +142,7 @@ class BattleManager:
             self.tactics_manager.stop()
             self.fighter.stop()
             await self.handle_post_battle_registration()
-
+            
     async def get_registered_character_data(self):
         logger.info("Получение данных зарегистрированных персонажей")
         with current_app.app_context():
@@ -157,6 +160,7 @@ class BattleManager:
                     })
             return character_data
 
+
     async def manage_battle_round(self, character_data, arena):
         self.round_count += 1
         logger.info(f"--- Начало раунда {self.round_count} ---")
@@ -170,29 +174,68 @@ class BattleManager:
         # Запускаем генерацию тактик и ходов для всех бойцов одновременно
         tactics_tasks = [asyncio.create_task(self.tactics_manager.generate_tactics(char['user_id'])) for char in character_data]
         fighter_tasks = [asyncio.create_task(self.fighter.generate_move(char['user_id'])) for char in character_data]
-        await asyncio.gather(*tactics_tasks, *fighter_tasks)  # Ожидаем завершения всех задач
+        
+        #await asyncio.gather(*tactics_tasks, *fighter_tasks)  # Ожидаем завершения всех задач
 
-        await self.wait_for_moves(arena.id, len(character_data))
+        # После завершения всех задач проверяем, что бой продолжается
+        logger.info("Все бойцы завершили свои ходы, начинаем оценку и генерацию комментариев.")
+        await self.evaluate_and_comment_round(character_data, arena)  # Вызов функции для оценки и комментариев
+        logger.info("Раунд завершен, проверка на окончание битвы.")
 
+    async def evaluate_and_comment_round(self, character_data, arena):
+        # Оценка ходов бойцов
         unread_messages = ArenaChatMessage.query.filter_by(arena_id=arena.id, read_status=0, sender='fighter').all()
+        
+        logger.info(f"GET CHAT: {unread_messages}")
+        
         moves = [(msg.user_id, msg.content) for msg in unread_messages]
-
-        logger.info(f">>>>>> moves:  {moves}")
-
+        
+        logger.info(f"GET MOVE: {moves}")
+        
         for msg in unread_messages:
             msg.read_status = 1
         db.session.commit()
 
         referee_evaluation = await self.evaluate_moves(character_data, arena, moves)
+        logger.info(f"Оценка рефери завершена: {referee_evaluation}")
+
+        commentary = await self.generate_commentary(character_data, arena, moves, referee_evaluation)
+        logger.info(f"Комментарий завершен: {commentary}")
+
+        # general_chat_message = GeneralChatMessage(
+        #     content=f"Комментатор: {commentary}", sender='commentator', user_id=None
+        # )
+        general_chat_message = GeneralChatMessage(content=commentary,sender='commentator', user_id=None)
+        db.session.add(general_chat_message)
+        db.session.commit()
+
+
+    async def handle_end_of_round(self, arena, character_data):
+        """Метод для обработки завершения раунда и подготовки к следующему."""
+        await self.wait_for_moves(arena.id, len(character_data))
+        unread_messages = ArenaChatMessage.query.filter_by(arena_id=arena.id, read_status=0, sender='fighter').all()
+        moves = [(msg.user_id, msg.content) for msg in unread_messages]
+
+        for msg in unread_messages:
+            msg.read_status = 1
+        db.session.commit()
+
+        # Оценка и комментарии после завершения всех ходов
+        referee_evaluation = await self.evaluate_moves(character_data, arena, moves)
         commentary = await self.generate_commentary(character_data, arena, moves, referee_evaluation)
 
-        general_chat_message = GeneralChatMessage(
-            content=f"Комментатор: {commentary}", sender='commentator', user_id=None, read_status=0
-        )
+        # general_chat_message = GeneralChatMessage(
+        #     content=f"Комментатор: {commentary}", sender='commentator', user_id=None, read_status=0
+        # )
+
+        general_chat_message = GeneralChatMessage(content=commentary,sender='commentator', user_id=None)
+
+        
         db.session.add(general_chat_message)
         db.session.commit()
 
         logger.info(f"--- Раунд {self.round_count} завершен ---")
+
 
     async def wait_for_moves(self, arena_id, num_participants):
         logger.info("Ожидание ходов от участников")
@@ -213,7 +256,12 @@ class BattleManager:
             logger.error("Пустое сообщение для оценки, пропуск оценки")
             return "Оценка не предоставлена"
         evaluation = await self.referee_assistant.send_message(evaluation_message)
-        logger.info(f"Оценка рефери: {evaluation}")
+        
+
+        parsed_grade = parse_referi(evaluation)
+        if parsed_grade["name"]:
+            logger.info(f"Оценка рефери: {parsed_grade['Name']} |  {parsed_grade['Combat']} |  {parsed_grade['Damage']}")
+
 
         evaluation_message = ArenaChatMessage(
             content=evaluation, sender='referee', user_id=None, arena_id=arena.id, read_status=0
@@ -225,6 +273,7 @@ class BattleManager:
         self.update_character_health(evaluation)
 
         return evaluation
+
     async def handle_post_battle_registration(self):
         with current_app.app_context():
             Registrar.query.delete()
@@ -245,11 +294,6 @@ class BattleManager:
 
             logger.info("Таблица регистрации обновлена данными из предварительной регистрации")
 
-
-
-
-
-
     def update_character_health(self, evaluation):
         """Обновляет здоровье персонажей на основе оценки рефери."""
         with current_app.app_context():
@@ -264,4 +308,19 @@ class BattleManager:
                     points = int(line.split()[-1])
                     character = Character.query.get(character_id)
                     if character:
-                        traits = json.loads
+                        traits = json.loads(character.traits)
+                        # Обновление здоровья или другого показателя
+                        traits['health'] = max(0, traits.get('health', 100) - points)
+                        character.traits = json.dumps(traits)
+                        db.session.commit()
+                        
+    async def generate_commentary(self, character_data, arena, moves, referee_evaluation):
+        logger.info("Генерация комментария для раунда")
+        # Создание шаблона комментария на основе оценки рефери и выполненных ходов
+        commentary = f"Рефери оценил раунд следующим образом: {referee_evaluation}\n"
+        commentary += "Бойцы сделали следующие ходы:\n"
+        for user_id, move in moves:
+            character = next((char for char in character_data if char['user_id'] == user_id), None)
+            if character:
+                commentary += f"{character['name']}: {move}\n"
+        return commentary                    

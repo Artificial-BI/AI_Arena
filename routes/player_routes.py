@@ -11,7 +11,7 @@ import logging
 from utils import parse_character, save_to_json
 from load_user import load_user
 from open_ai import AIDesigner
-from core import BattleManager
+#from core import BattleManager
 import os
 
 # --- player_routes.py ---
@@ -298,14 +298,21 @@ def create_character():
 
         traits_json = json.dumps(traits, ensure_ascii=False)
 
-        new_character = Character(name=name, description=description, image_url='images/default/character.png', traits=traits_json, user_id=g.user_id)
+        # Формирование пути к уже сгенерированному изображению
+        filename = re.sub(r'[\\/*?:"<>|]', "", name.replace(" ", "_"))
+        image_filename = f"{filename}.png"
+        image_url = f"images/user_{g.user_id}/{image_filename}"
+
+        new_character = Character(name=name, description=description, image_url=image_url, traits=traits_json, user_id=g.user_id)
         db.session.add(new_character)
         db.session.commit()
-        logger.info(f"Created new character: {name}")
+
+        logger.info(f"Created new character: {name} with image {image_url}")
         return redirect(url_for('player_bp.player'))
     except Exception as e:
         logger.error(f"Error creating character: {e}")
         return jsonify({"error": str(e)}), 500
+
 
 @player_bp.route('/send_general_message', methods=['POST'])
 def send_general_message():

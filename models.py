@@ -100,11 +100,14 @@ class Fight(db.Model):
     result = db.Column(db.String(64))
     fight_date = db.Column(db.DateTime, default=datetime.utcnow)
 
+# models.py
 class Arena(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String(256))
     parameters = db.Column(db.Text)
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
+    image_url = db.Column(db.String(255), nullable=True)  # Добавляем поле для хранения URL изображения арены
+
 
 class Tournament(db.Model):
     id = db.Column(db.Integer, primary_key=True)

@@ -19,7 +19,6 @@ class TacticsManager:
     def add_fighter(self, user_id):
         self.fighters[user_id] = None  # Инициализируем без данных о персонаже
 
-
     async def gather_arena_info(self, arena_id, user_id):
         """Собирает информацию о характеристиках арены, последних ходах противников и характеристиках персонажа."""
         with current_app.app_context():
@@ -41,29 +40,30 @@ class TacticsManager:
                 return None, None
 
             # Собираем последние ходы противников
-            opponent_moves = ArenaChatMessage.query.filter(ArenaChatMessage.user_id != user_id, ArenaChatMessage.arena_id == arena_id).order_by(ArenaChatMessage.timestamp.desc()).all()
+            opponent_moves = ArenaChatMessage.query.filter(
+                ArenaChatMessage.user_id != user_id, 
+                ArenaChatMessage.arena_id == arena_id
+            ).order_by(ArenaChatMessage.timestamp.desc()).all()
             opponent_moves_text = "\n".join([f"{move.sender}: {move.content}" for move in opponent_moves])
 
             return arena, character, opponent_moves_text
+    
     async def generate_tactics(self, user_id):
         """Генерация тактических рекомендаций для персонажа."""
         logger.info(f"Запуск процесса генерации тактических рекомендаций для пользователя {user_id}")
 
         self.running = True
+        registration = Registrar.query.filter_by(user_id=user_id).first()
+        if not registration:
+            logger.error(f"Персонаж для пользователя {user_id} не найден")
+            return
+        
+        arena, character, opponent_moves_text = await self.gather_arena_info(registration.arena_id, user_id)
+        if not arena or not character:
+            return
+
         while self.running:
             with current_app.app_context():
-                # Получение арены и персонажа
-                registration = Registrar.query.filter_by(user_id=user_id).first()
-                if not registration:
-                    logger.error(f"Персонаж для пользователя {user_id} не найден")
-                    await asyncio.sleep(10)
-                    continue
-
-                arena, character, opponent_moves_text = await self.gather_arena_info(registration.arena_id, user_id)
-                if not arena or not character:
-                    await asyncio.sleep(10)
-                    continue
-
                 # Генерация тактической рекомендации
                 prompt = f"Атмосфера арены: {arena.description}\n"
                 prompt += f"Параметры арены: {arena.parameters}\n\n"
@@ -118,12 +118,15 @@ class Fighter:
         self.assistant = None
         self.running = False
         self.fighters = {}  # Словарь для хранения бойцов
+        self.max_moves = 3  # Максимальное количество ходов до следующего раунда
+        self.moves_count = {}  # Счетчик ходов для каждого бойца
 
     def add_fighter(self, user_id):
         self.fighters[user_id] = None  # Инициализируем без данных о персонаже
+        self.moves_count[user_id] = 0  # Инициализируем счетчик ходов для бойца
 
     async def wait_for_instructions(self, user_id):
-        """Ждет получения тактических инструкций или пожеланий от игрока."""
+        """Ждет получения тактических инструкций от тактика."""
         while self.running:
             with current_app.app_context():
                 # Проверка наличия новых тактических рекомендаций
@@ -161,20 +164,28 @@ class Fighter:
         if self.assistant is None:
             self.assistant = GeminiAssistant("fighter")
 
-        response = await self.assistant.send_message(prompt)
+        try:
+            response = await self.assistant.send_message(prompt)
+        except Exception as e:
+            logger.error(f"Ошибка при отправке сообщения для {character.name}: {e}")
+            return "Ошибка при отправке сообщения"
 
         if not response.strip():
             logger.error("Получен пустой ответ от ассистента")
             return "Получен пустой ответ от ассистента"
 
-        # Запись хода в чат арены
-        fighter_move = ArenaChatMessage(content=response, sender="fighter", user_id=character.user_id, arena_id=arena.id)
-        db.session.add(fighter_move)
-        db.session.commit()
+        # Добавьте дополнительные логи здесь для отладки
+        logger.info(f"Generated fighter move: {response}")
+
+        with current_app.app_context():  # Проверьте, что находитесь в контексте приложения
+            fighter_move = ArenaChatMessage(content=response, sender="fighter", user_id=character.user_id, arena_id=arena.id)
+            db.session.add(fighter_move)
+            db.session.commit()
 
         logger.info(f"Ход бойца для {character.name} успешно создан")
 
         return "Ход бойца успешно создан"
+
 
     async def generate_move(self, user_id):
         logger.info("Запуск бойца")
@@ -204,8 +215,26 @@ class Fighter:
                             player_message.read_status = 1
                         db.session.commit()
 
-            await asyncio.sleep(1)  # Ожидание перед следующим ходом
+                        # Увеличиваем счетчик ходов
+                        self.moves_count[user_id] += 1
+                        logger.info(f"Боец {character.name} сделал {self.moves_count[user_id]} ходов")
+
+                        # Проверка и остановка бойцов, если достигнуто максимальное количество ходов
+                        self.controler()
+
+            await asyncio.sleep(10)  # Ожидание перед следующим ходом
+        logger.info(f"Боец {character.name} завершил свои ходы.")
+
+    def controler(self):
+        for uid, count in self.moves_count.items():
+            logger.info(f"user_id: {uid} сделал {count} ходов")
+            if count > 2:
+                logger.info(f"Остановка бойцов, так как пользователь {uid} сделал более 2 ходов.")
+                self.stop()
+                break
 
     def stop(self):
         self.running = False
         logger.info("Процесс генерации ходов бойца остановлен")
+
+
