@@ -84,14 +84,14 @@ def arena():
                 'image_url': character.image_url
             })
 
-        return render_template(
-            'arena.html', 
-            characters=characters, 
-            selected_character=selected_character, 
-            arena_image_url=arena_image_url, 
-            enumerate=enumerate,
-            show_start_game_popup=show_start_game_popup
-        )
+    return render_template(
+        'arena.html', 
+        characters=characters, 
+        selected_character=selected_character, 
+        arena_image_url=arena_image_url, 
+        enumerate=enumerate,
+        show_start_game_popup=show_start_game_popup
+    )
 
 def reset_game_state():
     """Сброс состояния игры для всех пользователей."""
@@ -103,15 +103,6 @@ def reset_game_state():
             file.seek(0)
             json.dump(visit_data, file)
             file.truncate()
-
-    return render_template(
-        'arena.html', 
-        characters=characters, 
-        selected_character=selected_character, 
-        arena_image_url=arena_image_url, 
-        enumerate=enumerate,
-        show_start_game_popup=show_start_game_popup
-    )
 
 @arena_bp.route('/get_registered_characters')
 def get_registered_characters():
@@ -206,10 +197,7 @@ def start_battle():
 @arena_bp.route('/get_arena_image_url/<int:arena_id>', methods=['GET'])
 def get_arena_image_url(arena_id):
     """Получение URL изображения арены."""
-    try:
-        # Вызов всплывающего сообщения о начале генерации арены
-       # show_notification("Генерация изображения арены...")
-
+    try: 
         arena = Arena.query.get(arena_id)
         if arena and arena.image_url:
             image_url = arena.image_url.replace("\\", "/")
@@ -219,7 +207,6 @@ def get_arena_image_url(arena_id):
     except Exception as e:
         logger.error(f"Error fetching arena image URL: {e}", exc_info=True)
         return jsonify({"error": "Internal server error"}), 500
-
 
 @arena_bp.route('/get_latest_arena_image')
 def get_latest_arena_image():

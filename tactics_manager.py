@@ -10,11 +10,12 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class TacticsManager:
-    def __init__(self, fighter_instance):
+    def __init__(self, fighter_instance, loop=None):
         self.assistant = None
         self.running = False
         self.fighters = {}
-        self.fighter = fighter_instance  # Передаем экземпляр Fighter
+        self.fighter = fighter_instance
+        self.loop = loop or asyncio.get_event_loop()
 
     def add_fighter(self, user_id):
         self.fighters[user_id] = None  # Инициализируем без данных о персонаже
@@ -176,11 +177,17 @@ class TacticsManager:
             return None
         
 class Fighter:
-    def __init__(self):
+    def __init__(self, loop=None):
         self.assistant = None
         self.running = False
         self.fighters = {}
         self.moves_count = {}
+        self.loop = loop or asyncio.get_event_loop()
+
+    def message_to_Arena(self, _message):
+        set_message = ArenaChatMessage(content=_message, sender='system', user_id=None, read_status=0)
+        db.session.add(set_message)
+        db.session.commit()
 
     def add_fighter(self, user_id):
         self.fighters[user_id] = None  # Инициализируем без данных о персонаже
@@ -189,30 +196,6 @@ class Fighter:
     def _initialize_assistant(self):
         if self.assistant is None:
             self.assistant = GeminiAssistant("fighter")
-
-    async def wait_for_instructions(self, user_id):
-        """Ждет получения тактических инструкций от тактика."""
-        while self.running:
-            with current_app.app_context():
-                tactics_message = TacticsChatMessage.query.filter_by(
-                    user_id=user_id, sender='tactician', read_status=0
-                ).order_by(TacticsChatMessage.timestamp.desc()).first()
-                if tactics_message:
-                    logger.info(f"Получена тактическая рекомендация для Fighter: {user_id}")
-                    return tactics_message
-
-            await asyncio.sleep(1)
-
-    async def get_player_input(self, user_id):
-        """Получает пожелания игрока, если они есть."""
-        with current_app.app_context():
-            player_message = TacticsChatMessage.query.filter_by(
-                user_id=user_id, sender='user', read_status=0
-            ).order_by(TacticsChatMessage.timestamp.desc()).first()
-            if player_message:
-                logger.info(f"Получено пожелание игрока для бойца {user_id}: {player_message.content}")
-                return player_message
-            return None
 
     async def generate_fighter_move(self, character, arena, tactics_content, player_content):
         """Генерирует ход бойца на основе инструкций тактика и пожеланий игрока."""
@@ -238,6 +221,7 @@ class Fighter:
         logger.info(f"Generated fighter move: {response}")
 
         with current_app.app_context():
+            self.message_to_Arena(f"--- Step fighter: {character.name} ---")
             fighter_move = ArenaChatMessage(content=response, sender="fighter", user_id=character.user_id, arena_id=arena.id)
             db.session.add(fighter_move)
             db.session.commit()
@@ -250,6 +234,85 @@ class Fighter:
                 logger.error(f"Ошибка: Ход бойца для {character.name} не был найден в базе данных после коммита!")
 
         return "Ход бойца успешно создан"
+
+
+    async def wait_for_instructions(self, user_id):
+        """Ждет получения тактических инструкций от тактика."""
+        while self.running:
+            with current_app.app_context():
+                tactics_message = TacticsChatMessage.query.filter_by(
+                    user_id=user_id, sender='tactician', read_status=0
+                ).order_by(TacticsChatMessage.timestamp.desc()).first()
+                if tactics_message:
+                    logger.info(f"Получена тактическая рекомендация для Fighter: {user_id}")
+                    return tactics_message
+
+            await asyncio.sleep(1)
+
+    async def get_player_input(self, user_id):
+        """Получает пожелания игрока, если они есть."""
+        with current_app.app_context():
+            player_message = TacticsChatMessage.query.filter_by(
+                user_id=user_id, sender='user', read_status=0
+            ).order_by(TacticsChatMessage.timestamp.desc()).first()
+            if player_message:
+                logger.info(f"Получено пожелание игрока для бойца {user_id}: {player_message.content}")
+                return player_message
+            return None
+
+    async def generate_tactics_and_moves(self, user_id, num_moves, arena):
+        logger.info(f"Запуск генерации тактик и ходов для пользователя {user_id}")
+
+        self._initialize_assistant()
+        self.running = True
+
+        for _ in range(num_moves):
+            if not self.running:
+                break
+
+            # Получение информации об арене и персонаже
+            arena, character, opponent_moves_text = await self.gather_arena_info(arena.id, user_id)
+            if not arena or not character:
+                return
+
+            # Генерация тактики
+            prompt = f"Атмосфера арены: {arena.description}\nПараметры арены: {arena.parameters}\n\n"
+            prompt += f"Имя персонажа: {character.name}\nХарактеристики персонажа: {character.traits}\n\n"
+            if opponent_moves_text:
+                prompt += f"Последние ходы противников:\n{opponent_moves_text}\n\n"
+            prompt += "Сгенерируйте тактические рекомендации для следующего хода персонажа."
+
+            try:
+                response = await self.assistant.send_message(prompt)
+            except Exception as e:
+                logger.error(f"Ошибка при отправке сообщения для {character.name}: {e}")
+                await asyncio.sleep(10)
+                continue
+
+            if not response.strip():
+                logger.error("Получен пустой ответ от ассистента")
+                await asyncio.sleep(10)
+                continue
+
+            # Сохранение тактического сообщения
+            tactics_message = TacticsChatMessage(content=response, sender="tactician", user_id=user_id)
+            db.session.add(tactics_message)
+            db.session.commit()
+
+            # Получение пожеланий игрока
+            player_message = await self.get_player_input(user_id)
+            player_content = player_message.content if player_message else ""
+
+            # Генерация хода бойца через экземпляр Fighter
+            await self.fighter.generate_fighter_move(character, arena, response, player_content)
+
+            # Помечаем сообщения как прочитанные
+            tactics_message.read_status = 1
+            if player_message:
+                player_message.read_status = 1
+            db.session.commit()
+
+        logger.info(f"Боец {character.name} завершил свои ходы.")
 
     async def generate_move(self, user_id, num_moves):
         logger.info(f"Запуск бойца для user_id: {user_id} с количеством ходов: {num_moves}")

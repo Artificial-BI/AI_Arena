@@ -50,6 +50,8 @@ class GeminiAssistant:
                     if response and response.candidates:
                         result = response.candidates[0].content.parts[0].text
                         self.chat_history.append({"role": "assistant", "content": result})
+                        # Добавляем задержку после успешного запроса
+                        await asyncio.sleep(2)  # Задержка в 2 секунды
                         return result
                     else:
                         logger.error("No response received")

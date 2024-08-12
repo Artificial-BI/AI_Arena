@@ -13,21 +13,29 @@ def convert_hash_mini(original_code):
     short_code = hash_code[:8]
     return short_code
 
-def parse_referi(text):
-    name_pattern = re.compile(r"Name:\s*(.*)")
-    combat_pattern = re.compile(r"Combat:\s*(\d+)")
-    damage_pattern = re.compile(r"Damage:\s*(\d+)")
-    
-    name = name_pattern.search(text)
-    combat = combat_pattern.search(text)
-    damage = damage_pattern.search(text)
-    
-    grade = {
-        "name": name.group(1) if name else None,
-        "combat": int(combat.group(1)) if combat else None,
-        "damage": int(damage.group(1)) if damage else None,
-    }
-    return grade
+import re
+
+def parse_referee(text):
+    name_pattern = re.compile(r"'name':\s*'([^']*)'")
+    combat_pattern = re.compile(r"'combat':\s*(\d+)")
+    damage_pattern = re.compile(r"'damage':\s*(\d+)")
+
+    names = name_pattern.findall(text)
+    combats = combat_pattern.findall(text)
+    damages = damage_pattern.findall(text)
+
+    grades = []
+
+    # Обрабатываем все найденные имена
+    for i in range(len(names)):
+        grade = {
+            "name": names[i],
+            "combat": int(combats[i]) if i < len(combats) else None,
+            "damage": int(damages[i]) if i < len(damages) else None,
+        }
+        grades.append(grade)
+
+    return grades
 
 def parse_character(text): # Strength: 80 Dexterity: 65 Intelligence: 45 Stamina: 90 Speed: 70 Magic: 10 Defense: 85 Attack: 90 Charisma: 30 Luck: 25 
     # Define regular expressions for each field
