@@ -37,21 +37,21 @@ def before_request():
 
 @arena_bp.route('/')
 def arena():
-    """Основной маршрут для отображения арены."""
+    """Main route for displaying the arena."""
 
-    # Проверка существования JSON-файла
+    # Check if the JSON file exists
     if not os.path.exists(VISIT_TRACKING_FILE):
         with open(VISIT_TRACKING_FILE, 'w') as file:
             json.dump({"current_game": {}}, file)
 
-    # Чтение данных из JSON-файла
+    # Read data from the JSON file
     with open(VISIT_TRACKING_FILE, 'r') as file:
         visit_data = json.load(file)
 
     user_id_str = str(g.user_id)
     show_start_game_popup = False
 
-    # Проверка состояния текущей игры для пользователя
+    # Check the current game state for the user
     if visit_data["current_game"].get(user_id_str, True):
         show_start_game_popup = True
         visit_data["current_game"][user_id_str] = False
@@ -60,7 +60,7 @@ def arena():
 
     selected_character = Character.query.filter_by(user_id=g.user_id).order_by(Character.id.desc()).first()
     if not selected_character:
-        return "Пожалуйста выберите персонажа или создайте с помощью ассистента"
+        return "Please select a character or create one using the assistant."
 
     logger.info(f"Current user_id: {g.user_id}")
 
@@ -73,6 +73,7 @@ def arena():
         character = Character.query.get(registration.character_id)
         if character:
             traits = json.loads(character.traits) if character.traits else {}
+            # Adding Combat, Damage, and Life to the traits dictionary
             traits['Combat'] = character.combat
             traits['Damage'] = character.damage
             traits['Life'] = character.life
