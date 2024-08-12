@@ -203,38 +203,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    function updatePlayersTable() {
-        fetch('/arena/get_registered_characters')
-        .then(response => response.json())
-        .then(data => {
-            const tbody = playersTable.querySelector('tbody');
-            tbody.innerHTML = ''; // Очищаем таблицу перед заполнением
     
-            data.forEach((character, index) => {
-                const row = document.createElement('tr');
-                row.dataset.traits = JSON.stringify(character.traits);
-    
-                row.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td>${character.user_id}</td>
-                    <td>${character.name}</td>
-                    <td>
-                        <div class="chart-container">
-                            <canvas id="traits-chart-${index + 1}" class="chart-canvas"></canvas>
-                        </div>
-                    </td>
-                    <td>
-                        <img src="/static/${character.image_url}" alt="Character Image" class="character-image" data-description="${character.description}">
-                    </td>
-                `;
-    
-                tbody.appendChild(row);
-            });
-    
-            loadCharacterCharts(); // Обновляем диаграммы характеристик
-        })
-        .catch(error => console.error('Error updating players table:', error));
-    }
 
     function startPlayersTableUpdate() {
         updatePlayersTable();

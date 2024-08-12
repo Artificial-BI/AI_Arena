@@ -88,6 +88,25 @@ def player():
     characters = fetch_records(Character)
     last_character_id = selected_character.id if selected_character else None
 
+    # Добавление значений Combat, Damage, Life в traits
+    characters_data = []
+    for character in characters:
+        traits = json.loads(character.traits) if character.traits else {}
+        traits.update({
+            "Combat": character.combat,
+            "Damage": character.damage,
+            "Life": character.life
+        })
+        characters_data.append({
+            "id": character.id,
+            "name": character.name,
+            "description": character.description,
+            "traits": traits,
+            "image_url": character.image_url
+        })
+
+    logger.info(f"Characters data: {characters_data}")  # Логируем данные для проверки
+
     return render_template('player.html', messages=messages, characters=characters, selected_character=selected_character, last_character_id=last_character_id)
 
 @player_bp.route('/arena')

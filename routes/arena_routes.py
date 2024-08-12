@@ -37,21 +37,21 @@ def before_request():
 
 @arena_bp.route('/')
 def arena():
-    """Main route for displaying the arena."""
+    """Основной маршрут для отображения арены."""
 
-    # Check if the JSON file exists
+    # Проверка существования JSON-файла
     if not os.path.exists(VISIT_TRACKING_FILE):
         with open(VISIT_TRACKING_FILE, 'w') as file:
             json.dump({"current_game": {}}, file)
 
-    # Read data from the JSON file
+    # Чтение данных из JSON-файла
     with open(VISIT_TRACKING_FILE, 'r') as file:
         visit_data = json.load(file)
 
     user_id_str = str(g.user_id)
     show_start_game_popup = False
 
-    # Check the current game state for the user
+    # Проверка состояния текущей игры для пользователя
     if visit_data["current_game"].get(user_id_str, True):
         show_start_game_popup = True
         visit_data["current_game"][user_id_str] = False
@@ -60,7 +60,7 @@ def arena():
 
     selected_character = Character.query.filter_by(user_id=g.user_id).order_by(Character.id.desc()).first()
     if not selected_character:
-        return "Please select a character or create one using the assistant."
+        return "Пожалуйста выберите персонажа или создайте с помощью ассистента"
 
     logger.info(f"Current user_id: {g.user_id}")
 
@@ -68,22 +68,43 @@ def arena():
     arena_image_url = arena.image_url if arena else None
     registrations = Registrar.query.all()
 
+    # characters = []
+    # for registration in registrations:
+    #     character = Character.query.get(registration.character_id)
+    #     if character:
+    #         # Создаем объект traits и добавляем необходимые параметры
+    #         traits = json.loads(character.traits) if character.traits else {}
+    #         traits['Combat'] = character.combat
+    #         traits['Damage'] = character.damage
+    #         traits['Life'] = character.life
+            
+    #         characters.append({
+    #             'name': character.name,
+    #             'traits': traits,
+    #             'description': character.description,
+    #             'image_url': character.image_url
+    #         })
+
     characters = []
     for registration in registrations:
         character = Character.query.get(registration.character_id)
         if character:
             traits = json.loads(character.traits) if character.traits else {}
-            # Adding Combat, Damage, and Life to the traits dictionary
+            
+            # Добавляем значения из отдельных полей базы данных
             traits['Combat'] = character.combat
             traits['Damage'] = character.damage
             traits['Life'] = character.life
-            
+
             characters.append({
                 'name': character.name,
                 'traits': traits,
                 'description': character.description,
                 'image_url': character.image_url
             })
+
+
+
 
     return render_template(
         'arena.html', 
@@ -93,6 +114,8 @@ def arena():
         enumerate=enumerate,
         show_start_game_popup=show_start_game_popup
     )
+
+
 
 def reset_game_state():
     """Сброс состояния игры для всех пользователей."""
@@ -109,21 +132,34 @@ def reset_game_state():
 def get_registered_characters():
     """Получение списка зарегистрированных персонажей."""
     try:
-        characters = [
-            {
-                "user_id": registration.user_id,
-                "name": char.name,
-                "traits": json.loads(char.traits),
-                "image_url": char.image_url,
-                "description": char.description
-            }
-            for registration in Registrar.query.all()
-            if (char := Character.query.get(registration.character_id)) is not None
-        ]
+        characters = []
+        for registration in Registrar.query.all():
+            char = Character.query.get(registration.character_id)
+            if char is not None:
+                # Загружаем traits как JSON-объект, если traits не None
+                traits = json.loads(char.traits) if char.traits else {}
+
+                # Добавляем дополнительные параметры из базы данных
+                traits.update({
+                    "Combat": char.combat,
+                    "Damage": char.damage,
+                    "Life": char.life
+                })
+
+                characters.append({
+                    "user_id": registration.user_id,
+                    "name": char.name,
+                    "traits": traits,
+                    "image_url": char.image_url,
+                    "description": char.description
+                })
+
         return jsonify(characters)
     except Exception as e:
         logger.error(f"Error fetching registered characters: {e}", exc_info=True)
         return jsonify({"error": "Internal server error"}), 500
+
+
 
 @arena_bp.route('/get_arena_chat')
 def get_arena_chat():

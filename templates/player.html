@@ -12,9 +12,10 @@
 
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/player.css') }}">
-<!-- Обязательно загружаем Chart.js до пользовательского скрипта -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/player_chart.js') }}"></script>
 {% endblock %}
+
 
 {% block content %}
 <div class="player-container">
