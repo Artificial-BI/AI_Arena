@@ -1,3 +1,6 @@
+
+/* arena.css */
+
 /* Основные переменные */
 :root {
     --bg-color: #f4f4f4;
@@ -127,6 +130,24 @@ header nav ul li button:active {
     border-radius: 10px;
 }
 
+.notification-popup {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 5px;
+    z-index: 1000;
+    display: none;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    font-size: 16px;
+}
+
+.notification-popup.show {
+    display: block;
+}
+
 
 .chat-box,
 #arena-chat-box,
@@ -146,24 +167,50 @@ header nav ul li button:active {
 }
 
 
+/* Основные стили для сообщений чата */
 .chat-message {
     padding: 10px;
     border-radius: 10px;
     margin-bottom: 10px;
     max-width: 70%;
-    background-color: var(--chat-bg-color); /* Цвет фона для сообщений чата */
-    color: var(--chat-text-color); /* Цвет текста для сообщений чата */
+    position: relative;
 }
 
-.chat-message.right {
-    background-color: var(--button-bg-color);
-    color: var(--button-text-color);
+/* Сообщения от игрока 1 (левый противник) */
+.chat-message.player1 {
+    background-color: #f1c40f; /* Золотой цвет */
+    color: #333;
+    text-align: left;
+    margin-left: 0;
+    margin-right: auto;
+}
+
+/* Сообщения от игрока 2 (правый противник) */
+.chat-message.player2 {
+    background-color: #3498db; /* Синий цвет */
+    color: #fff;
+    text-align: right;
     margin-left: auto;
+    margin-right: 0;
 }
 
-.chat-message.left {
-    background-color: var(--chat-bg-color);
-    color: var(--chat-text-color);
+/* Сообщения от системы или рефери */
+.chat-message.system {
+    background-color: #2ecc71; /* Зеленый цвет */
+    color: #fff;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 50%; /* Центрируем сообщение и уменьшаем ширину */
+}
+
+/* Стили для временной метки сообщений */
+.chat-message .timestamp {
+    font-size: 0.8em;
+    color: #888;
+    display: block;
+    margin-top: 5px;
+    text-align: right;
 }
 
 .timestamp {

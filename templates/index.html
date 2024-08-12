@@ -1,134 +1,107 @@
-
-<!-- index.html -->
-
-{% extends 'base.html' %}
-
-{% block nav %}
-<nav>
-    <ul>
-        <li><a href="/viewer">Viewer</a></li>
-        <li><a href="/player">Player</a></li>
-        <li><a href="/login">Login</a></li>
-    </ul>
-</nav>
-{% endblock %}
-
-{% block content %}
-<div class="container">
-    <section class="description">
-        <h2>Welcome to AI Arena</h2>
-        <p>A unique platform for virtual battles of neural network characters. Create your characters, watch their battles in the arena, and participate in exciting tournaments. Join us and dive into the world of intellectual battles!</p>
-    </section>
-
-    <section class="tournament-table">
-        <h3>Tournament Table</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Tournament ID</th>
-                    <th>Tournament Name</th>
-                    <th>Format</th>
-                    <th>Start Date</th>
-                    <th>End Date</th>
-                    <th>Current Stage</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for tournament in tournaments %}
-                <tr>
-                    <td>{{ tournament.id }}</td>
-                    <td>{{ tournament.name }}</td>
-                    <td>{{ tournament.format }}</td>
-                    <td>{{ tournament.start_date }}</td>
-                    <td>{{ tournament.end_date if tournament.end_date else 'TBD' }}</td>
-                    <td>{{ tournament.current_stage }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </section>
-
-    <section class="top-players">
-        <h3>Top 10 Players</h3>
-        <div class="top-players-list">
-            <ul>
-                {% for player in top_players %}
-                <li>{{ player.name }} - {{ player.character_name }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-    </section>
-
-    <section class="charts">
-        <h3>Wins-Losses Chart for the Week</h3>
-        <div id="chart_div" style="width: 100%; height: 500px;"></div>
-    </section>
-    
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    <script type="text/javascript">
-        google.charts.load('current', {'packages':['corechart']});
-        google.charts.setOnLoadCallback(drawChart);
-
-        function drawChart() {
-            var defaultData = [
-                ['Player', 'Wins', 'Losses'],
-                {% for player in top_players %}
-                    ['{{ player.name }}', {{ player.weekly_wins }}, {{ player.weekly_losses }}],
-                {% endfor %}
-            ];
-
-            var data = google.visualization.arrayToDataTable(defaultData);
-
-            console.log(data);  // Вывод данных для проверки
-
-            var options = {
-                title: 'Wins and Losses for the Week',
-                hAxis: {title: 'Players'},
-                vAxis: {title: 'Count'},
-                seriesType: 'bars',
-                series: {5: {type: 'line'}}
-            };
-
-            var chart = new google.visualization.ComboChart(document.getElementById('chart_div'));
-            chart.draw(data, options);
+<!DOCTYPE html>
+<!-- home.html -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Arena - Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--bg-color);
+            color: var(--text-color);
         }
-    </script>
 
-    <section class="sliders">
-        <div class="slider-container">
-            <div class="slider" id="arena-slider">
-                <h3>Arenas</h3>
-                <!-- Arena Images -->
-                <img src="{{ url_for('static', filename='images/default/arena1.png') }}" alt="Fantasy Arena">
-                <img src="{{ url_for('static', filename='images/default/arena2.png') }}" alt="Futuristic Arena">
-                <img src="{{ url_for('static', filename='images/default/arena3.png') }}" alt="Ancient Arena">
-                <!-- Add more images as needed -->
-            </div>
+        header {
+            width: 100%;
+        }
 
-            <div class="slider" id="character-slider">
-                <h3>Characters</h3>
-                <!-- Character Images -->
-                <img src="{{ url_for('static', filename='images/default/player1.png') }}" alt="Cyber Warrior">
-                <img src="{{ url_for('static', filename='images/default/player2.png') }}" alt="Magic Mage">
-                <!-- Add more images as needed -->
-            </div>
+        nav ul {
+            display: flex;
+            justify-content: center;
+            list-style-type: none;
+            padding: 10px;
+            margin: 0;
+            background-color: var(--nav-bg-color);
+        }
 
-            <div class="slider" id="video-slider">
-                <h3>Battle Videos</h3>
-                <!-- Battle Videos -->
-                <video src="{{ url_for('static', filename='videos/default/battle1.mp4') }}" controls></video>
-                <video src="{{ url_for('static', filename='videos/default/battle2.mp4') }}" controls></video>
-            </div>
-        </div>
-    </section>
+        nav ul li {
+            margin: 0 20px;
+        }
 
-    <section class="gifs">
-        <h3>Battle GIFs</h3>
-        <div class="gif-container">
-            <!-- Battle GIFs -->
-            <img src="{{ url_for('static', filename='images/default/gif/battle1.gif') }}" alt="Battle GIF 1">
-            <img src="{{ url_for('static', filename='images/default/gif/battle2.gif') }}" alt="Battle GIF 2">
-        </div>
-    </section>
-</div>
-{% endblock %}
+        nav ul li a {
+            color: var(--nav-text-color);
+            text-decoration: none;
+            font-size: 20px;
+        }
+
+        .main-image-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .main-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .transparent-button {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0); /* Прозрачный фон */
+            border: none;
+            cursor: pointer;
+            font-size: 40px;
+            color: white; /* Цвет текста */
+            padding: 20px;
+            border-radius: 50%; /* Закругленные кнопки */
+        }
+
+        .home-button {
+            top: 82%;
+            left: 6%;
+        }
+
+        .view-button {
+            top: 82%;
+            left: 39%;
+        }
+
+        .player-button {
+            top: 82%;
+            left: 69%;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <ul class="nav-group">
+                <li><a href="/">Home</a></li>
+                <li><a href="/viewer">Viewer</a></li>
+                <li><a href="/player">Player</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="main-image-container">
+        <img src="{{ url_for('static', filename='images/idx.png') }}" alt="AI Arena" class="main-image">
+
+        <!-- Прозрачные кнопки -->
+        <button class="transparent-button home-button" onclick="window.location.href='/'">Home</button>
+        <button class="transparent-button view-button" onclick="window.location.href='/viewer'">View</button>
+        <button class="transparent-button player-button" onclick="window.location.href='/player'">Player</button>
+    </div>
+</body>
+</html>

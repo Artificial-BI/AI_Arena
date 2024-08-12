@@ -60,5 +60,8 @@ class Config:
     
     DEBUG = False
 
+    # Путь к JSON-файлу
+    FIRST_VISIT_FILE = 'first_visit.json'
     
-    
+    # Путь к JSON-файлу
+    VISIT_TRACKING_FILE = 'game_visit_tracking.json'

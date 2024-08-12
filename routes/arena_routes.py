@@ -7,10 +7,15 @@ import json
 from extensions import db
 from core import BattleManager
 from load_user import load_user
+import os
+from config import Config
 
 # Применение nest_asyncio для поддержки запуска asyncio в текущем событии
 nest_asyncio.apply()
 
+config = Config()
+# Путь к JSON-файлу
+VISIT_TRACKING_FILE = config.VISIT_TRACKING_FILE
 # Создание blueprint и battle manager
 arena_bp = Blueprint('arena', __name__)
 battle_manager = BattleManager()
@@ -33,18 +38,36 @@ def before_request():
 @arena_bp.route('/')
 def arena():
     """Основной маршрут для отображения арены."""
+
+    # Проверка существования JSON-файла
+    if not os.path.exists(VISIT_TRACKING_FILE):
+        with open(VISIT_TRACKING_FILE, 'w') as file:
+            json.dump({"current_game": {}}, file)
+
+    # Чтение данных из JSON-файла
+    with open(VISIT_TRACKING_FILE, 'r') as file:
+        visit_data = json.load(file)
+
+    user_id_str = str(g.user_id)
+    show_start_game_popup = False
+
+    # Проверка состояния текущей игры для пользователя
+    if visit_data["current_game"].get(user_id_str, True):
+        show_start_game_popup = True
+        visit_data["current_game"][user_id_str] = False
+        with open(VISIT_TRACKING_FILE, 'w') as file:
+            json.dump(visit_data, file)
+
     selected_character = Character.query.filter_by(user_id=g.user_id).order_by(Character.id.desc()).first()
     if not selected_character:
         return "Пожалуйста выберите персонажа или создайте с помощью ассистента"
 
     logger.info(f"Current user_id: {g.user_id}")
 
-    # Получение самой последней арены и регистраций
     arena = Arena.query.order_by(Arena.date_created.desc()).first()
     arena_image_url = arena.image_url if arena else None
     registrations = Registrar.query.all()
 
-    # Формирование данных о персонажах с добавлением combat, damage и life
     characters = []
     for registration in registrations:
         character = Character.query.get(registration.character_id)
@@ -61,14 +84,34 @@ def arena():
                 'image_url': character.image_url
             })
 
+        return render_template(
+            'arena.html', 
+            characters=characters, 
+            selected_character=selected_character, 
+            arena_image_url=arena_image_url, 
+            enumerate=enumerate,
+            show_start_game_popup=show_start_game_popup
+        )
+
+def reset_game_state():
+    """Сброс состояния игры для всех пользователей."""
+    if os.path.exists(VISIT_TRACKING_FILE):
+        with open(VISIT_TRACKING_FILE, 'r+') as file:
+            visit_data = json.load(file)
+            for user_id in visit_data["current_game"]:
+                visit_data["current_game"][user_id] = True
+            file.seek(0)
+            json.dump(visit_data, file)
+            file.truncate()
+
     return render_template(
         'arena.html', 
         characters=characters, 
         selected_character=selected_character, 
         arena_image_url=arena_image_url, 
-        enumerate=enumerate
+        enumerate=enumerate,
+        show_start_game_popup=show_start_game_popup
     )
-
 
 @arena_bp.route('/get_registered_characters')
 def get_registered_characters():
@@ -164,6 +207,9 @@ def start_battle():
 def get_arena_image_url(arena_id):
     """Получение URL изображения арены."""
     try:
+        # Вызов всплывающего сообщения о начале генерации арены
+       # show_notification("Генерация изображения арены...")
+
         arena = Arena.query.get(arena_id)
         if arena and arena.image_url:
             image_url = arena.image_url.replace("\\", "/")
@@ -173,6 +219,7 @@ def get_arena_image_url(arena_id):
     except Exception as e:
         logger.error(f"Error fetching arena image URL: {e}", exc_info=True)
         return jsonify({"error": "Internal server error"}), 500
+
 
 @arena_bp.route('/get_latest_arena_image')
 def get_latest_arena_image():

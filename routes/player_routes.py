@@ -193,8 +193,9 @@ def send_message():
             filename = re.sub(r'[\\/*?:"<>|]', "", parsed_character['name'].replace(" ", "_"))
             image_filename = f"{filename}.png"
             path_img_file = designer.create_image(parsed_character['description'], f"user_{user_id}", image_filename)
-
-            parsed_character['image_url'] = f"images/user_{user_id}/{image_filename}"
+            parsed_character['image_url'] = path_img_file
+           
+            
             save_to_json(parsed_character)
 
             return jsonify({

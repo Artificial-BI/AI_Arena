@@ -11,7 +11,6 @@ import traceback
 app = Flask(__name__)
 app.config.from_object(Config)
 
-
 if not app.debug:
     configure_logging(app)
 

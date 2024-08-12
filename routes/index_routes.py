@@ -41,7 +41,7 @@ def index():
             top_players = [player.to_dict() for player in top_players]
 
         response = make_response(render_template('index.html', tournaments=tournaments, top_players=top_players))
-        response.set_cookie('user_id', g.cookie_id, max_age=60*60*24*365)  # Cookie for one year
+        # response.set_cookie('user_id', g.cookie_id, max_age=60*60*24*365)  # Cookie for one year
         return response
     except Exception as e:
         current_app.logger.error(f"Error in index view: {e}")

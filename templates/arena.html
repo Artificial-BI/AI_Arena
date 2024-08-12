@@ -4,6 +4,8 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/arena.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/static/js/chart_script.js"></script>
+
 {% endblock %}
 
 {% block content %}
@@ -12,6 +14,13 @@
     <img src="{{ url_for('static', filename=arena_image_url) }}" alt="Arena Image" class="arena-image">
     {% endif %}
 </div>
+{% if show_start_game_popup %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            showNotification("Добро пожаловать на арену! Игра начинается!");
+        });
+    </script>
+{% endif %}
 
 <!-- Player Table -->
 <table id="players-table">
@@ -24,7 +33,7 @@
             <th>Character Image</th>
         </tr>
     </thead>
-    <tbody id="players-table-body">
+    <tbody>
         {% for character in characters %}
         <tr data-traits="{{ character.traits | tojson }}">
             <td>{{ loop.index }}</td>
@@ -42,6 +51,10 @@
         {% endfor %}
     </tbody>
 </table>
+
+<div id="notification-popup" class="notification-popup">
+    <p id="notification-message"></p>
+</div>
 
 <!-- Arena Chat -->
 <h2>Arena Chat</h2>
