@@ -70,6 +70,24 @@ function createChart(ctx, traits) {
     });
 }
 
+function loadCharacterCharts() {
+    document.querySelectorAll('tbody tr').forEach((row, index) => {
+        const traitsData = row.dataset.traits;
+        if (traitsData) {
+            try {
+                const traits = JSON.parse(traitsData);
+                const canvas = document.getElementById(`traits-chart-${index + 1}`);
+                if (canvas) {
+                    createChart(canvas.getContext('2d'), traits);
+                }
+            } catch (e) {
+                console.error('Error parsing traits data:', e);
+            }
+        }
+    });
+}
+
+
 document.addEventListener('DOMContentLoaded', function() {
     loadCharacterCharts();
 });

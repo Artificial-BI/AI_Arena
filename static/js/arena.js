@@ -203,6 +203,50 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    function updatePlayersTable() {
+        fetch('/arena/get_registered_characters')
+        .then(response => response.json())
+        .then(data => {
+            const tbody = playersTable.querySelector('tbody');
+            tbody.innerHTML = ''; // РћС‡РёС‰Р°РµРј С‚Р°Р±Р»РёС†Сѓ РїРµСЂРµРґ Р·Р°РїРѕР»РЅРµРЅРёРµРј
+    
+            data.forEach((character, index) => {
+                const row = document.createElement('tr');
+                row.dataset.traits = JSON.stringify(character.traits);
+    
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${character.user_id}</td>
+                    <td>${character.name}</td>
+                    <td>
+                        <div class="chart-container">
+                            <canvas id="traits-chart-${index + 1}" class="chart-canvas"></canvas>
+                        </div>
+                    </td>
+                    <td>
+                        <img src="/static/${character.image_url}" alt="Character Image" class="character-image" data-description="${character.description}">
+                    </td>
+                `;
+    
+                tbody.appendChild(row);
+            });
+    
+            loadCharacterCharts(); // РћР±РЅРѕРІР»СЏРµРј РґРёР°РіСЂР°РјРјС‹ С…Р°СЂР°РєС‚РµСЂРёСЃС‚РёРє
+        })
+        .catch(error => console.error('Error updating players table:', error));
+    }
+
+    function showNotification(message) {
+        const notificationPopup = document.getElementById('notification-popup');
+        const notificationMessage = document.getElementById('notification-message');
+        
+        notificationMessage.textContent = message;
+        notificationPopup.classList.add('show');
+        
+        setTimeout(() => {
+            notificationPopup.classList.remove('show');
+        }, 5000); // РЎРѕРѕР±С‰РµРЅРёРµ РёСЃС‡РµР·РЅРµС‚ С‡РµСЂРµР· 5 СЃРµРєСѓРЅРґ
+    }
     
 
     function startPlayersTableUpdate() {
