@@ -8,12 +8,30 @@ from flask import current_app
 from models import (Arena, ArenaChatMessage, Character, GeneralChatMessage, PreRegistrar, Registrar, Role, TacticsChatMessage, db)
 from gemini import GeminiAssistant
 from open_ai import AIDesigner
-from tactics_manager import Fighter, TacticsManager
+from tactics_manager import FighterManager, TacticsManager
 from utils import parse_arena, parse_referee
+import random
 
 # Logging setup
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+def message_to_Arena(_message, _sender='sys', _name='sys', _user_id=None, _arena_id=None):
+    if _name is None or _arena_id is None:
+        logger.error("Cannot add message to arena chat: 'name' and 'arena_id' must not be None.")
+        return
+
+    set_message = ArenaChatMessage(
+        content=f'{_message}\n', 
+        sender=_sender, 
+        user_id=_user_id, 
+        name=_name, 
+        arena_id=_arena_id, 
+        read_status=0
+    )
+    db.session.add(set_message)
+    db.session.commit()
+
 
 class CoreCommon:
     def get_role_instructions(self, role_name):
@@ -30,18 +48,21 @@ class ArenaManager:
         self.ccom = CoreCommon()
         self.loop = loop or asyncio.get_event_loop()
 
-    def _initialize_assistant(self):
-        if self.assistant is None:
-            self.assistant = GeminiAssistant('arena')
-
-    def message_to_Arena(self, _message):
-        set_message = ArenaChatMessage(content=_message, sender='system', user_id=None, read_status=0)
-        db.session.add(set_message)
-        db.session.commit()
+    # def message_to_Arena(self, _message):
+    #     set_message = ArenaChatMessage(content=_message, sender='system', user_id=None, read_status=0)
+    #     db.session.add(set_message)
+    #     db.session.commit()
+    
+    def create_arena_image(self, new_arena, arena_description):
+        designer = AIDesigner()
+        filename = re.sub(r'[\\/*?:"<>|]', "", f"arena_{new_arena.id}")
+        image_filename = f"{filename}.png"
+        image_url = designer.create_image(arena_description, "arena", image_filename)
+        return image_url
 
     async def generate_arena(self, character_data):
         logger.info("Generating arena")
-        self._initialize_assistant()
+        self.assistant = GeminiAssistant('arena')
 
         parameters = await self.assistant.send_message(
             f"Generate arena with the following character data: {character_data}"
@@ -58,15 +79,12 @@ class ArenaManager:
         db.session.add(new_arena)
         db.session.commit()
 
-        designer = AIDesigner()
-        filename = re.sub(r'[\\/*?:"<>|]', "", f"arena_{new_arena.id}")
-        image_filename = f"{filename}.png"
-        image_url = designer.create_image(arena_description, "arena", image_filename)
+        image_url = self.create_arena_image(new_arena, arena_description) 
 
         new_arena.image_url = image_url
         db.session.commit()
 
-        self.message_to_Arena(f"Arena description: {arena_description}\nParameters: {parsed_parameters}")
+        message_to_Arena(f"Arena description: {arena_description} \n Parameters: {parsed_parameters}",_sender='sys',_name='sys',_arena_id=new_arena.id)
 
         logger.info(f"Arena generated with ID: {new_arena.id} and image {image_url}")
         return new_arena
@@ -79,19 +97,34 @@ class BattleManager:
         self.arena_manager = ArenaManager(loop=loop)
         self.battle_count = 0
         self.round_count = 0
-        self.fighter = Fighter(loop=loop)
-        self.tactics_manager = TacticsManager(fighter_instance=self.fighter, loop=loop)
+        self.fighter_manager = FighterManager(loop=loop)
+        self.tactics_manager = TacticsManager(loop=loop)
         self.timer_in_progress = False
         self.battle_in_progress = False
         self.timer_start_time = None
         self.countdown_duration = 30
         self.moves_count = {}
         self.loop = loop or asyncio.get_event_loop()
+        self.count_round = 3
+        self.count_steps = 4 
+        self.user_expectation = 2
+        
 
-    def message_to_Arena(self, _message):
-        set_message = ArenaChatMessage(content=_message, sender='system', user_id=None, read_status=0)
-        db.session.add(set_message)
-        db.session.commit()
+    # def message_to_Arena(self, _message, _sender='system', _user_id=None, _name=None, _arena_id=None):
+    #     if _name is None or _arena_id is None:
+    #         logger.error("Cannot add message to arena chat: 'name' and 'arena_id' must not be None.")
+    #         return
+
+    #     set_message = ArenaChatMessage(
+    #         content=f'{_message}\n', 
+    #         sender=_sender, 
+    #         user_id=_user_id, 
+    #         name=_name, 
+    #         arena_id=_arena_id, 
+    #         read_status=0
+    #     )
+    #     db.session.add(set_message)
+    #     db.session.commit()
 
     async def start_battle(self, user_id):
         logger.info(f"--- Battle {self.battle_count + 1} started ---")
@@ -100,49 +133,47 @@ class BattleManager:
             self.battle_count += 1
             await self._clear_previous_battle()
 
-            content = f"--- Battle № {self.battle_count} ---"
-            self.message_to_Arena(content)
-
+           
             character_data = await self.get_registered_character_data()
             arena = await self.arena_manager.generate_arena(character_data)
+            
+            content = f"--- Battle № {self.battle_count+1} ---"
+            message_to_Arena(content,_name='sys',_sender='sys',_arena_id=arena.id)
 
             for character in character_data:
-                self.tactics_manager.add_fighter(character['user_id'])
-                self.fighter.add_fighter(character['user_id'])
-
+                self.tactics_manager.add_tactic(character['user_id'])
+                self.fighter_manager.add_fighter(character['user_id'])
             logger.info("-------------- STARTING MAIN BATTLE CYCLE ---------------")
-            max_rounds = 2  # Set the maximum number of rounds in the battle
-            for round_number in range(max_rounds):
+
+            for round_number in range(self.count_round):
                 if not self.battle_in_progress:
                     break
                 logger.info(f"Round {round_number + 1} started")
-                self.message_to_Arena(f"Round N: {round_number + 1}")
-                await self.manage_battle_round(character_data, arena, max_moves=3)
+                message_to_Arena(f"Round N: {round_number + 1}", _name='sys',_arena_id=arena.id)
+                await self.manage_battle_round(character_data, arena, self.count_steps, self.user_expectation)
 
-            self.message_to_Arena("--- Battle stop ---")
+            message_to_Arena("--- Battle stop ---",_sender='sys', _name='sys',_arena_id=arena.id)
             logger.info("Battle finished")
         except Exception as e:
             logger.error(f"Error in battle: {e}", exc_info=True)
-            raise
-        finally:
-            self.battle_in_progress = False
-            self.stop_timer()
-            self.tactics_manager.stop()
-            self.fighter.stop()
-            await self.handle_post_battle_registration()
 
-
-    async def manage_battle_round(self, character_data, arena, max_moves):
+#====================
+    async def manage_battle_round(self, character_data, arena, max_moves, user_expectation):
         self.round_count += 1
-        for char in character_data:
-            logger.info("Processing actions for the fighter ")
-            await self.tactics_manager.generate_tactics_and_moves(char['user_id'], max_moves, arena)
-            logger.info("Fighter actions completed")
+        random.shuffle(character_data)
+        for step_move in range(max_moves):
+            for char in character_data:
+                logger.info("Processing actions for the fighter ")
+                tactical_recommendation, character  = await self.tactics_manager.generate_tactics(char['user_id'])
+                
+                await self.fighter_manager.generate_fighter(char['user_id'], character ,tactical_recommendation, user_expectation, step_move, arena)
+                
+                logger.info("Fighter actions completed")
 
-        logger.info("All fighters have finished their moves, starting evaluation and commentary generation.")
-        await self.evaluate_and_comment_round(character_data, arena)
-        logger.info("Round completed, checking for battle end.")
-
+            logger.info("All fighters have finished their moves, starting evaluation and commentary generation.")
+            await self.evaluate_and_comment_round(character_data, arena)
+            logger.info("Round completed, checking for battle end.")
+#=====================
     def start_timer(self, duration):
         self.countdown_duration = duration
         self.timer_start_time = time.time()
@@ -190,6 +221,7 @@ class BattleManager:
     async def evaluate_and_comment_round(self, character_data, arena):
         # Evaluate fighters' moves
         unread_messages = ArenaChatMessage.query.filter_by(arena_id=arena.id, read_status=0, sender='fighter').all()
+
         moves = [(msg.user_id, msg.content) for msg in unread_messages]
         for msg in unread_messages:
             msg.read_status = 1
@@ -231,15 +263,15 @@ class BattleManager:
         for parsed_grade in parsed_grades:
             if parsed_grade["name"]:
                 logger.info(f"Referee evaluation: {parsed_grade['name']} | Combat: {parsed_grade['combat']} | Damage: {parsed_grade['damage']}")
-                self.message_to_Arena(f"--- Referee: {parsed_grade['name']} | Combat: {parsed_grade['combat']} | Damage: {parsed_grade['damage']} ---")
+                message_to_Arena(f"--- Referee: {parsed_grade['name']} | Combat: {parsed_grade['combat']} | Damage: {parsed_grade['damage']} ---", _sender='referee',_name='referee',_arena_id=arena.id)
                 # Update character combat and damage
                 self.update_character_combat_and_damage(parsed_grade)
-
-        evaluation_message = ArenaChatMessage(
-            content=evaluation, sender='referee', user_id=None, arena_id=arena.id, read_status=0
-        )
-        db.session.add(evaluation_message)
-        db.session.commit()
+        message_to_Arena(evaluation, _sender='referee', _name='referee',_arena_id=arena.id)
+        # evaluation_message = ArenaChatMessage(
+        #     content=evaluation, sender='referee', user_id=None, arena_id=arena.id, read_status=0
+        # )
+        # db.session.add(evaluation_message)
+        # db.session.commit()
 
         return evaluation
 
@@ -294,6 +326,9 @@ class BattleManager:
             character = next((char for char in character_data if char['user_id'] == user_id), None)
             if character:
                 commentary += f"{character['name']}: {move}\n"
+                
+        self.assistant = GeminiAssistant('arena')       
+  
         return commentary
 
     async def handle_post_battle_registration(self):

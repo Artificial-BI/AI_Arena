@@ -63,6 +63,7 @@ class ArenaChatMessage(db.Model):
     content = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     sender = db.Column(db.String(64), nullable=False)  # 'player1', 'player2', 'referee'
+    name = db.Column(db.String(64), nullable=False)  # 'fighter name'
     arena_id = db.Column(db.Integer, db.ForeignKey('arena.id'), nullable=True)
     read_status = db.Column(db.Integer, default=0)
 
