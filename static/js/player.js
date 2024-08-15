@@ -8,117 +8,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const characterImage = document.querySelector('.selected-character img');
     const characterButtons = document.querySelectorAll('#character-list .character-item button[data-name]');
     const noCharactersMessage = document.getElementById('no-characters-message');
-    const loadingMessage = document.createElement('div');
+    const loadingMessage = document.getElementById('loading-message');
     const arenaButton = document.querySelector('a[href="/arena"]');
 
     let characterChart;
     let selectedCharacterId = null;
 
-    loadingMessage.id = 'loading-message';
-    loadingMessage.style.display = 'none';
-    loadingMessage.style.position = 'fixed';
-    loadingMessage.style.top = '50%';
-    loadingMessage.style.left = '50%';
-    loadingMessage.style.transform = 'translate(-50%, -50%)';
-    loadingMessage.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-    loadingMessage.style.color = 'white';
-    loadingMessage.style.padding = '20px';
-    loadingMessage.style.borderRadius = '5px';
-    loadingMessage.style.zIndex = '1000';
-    loadingMessage.textContent = 'Generating...';
-    document.body.appendChild(loadingMessage);
-
     function displayCharacterStats(traits) {
-        if (typeof Chart === 'undefined') {
-            console.error('Chart.js is not loaded');
-            return;
-        }
-    
-        console.log('Received traits:', traits);
-    
         const ctx = document.getElementById('character-chart').getContext('2d');
-    
-        const chartData = {
-            labels: Object.keys(traits),
-            datasets: [{
-                label: 'Attributes',
-                data: Object.values(traits),
-                backgroundColor: Object.keys(traits).map(key => {
-                    if (key === 'Life') return 'rgba(64, 224, 208, 0.8)'; // Бирюзовый для Life
-                    if (key === 'Combat') return 'rgba(255, 100, 30, 0.8)'; // Оранжевый для Combat
-                    if (key === 'Damage') return 'rgba(255, 255, 0, 0.8)'; // Желтый для Damage
-                    return 'rgba(34, 139, 34, 0.8)'; // Зеленый для остальных атрибутов
-                }),
-                borderColor: Object.keys(traits).map(key => {
-                    if (key === 'Life') return 'rgba(64, 224, 208, 1)';
-                    if (key === 'Combat') return 'rgba(255, 100, 30, 1)';
-                    if (key === 'Damage') return 'rgba(255, 255, 0, 1)';
-                    return 'rgba(34, 139, 34, 1)';
-                }),
-                borderWidth: 1
-            }]
-        };
-    
         if (characterChart) {
             characterChart.destroy();
         }
-    
-        characterChart = new Chart(ctx, {
-            type: 'bar',
-            data: chartData,
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: {
-                        beginAtZero: true,
-                        title: {
-                            display: false
-                        }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: false
-                        }
-                    }
-                },
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(tooltipItem) {
-                                return tooltipItem.label + ': ' + tooltipItem.raw;
-                            }
-                        }
-                    },
-                    legend: {
-                        display: false
-                    }
-                }
-            },
-            plugins: [{
-                afterDatasetsDraw: function(chart) {
-                    const ctx = chart.ctx;
-                    ctx.font = '8px Arial';
-                    ctx.fillStyle = 'white';
-    
-                    chart.data.datasets.forEach(function(dataset, i) {
-                        const meta = chart.getDatasetMeta(i);
-                        meta.data.forEach(function(bar, index) {
-                            const data = dataset.data[index];
-                            if (data !== 0) {
-                                ctx.fillText(data, bar.x, bar.y - 5);
-                            }
-                        });
-                    });
-                }
-            }]
-        });
-    
+        characterChart = createChart(ctx, traits);
         const traitsString = Object.entries(traits).map(([key, value]) => `${key}:${value}`).join(', ');
         extraInput.value = traitsString;
     }
-    
 
     function selectCharacter(characterId) {
         selectedCharacterId = characterId;
@@ -126,10 +30,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (button) {
             nameField.value = button.dataset.name;
             descriptionField.value = button.dataset.description;
-    
             const traits = JSON.parse(button.dataset.traits);
             displayCharacterStats(traits);
-    
             const imageUrl = button.dataset.imageUrl.replace(/ /g, "_");
             if (imageUrl && characterImage) {
                 characterImage.src = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
@@ -138,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
-    
+
     if (characterButtons.length === 0) {
         noCharactersMessage.style.display = 'block';
     } else {
@@ -190,17 +92,19 @@ document.addEventListener('DOMContentLoaded', function() {
                         document.getElementById('description').value = data.character.description;
                     }
                     if (data.character.strength !== undefined) {
+                       // 1. Strength 2. Dexterity 3. Intelligence 4. Endurance 5. Speed 6. Magic 7. Defense 8. Attack 9. Charisma 10. Luck
                         const traits = {
-                            "Life": data.character.life,
-                            "Intelligence": data.character.intelligence,
                             "Strength": data.character.strength,
-                            "Magic": data.character.magic,
-                            "Attack": data.character.attack,
-                            "Defense": data.character.defense,
+                            "Dexterity": data.character.dexterity,
+                            "Intelligence": data.character.intelligence, 
+                            "Endurance": data.character.endurance,
                             "Speed": data.character.speed,
-                            "Agility": data.character.agility,
-                            "Stamina": data.character.endurance,
+                            "Magic": data.character.magic,
+                            "Defense": data.character.defense,
+                            "Attack": data.character.attack,
                             "Luck": data.character.luck,
+                            "Charisma": data.character.charisma,
+                            "Life": data.character.life,
                             "Combat": data.character.combat,
                             "Damage": data.character.damage
                         };
@@ -250,7 +154,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
+
     if (lastCharacterId !== null) {
         selectCharacter(lastCharacterId);
     } else if (selectedCharacterTraits) {

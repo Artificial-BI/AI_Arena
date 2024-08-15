@@ -1,6 +1,9 @@
 import json
 from extensions import db
 from models import User, Role, Character
+from config import Config 
+
+conf = Config()
 
 default_roles = [
     {'name': 'referee', 'instructions':"""You are an AI assistant designed to act as a referee in virtual arena battles.
@@ -154,11 +157,14 @@ default_roles = [
      8. Attack \n9. Charisma \n10. Luck \n\nPlease generate a character with these characteristics and an additional description of the character's abilities and background. 
      Characteristics should correspond to character’s description. 
      The output must exactly match this format:\n\nName: <Character name>\nType: <Character type>\nStrength: <Value>\nDexterity: <Value>\n
-     Intelligence: <Value>\nStamina: <Value>\nSpeed: <Value>\nMagic: <Value>\nDefense: <Value>\nAttack: <Value>\nCharisma: <Value>\nLuck: <Value>\n
+     Intelligence: <Value>\nEndurance: <Value>\nSpeed: <Value>\nMagic: <Value>\nDefense: <Value>\nAttack: <Value>\nCharisma: <Value>\nLuck: <Value>\n
      Description: <A detailed description of the character's abilities and background>"""},
     
     {'name': 'artist', 'instructions': 'Generate images based on the best battle episodes.'}
 ]
+
+#Strength Dexterity Intelligence Endurance Speed \n6. Magic \n7. Defense \n8. Attack \n9. Charisma \n10. Luck
+#Strength Dexterity Intelligence Stamina   Speed: <Value>\nMagic: <Value>\nDefense: <Value>\nAttack: <Value>\nCharisma: <Value>\nLuck: <Value>\n
 
 default_tournaments = [
     {
@@ -279,3 +285,43 @@ def remove_default_values():
     Role.query.filter_by(name='character_creator').delete()
     Character.query.filter_by(user_id=None).delete()
     db.session.commit()
+
+# 1. Strength 2. Dexterity 3. Intelligence 4. Endurance 5. Speed 6. Magic 7. Defense 8. Attack 9. Charisma 10. Luck
+def default_current_character():
+    current_character = {
+        "name": 'Brother-Captain Marius Corvus',
+        "traits":{
+            "type": None,
+            "strength": 90,
+            "agility": 1,
+            "intelligence": 70,
+            "stamina": 0,
+            "speed": 60,
+            "magic": 2,
+            "defense": 80,
+            "attack": 95,
+            "charisma": 10,
+            "luck": 5},
+        "Life": 100,
+        "Combat":0,
+        "Damage":0,
+        "description": """Brother-Captain Marius Corvus is a veteran of countless battles, his armor scarred from countless engagements. 
+        He leads the 1st Company of the Ultramarines Chapter, known for their unwavering discipline and tactical prowess. 
+        His strength is legendary, allowing him to wield the mighty power sword "Bloodreaver" with devastating effect. 
+        His intellect is sharp, enabling him to devise intricate battle plans and adapt to ever-changing situations. 
+        He is a relentless warrior, his stamina allowing him to fight for extended periods without tiring. 
+        Despite his experience and skill, Marius Corvus is a man of few words, his charisma limited by his unwavering focus on duty. 
+        His luck is a fickle thing, relying on his skill and planning rather than chance. He is a loyal servant of the Emperor, his faith unyielding, 
+        his devotion to the Chapter absolute. He believes that every battle is a chance to bring order to the chaos of the galaxy, 
+        a chance to defend humanity from the ever-present threat of the enemies of mankind.""",
+        "image_url": 'images/default/1723714026.png',
+        "player_id": '1723714026'
+        
+    }
+    
+    
+    
+    
+    conf.CURRENT_CHARACTER = current_character['player_id']
+    
+    

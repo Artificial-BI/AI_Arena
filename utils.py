@@ -1,9 +1,24 @@
 # -- utils.py --
-
+import os
 import re
 import json
 import hashlib
+import logging
+import time
 
+# Logging setup
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+def name_to_filename(name):
+    filename = re.sub(r'[\\/*?:"<>|]', "", name.replace(" ", "_"))
+    return filename
+
+
+def win_to_unix_path(winpath):
+    file_path = winpath.replace("\\", "/").replace('"', '')
+    return file_path
 
 def convert_hash_mini(original_code):
     # Generate a hash using SHA1
@@ -39,12 +54,13 @@ def parse_referee(text):
 
 def parse_character(text): # Strength: 80 Dexterity: 65 Intelligence: 45 Stamina: 90 Speed: 70 Magic: 10 Defense: 85 Attack: 90 Charisma: 30 Luck: 25 
     # Define regular expressions for each field
+    # 1. Strength 2. Dexterity 3. Intelligence 4. Endurance 5. Speed 6. Magic 7. Defense 8. Attack 9. Charisma 10. Luck
     name_pattern = re.compile(r"Name:\s*(.*)")
     type_pattern = re.compile(r"Type:\s*(.*)")
     strength_pattern = re.compile(r"Strength:\s*(\d+)")
-    agility_pattern = re.compile(r"Agility:\s*(\d+)")
+    dexterity_pattern = re.compile(r"Dexterity:\s*(\d+)")
     intelligence_pattern = re.compile(r"Intelligence:\s*(\d+)")
-    stamina_pattern = re.compile(r"Stamina:\s*(\d+)")
+    endurance_pattern = re.compile(r"Endurance:\s*(\d+)")
     speed_pattern = re.compile(r"Speed:\s*(\d+)")
     magic_pattern = re.compile(r"Magic:\s*(\d+)")
     defense_pattern = re.compile(r"Defense:\s*(\d+)")
@@ -52,14 +68,14 @@ def parse_character(text): # Strength: 80 Dexterity: 65 Intelligence: 45 Stamina
     charisma_pattern = re.compile(r"Charisma:\s*(\d+)")
     luck_pattern = re.compile(r"Luck:\s*(\d+)")
     description_pattern = re.compile(r"Description:\s*(.*)", re.DOTALL)
-
+    #print('------text:',text)
     # Extract values using regular expressions
     name = name_pattern.search(text)
     char_type = type_pattern.search(text)
     strength = strength_pattern.search(text)
-    agility = agility_pattern.search(text)
+    dexterity = dexterity_pattern.search(text)
     intelligence = intelligence_pattern.search(text)
-    stamina = stamina_pattern.search(text)
+    endurance = endurance_pattern.search(text)
     speed = speed_pattern.search(text)
     magic = magic_pattern.search(text)
     defense = defense_pattern.search(text)
@@ -69,13 +85,14 @@ def parse_character(text): # Strength: 80 Dexterity: 65 Intelligence: 45 Stamina
     description = description_pattern.search(text)
 
     # Create a dictionary with extracted values
+    #print('endurance:',endurance)
     character = {
         "name": name.group(1) if name else None,
         "type": char_type.group(1) if char_type else None,
         "strength": int(strength.group(1)) if strength else None,
-        "agility": int(agility.group(1)) if agility else None,
+        "dexterity": int(dexterity.group(1)) if dexterity else None,
         "intelligence": int(intelligence.group(1)) if intelligence else None,
-        "stamina": int(stamina.group(1)) if stamina else None,
+        "endurance": int(endurance.group(1)) if endurance else None,
         "speed": int(speed.group(1)) if speed else None,
         "magic": int(magic.group(1)) if magic else None,
         "defense": int(defense.group(1)) if defense else None,
@@ -84,7 +101,7 @@ def parse_character(text): # Strength: 80 Dexterity: 65 Intelligence: 45 Stamina
         "luck": int(luck.group(1)) if luck else None,
         "description": description.group(1).strip() if description else None
     }
-
+    #print('character:',character['endurance'])
     return character
 
 def parse_arena(text):
@@ -110,7 +127,19 @@ def parse_arena(text):
 
     return arena
 
-def save_to_json(data, filename='data.json'):
+def load_from_json(filename):
+
+    # Проверяем, существует ли JSON файл
+    if not os.path.exists(filename):
+        logger.error(f"JSON file not found for character: {filename}")
+        character_data = f"JSON file not found for character: {filename}"
+    # Чтение данных из JSON файла
+    with open(filename, 'r', encoding='utf-8') as json_file:
+        character_data = json.load(json_file)
+    return character_data    
+
+def save_to_json(data, filename):
+    
     try:
         with open(filename, 'w') as f:
             json.dump(data, f, indent=4)
@@ -118,40 +147,7 @@ def save_to_json(data, filename='data.json'):
     except Exception as e:
         print(f"Error saving data to JSON: {e}")
 
-# Example usage
-if __name__ == "__main__":
-    character_text = """
-    Name: Arathorn
-    Type: Warrior
-    Strength: 85
-    Agility: 60
-    Intelligence: 50
-    Endurance: 80
-    Speed: 70
-    Magic: 30
-    Defense: 75
-    Attack: 90
-    Charisma: 65
-    Luck: 50
-    Description: Arathorn is a seasoned warrior known for his strength and combat skills. He has fought in numerous battles and his presence on the battlefield inspires his comrades.
-    """
-
-    parsed_character = parse_character(character_text)
-    print('TEST CHARACTERS:', parsed_character)
-    save_to_json(parsed_character)
-
-    arena_text = """
-    Set Arena Parameters:
-
-    Difficulty: 60%
-    Danger: 45%
-    Size: Medium
-
-    Describe Arena Atmosphere:
-
-    The arena is a sprawling, sun-drenched clearing within a vast, ancient forest. Towering trees, gnarled and twisted by time, cast long, dappled shadows across the verdant floor. The air is thick with the scent of pine needles and damp earth, a heady mix of life and decay. The silence is broken only by the rustling of leaves and the occasional chirp of unseen birds. A sense of hidden danger hangs heavy in the air, as if the very forest itself is watching, waiting for a moment to unleash its fury.
-    """
-
-    parsed_arena = parse_arena(arena_text)
-    print('TEST ARENA:', parsed_arena)
-    save_to_json(parsed_arena, 'arena_data.json')
+def generate_unixid():
+    # Получаем текущее Unix-время в секундах
+    unix_time = int(time.time())
+    return str(unix_time)

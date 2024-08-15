@@ -2,7 +2,7 @@
 
 import os
 import logging
-
+from utils import win_to_unix_path
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -29,7 +29,7 @@ class Config:
     LOG_DIR = 'logs'
     if not os.path.exists(LOG_DIR):
         os.makedirs(LOG_DIR)
-    LOG_FILE = os.path.join(LOG_DIR, 'app.log')
+    LOG_FILE = win_to_unix_path(os.path.join(LOG_DIR, 'app.log'))
     
     key_env = load_dotenv('.env')
     
@@ -41,10 +41,10 @@ class Config:
     OPENAI_API_KEY = key_env['OPENAI_API_KEY']
     
     # Define the base directory of the project
-    BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+    BASE_DIR = win_to_unix_path(os.path.abspath(os.path.dirname(__file__)))
     
     # SQLite database configuration
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(BASE_DIR, 'instance', 'aiarena.db')
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + win_to_unix_path(os.path.join(BASE_DIR, 'instance', 'aiarena.db'))
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Increase SQLite timeout to prevent database lock errors
@@ -53,7 +53,7 @@ class Config:
     }
     
     # Folder for storing uploaded images
-    IMAGE_UPLOADS = os.path.join('static', 'images')
+    IMAGE_UPLOADS = win_to_unix_path(os.path.join('static', 'images'))
     
     IMAGE_QUALITY = 'standard'
     IMAGE_SIZE = '1024x1024'
@@ -65,3 +65,5 @@ class Config:
     
     # Путь к JSON-файлу
     VISIT_TRACKING_FILE = 'game_visit_tracking.json'
+    
+    CURRENT_CHARACTER = {'user_id':[]}
