@@ -63,11 +63,11 @@ class IMGSelector:
         return selected_image_path
 
     def load_image(self, theme_img):
-        if theme_img in 'arena':
+        if theme_img == 'arena':
             folder_path = 'static/images/arena'
             image_list = self.read_images_from_folder(folder_path)
             path_img = self.select_random_image(image_list)
-        elif theme_img in 'character':
+        elif theme_img == 'character':
             exclude_folders = ['default', 'arena']
             folder_path = 'static/images'
             image_list = self.read_images_from_folder(folder_path, exclude_folders, False)
@@ -81,12 +81,12 @@ class IMGSelector:
 
     def selector(self, user_id, player_id, type_make, theme_img='', _name='', _prompt=''):
         path_img = ''
-        if type_make in 'create':
+        if type_make == 'create':
             designer = AIDesigner()
             try:
+                logger.info(f"--- GENERATE IMAGE {_name} ---")
                 img_url = designer.create_image(_prompt)
                 path_img = self.make_path(user_id, player_id)
-                print('path_img:', path_img)
                 self.save_file(path_img, img_url)
             except requests.exceptions.RequestException as e:
                 logger.info(f"Ошибка при загрузке изображения: {e}")
@@ -96,8 +96,7 @@ class IMGSelector:
                 path_img = self.load_image(theme_img)
         else:
             path_img = self.load_image(theme_img)
-        logger.info(f"File selected, path: {path_img}")
-        print(f"-- File selected, path: {path_img}")
         if path_img.startswith("static/"):
             path_img = path_img[len("static/"):]
+        logger.info(f"File selected, path: {path_img}")
         return path_img

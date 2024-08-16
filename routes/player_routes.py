@@ -70,7 +70,8 @@ def get_selected_character():
     #selected_character_id = manage_selected_character_in_file(g.user_id)
     
     try:
-        selected_character_id = conf.CURRENT_CHARACTER['player_id']
+        character = conf.CURRENT_CHARACTER[g.user_id]
+        selected_character_id = character['player_id']
     except :
         selected_character_id = default_current_character()
 
@@ -108,17 +109,20 @@ def player():
             "Damage": character.damage,
             "Life": character.life
         })
+        #------------ work code -----------------
         characters_data.append({
             "id": character.id,
             "name": character.name,
             "description": character.description,
-            "traits": traits,
-            "image_url": character.image_url
+            "traits": traits, 
+            "image_url": f"/static/{character.image_url}" 
         })
+
 
     logger.info(f"Characters data: {characters_data}")
 
     return render_template('player.html', messages=messages, characters=characters_data, selected_character=selected_character, last_character_id=last_character_id)
+
 
 @player_bp.route('/arena')
 def arena():
@@ -146,6 +150,7 @@ def arena():
 
 @player_bp.route('/select_character/<int:character_id>', methods=['POST'])
 def select_character(character_id):
+    logger.info(f"--------------- character_id: {character_id} | character = Character.query.get(character_id)")
     try:
         logger.info(f"Selecting character ID: {character_id} for user: {g.user_id}")
         character = Character.query.get(character_id)
@@ -220,7 +225,7 @@ def send_message():
         message = Message(content=content, user_id=user_id)
         db.session.add(message)
         db.session.commit()
-
+        #logger.info(f"Raw JSON from assistant response: {response}")
         parsed_character = parse_character(response)
         
         if parsed_character["name"]:
@@ -228,21 +233,29 @@ def send_message():
             for chkey in parsed_character:
                 if chkey != 'name' and  chkey != 'description' and chkey != 'type':
                     traits[chkey] = parsed_character[chkey]
-            conf.CURRENT_CHARACTER['traits'] = json.dumps(traits, ensure_ascii=False)
+                    
+            traits_json = json.dumps(traits, ensure_ascii=False)       
+            logger.info(f"======traits_json: {traits_json}")
+            
+            parsed_character['traits'] = traits_json
             designer = IMGSelector()
             player_id = generate_unixid()
                                                                 # create     character                           
             path_img_file = designer.selector(user_id, player_id, '', theme_img='character', _name=parsed_character['name'], _prompt=parsed_character['description'])
             
-            conf.CURRENT_CHARACTER['name'] = parsed_character['name']
-            conf.CURRENT_CHARACTER['description'] = parsed_character['description']
-            conf.CURRENT_CHARACTER['image_url'] = path_img_file
-            conf.CURRENT_CHARACTER['user_id'] = user_id
-            conf.CURRENT_CHARACTER['player_id'] = player_id
-  
+            parsed_character['name'] = parsed_character['name']
+            parsed_character['description'] = parsed_character['description']
+            parsed_character['image_url'] = path_img_file
+            parsed_character['user_id'] = user_id
+            parsed_character['player_id'] = player_id
             parsed_character['life'] = 100
             parsed_character['combat'] = 0
             parsed_character['damage'] = 0
+            
+            conf.CURRENT_CHARACTER[user_id] = parsed_character
+            # Логируем путь к изображению для проверки
+            logger.info(f"Image path: {path_img_file}")
+            
             return jsonify({
                 "status": "Message sent",
                 "response": response,
@@ -277,8 +290,7 @@ def create_character():
     try:
         name = request.form['name']
         description = request.form['description']
-        character_data = conf.CURRENT_CHARACTER
-        user_id = character_data.get('user_id')
+        character_data = conf.CURRENT_CHARACTER[g.user_id]
         player_id = character_data.get('player_id')
         image_url = character_data.get('image_url')
         traits = character_data.get('traits')
@@ -291,7 +303,7 @@ def create_character():
             description=description,
             image_url=image_url,
             traits=traits,
-            user_id=user_id,
+            user_id= g.user_id,
             player_id = player_id,
             life = 100,
             combat = 0,
@@ -305,7 +317,6 @@ def create_character():
     except Exception as e:
         logger.error(f"Error creating character: {e}")
         return jsonify({"error": str(e)}), 500
-
 
 @player_bp.route('/send_general_message', methods=['POST'])
 def send_general_message():

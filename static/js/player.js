@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     const chatForm = document.getElementById('chat-form');
     const chatBox = document.getElementById('chat-box');
-    const extraInput = document.getElementById('extraInput');
     const createCharacterForm = document.getElementById('create-character-form');
     const nameField = createCharacterForm.querySelector('#name');
     const descriptionField = createCharacterForm.querySelector('#description');
@@ -20,8 +19,6 @@ document.addEventListener('DOMContentLoaded', function() {
             characterChart.destroy();
         }
         characterChart = createChart(ctx, traits);
-        const traitsString = Object.entries(traits).map(([key, value]) => `${key}:${value}`).join(', ');
-        extraInput.value = traitsString;
     }
 
     function selectCharacter(characterId) {
@@ -30,17 +27,25 @@ document.addEventListener('DOMContentLoaded', function() {
         if (button) {
             nameField.value = button.dataset.name;
             descriptionField.value = button.dataset.description;
-            const traits = JSON.parse(button.dataset.traits);
-            displayCharacterStats(traits);
-            const imageUrl = button.dataset.imageUrl.replace(/ /g, "_");
-            if (imageUrl && characterImage) {
-                characterImage.src = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
-            } else {
-                characterImage.src = '/static/images/default/character.png';
+            try {
+
+                const imageUrl = button.dataset.imageUrl.replace(/ /g, "_");
+                if (imageUrl && characterImage) {
+                    characterImage.src = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
+                    console.log("1 Image URL:", imageUrl);
+
+                } else {
+                    characterImage.src = '/static/images/default/character.png';
+                    console.log("2 Image URL:", imageUrl);
+
+                }
+            } catch (error) {
+                console.error("Error parsing traits JSON:", error);  // Логируем ошибку парсинга
             }
         }
     }
-
+    
+    
     if (characterButtons.length === 0) {
         noCharactersMessage.style.display = 'block';
     } else {
@@ -92,7 +97,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         document.getElementById('description').value = data.character.description;
                     }
                     if (data.character.strength !== undefined) {
-                       // 1. Strength 2. Dexterity 3. Intelligence 4. Endurance 5. Speed 6. Magic 7. Defense 8. Attack 9. Charisma 10. Luck
                         const traits = {
                             "Strength": data.character.strength,
                             "Dexterity": data.character.dexterity,
