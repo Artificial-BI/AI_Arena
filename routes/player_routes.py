@@ -270,11 +270,12 @@ def delete_character(character_id):
             db.session.delete(character)
             db.session.commit()
             logger.info(f"Deleted character: {character_id}")
-            return redirect(url_for('player_bp.player'))
+            return jsonify({"status": "Character deleted", "character_id": character_id})
         return jsonify({"error": "Character not found or access denied"}), 404
     except Exception as e:
         logger.error(f"Error deleting character: {e}")
         return jsonify({"error": str(e)}), 500
+
 
 @player_bp.route('/create_character', methods=['POST'])
 def create_character():

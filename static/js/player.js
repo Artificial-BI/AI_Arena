@@ -255,40 +255,50 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    document.querySelectorAll('#character-list .delete-form').forEach(form => {
-        form.addEventListener('submit', function(event) {
-            event.preventDefault();
-            const characterId = form.action.split('/').pop();
 
-            fetch(form.action, {
-                method: 'POST',
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'Character deleted') {
-                    // Удаляем персонажа из списка
-                    form.parentElement.remove();
-
-                    // Если персонаж был выбранным, сбрасываем выбор
-                    if (selectedCharacterId == characterId) {
-                        selectedCharacterId = null;
-                        nameField.value = '';
-                        descriptionField.value = '';
-                        characterImage.src = '';
-                        // Также можно сбросить график
-                        if (window.characterChart) {
-                            window.characterChart.destroy();
-                            window.characterChart = null;
+        document.querySelectorAll('#character-list .delete-form').forEach(form => {
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+                const characterId = form.action.split('/').pop();
+    
+                fetch(form.action, {
+                    method: 'POST',
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'Character deleted') {
+                        console.log("Character deleted:", data.character_id);
+                        // Удаляем персонажа из списка
+                        form.parentElement.remove();
+    
+                        // Если персонаж был выбранным, сбрасываем выбор
+                        if (selectedCharacterId == characterId) {
+                            selectedCharacterId = null;
+                            nameField.value = '';
+                            descriptionField.value = '';
+                            characterImage.src = '';
+                            // Также можно сбросить график
+                            if (window.characterChart) {
+                                window.characterChart.destroy();
+                                window.characterChart = null;
+                            }
+    
+                            // Проверяем, есть ли оставшиеся персонажи
+                            const remainingCharacters = document.querySelectorAll('#character-list .character-item button[data-id]');
+                            if (remainingCharacters.length > 0) {
+                                // Выбираем последнего оставшегося персонажа
+                                const lastCharacter = remainingCharacters[remainingCharacters.length - 1];
+                                selectCharacter(lastCharacter.dataset.id);
+                            } else {
+                                noCharactersMessage.style.display = 'block';
+                            }
                         }
+                    } else {
+                        console.error("Error deleting character:", data.error);
                     }
-
-                    // Проверка на наличие оставшихся персонажей в списке
-                    if (characterList.children.length === 0) {
-                        noCharactersMessage.style.display = 'block';
-                    }
-                }
-            })
-            .catch(error => console.error('Error:', error));
+                })
+                .catch(error => console.error('Error:', error));
+            });
         });
-    });
+    
 });
