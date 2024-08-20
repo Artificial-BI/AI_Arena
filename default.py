@@ -295,7 +295,7 @@ def default_current_character():
             "strength": 90,
             "agility": 1,
             "intelligence": 70,
-            "stamina": 0,
+            "Endurance": 0,
             "speed": 60,
             "magic": 2,
             "defense": 80,

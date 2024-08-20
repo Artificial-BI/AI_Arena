@@ -46,87 +46,78 @@ def fetch_records(model, order_by_field=None):
         logger.error(f"Error fetching records from {model.__name__}: {e}")
         return []
 
-# def manage_selected_character_in_file(user_id, character_id=None, action="get"):
-#     """Управление сохранением и получением выбранного персонажа в/из файла."""
-#     try:
-#         file_path = 'selected_characters.json'
-#         if os.path.exists(file_path):
-#             with open(file_path, 'r') as f:
-#                 data = json.load(f)
-#         else:
-#             data = {}
-
-#         if action == "set" and character_id is not None:
-#             data[str(user_id)] = character_id
-#             with open(file_path, 'w') as f:
-#                 json.dump(data, f)
-#         return data.get(str(user_id))
-#     except Exception as e:
-#         logger.error(f"Error managing selected character in file: {e}")
-#         return None
-
 def get_selected_character():
     """Получение выбранного персонажа из файла или базы данных."""
-    #selected_character_id = manage_selected_character_in_file(g.user_id)
-    
     try:
-        character = conf.CURRENT_CHARACTER[g.user_id]
-        selected_character_id = character['player_id']
-    except :
+        logger.info(f"----- cur_char ------: {g.user_id} CONF {conf.CURRENT_CHARACTER}")
+        
+        # Проверяем, есть ли сохраненный выбранный персонаж
+        if g.user_id in conf.CURRENT_CHARACTER and conf.CURRENT_CHARACTER[g.user_id]:
+            cur_char = conf.CURRENT_CHARACTER[g.user_id]
+            selected_character_id = cur_char['player_id']
+            logger.info(f"Selected character from CURRENT_CHARACTER: {selected_character_id}")
+        else:
+            # Если нет сохраненного персонажа, получаем последнего из списка персонажей пользователя
+            data_list = Character.query.filter_by(user_id=g.user_id).order_by(desc(Character.id)).first()
+            if data_list:
+                selected_character_id = data_list.id
+                logger.info(f"Selected last character from database: {selected_character_id}")
+            else:
+                # Если у пользователя нет персонажей, выбираем дефолтный
+                selected_character_id = default_current_character()
+                logger.info(f"No characters found. Using default character: {selected_character_id}")
+        
+        # Получаем данные о выбранном персонаже
+        if selected_character_id:
+            data = Character.query.filter_by(id=selected_character_id, user_id=g.user_id).first()
+            logger.info(f"character_ID: {selected_character_id} data: {data}")
+            return data
+
+    except KeyError:
+        logger.info("No user data available. Using default character.")
         selected_character_id = default_current_character()
+        return Character.query.filter_by(id=selected_character_id, user_id=g.user_id).first()
 
-    if selected_character_id:
-        return Character.query.get(selected_character_id)
-    return Character.query.filter_by(user_id=g.user_id).order_by(desc(Character.player_id)).first()
+    return None
 
-def get_or_create_player():
-    """Получение или создание игрока в базе данных."""
-    player = Player.query.filter_by(user_id=g.user_id).first()
-    if not player:
-        player_name = f"Player_{g.user_id}"
-        player = Player(user_id=g.user_id, name=player_name)
-        db.session.add(player)
-        db.session.commit()
-    return player
-
-# Routes
 @player_bp.route('/')
 def player():
     logger.info("Fetching player data")
 
+    # Получаем выбранного персонажа
     selected_character = get_selected_character()
 
+    # Загружаем все сообщения и всех персонажей пользователя
     messages = fetch_records(Message, order_by_field=Message.timestamp)
-    characters = fetch_records(Character)
-    last_character_id = selected_character.id if selected_character else None
+    characters_data = fetch_records(Character)
 
-    # Формирование данных для отображения
-    characters_data = []
-    for character in characters:
-        traits = json.loads(character.traits) if character.traits else {}
-        traits.update({
-            "Combat": character.combat,
-            "Damage": character.damage,
-            "Life": character.life
-        })
-        #------------ work code -----------------
-        characters_data.append({
-            "id": character.id,
-            "name": character.name,
-            "description": character.description,
-            "traits": traits, 
-            "image_url": f"/static/{character.image_url}" 
-        })
+    # Логируем traits для каждого персонажа
+    for character in characters_data:
+        logger.info(f"Character {character.name} has traits: {character.traits}")
 
+    # Если выбранный персонаж не найден, выбираем последнего персонажа в списке
+    if not selected_character and characters_data:
+        selected_character = characters_data[-1]
+        logger.info(f"Selected last character in the list: {selected_character.name}")
 
-    logger.info(f"Characters data: {characters_data}")
+    if selected_character:
+        logger.info(f"-----START 3------ character {selected_character.id} | {selected_character}")
+        last_character_id = selected_character.id
+    else:
+        logger.info("No characters available.")
+        last_character_id = None
 
-    return render_template('player.html', messages=messages, characters=characters_data, selected_character=selected_character, last_character_id=last_character_id)
+    return render_template('player.html', 
+                           messages=messages, 
+                           characters=characters_data, 
+                           selected_character=selected_character, 
+                           last_character_id=last_character_id)
+
 
 
 @player_bp.route('/arena')
 def arena():
-    player = get_or_create_player()
+    logger.info(f"-----START------ User {user_id} character {selected_character.id} ")
     selected_character = player.selected_character
     if not selected_character:
         return render_template('error.html', error_message="Пожалуйста выберите персонажа или создайте с помощью ассистента")
@@ -146,31 +137,35 @@ def arena():
         db.session.commit()
         logger.info(f"User {user_id} registered character {selected_character.id} for arena {arena_id}")
 
+    logger.info(f"-----START 1------ User {user_id} character {selected_character.id} ")
+
+
     return render_template('arena.html', selected_character=selected_character, enumerate=enumerate)
 
+#===============================
 @player_bp.route('/select_character/<int:character_id>', methods=['POST'])
 def select_character(character_id):
     logger.info(f"--------------- character_id: {character_id} | character = Character.query.get(character_id)")
     try:
-        logger.info(f"Selecting character ID: {character_id} for user: {g.user_id}")
+        logger.info(f"Selecting --- character ID: {character_id} for user: {g.user_id}")
         character = Character.query.get(character_id)
         if not character or character.user_id != g.user_id:
             return jsonify({"error": "Character not found or access denied"}), 404
 
-        player = get_or_create_player()
+        #player = get_or_create_player()
         player.selected_character_id = character_id
         db.session.commit()
-
-        #manage_selected_character_in_file(g.user_id, character_id, action="set")
-#http://127.0.0.1:5000/player/images/user_410620035969326635/1723714534.png
-
-        logger.info(f"select_character --------- character_id: {character_id} | {character}")
+        logger.info(f"select_character --------- character_id: {character_id} | {character} | TR: {character.traits}")
         selected_character = {
             "name": character.name,
             "description": character.description,
+            "Life":character.life,
+            "Combat":character.combat,
+            "Damage":character.damage,
             "traits": json.loads(character.traits),
             "image_url": character.image_url
         }
+        conf.CURRENT_CHARACTER[g.user_id] = selected_character
         return jsonify(selected_character)
     except Exception as e:
         db.session.rollback()
@@ -235,16 +230,14 @@ def send_message():
                     traits[chkey] = parsed_character[chkey]
                     
             traits_json = json.dumps(traits, ensure_ascii=False)       
-            logger.info(f"======traits_json: {traits_json}")
+            logger.info(f"====== traits_json: =========== {traits_json}")
             
             parsed_character['traits'] = traits_json
             designer = IMGSelector()
             player_id = generate_unixid()
                                                                 # create     character                           
             path_img_file = designer.selector(user_id, player_id, '', theme_img='character', _name=parsed_character['name'], _prompt=parsed_character['description'])
-            
-            parsed_character['name'] = parsed_character['name']
-            parsed_character['description'] = parsed_character['description']
+ 
             parsed_character['image_url'] = path_img_file
             parsed_character['user_id'] = user_id
             parsed_character['player_id'] = player_id
@@ -283,40 +276,44 @@ def delete_character(character_id):
         logger.error(f"Error deleting character: {e}")
         return jsonify({"error": str(e)}), 500
 
-import os
-
 @player_bp.route('/create_character', methods=['POST'])
 def create_character():
     try:
+        character_data = conf.CURRENT_CHARACTER[g.user_id]
         name = request.form['name']
         description = request.form['description']
-        character_data = conf.CURRENT_CHARACTER[g.user_id]
-        player_id = character_data.get('player_id')
-        image_url = character_data.get('image_url')
-        traits = character_data.get('traits')
         
-        logger.info(f"character_data: {character_data}")
-
-        # Создание нового персонажа
         new_character = Character(
             name=name,
             description=description,
-            image_url=image_url,
-            traits=traits,
-            user_id= g.user_id,
-            player_id = player_id,
-            life = 100,
-            combat = 0,
-            damage = 0
+            image_url=character_data.get('image_url'),
+            traits=character_data.get('traits'),
+            user_id=g.user_id,
+            player_id=character_data.get('player_id'),
+            life=100,
+            combat=0,
+            damage=0
         )
         db.session.add(new_character)
         db.session.commit()
 
-        logger.info(f"Created new character: {name} with image {image_url}")
-        return redirect(url_for('player_bp.player'))
+        logger.info(f"Created new character: {name} with image {character_data.get('image_url')}")
+
+        # Возвращаем данные нового персонажа
+        return jsonify({
+            "status": "Character created",
+            "character": {
+                "id": new_character.id,
+                "name": new_character.name,
+                "description": new_character.description,
+                "traits": json.loads(new_character.traits),
+                "image_url": new_character.image_url
+            }
+        })
     except Exception as e:
         logger.error(f"Error creating character: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Internal server error"}), 500
+
 
 @player_bp.route('/send_general_message', methods=['POST'])
 def send_general_message():

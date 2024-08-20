@@ -66,4 +66,4 @@ class Config:
     # Путь к JSON-файлу
     VISIT_TRACKING_FILE = 'game_visit_tracking.json'
     
-    CURRENT_CHARACTER = {'user_id':[]}
+    CURRENT_CHARACTER = {'410620035969326635':{}}

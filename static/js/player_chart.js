@@ -30,18 +30,19 @@ function createChart(ctx, traits) {
                 borderWidth: 1
             }]
         },
+        
         options: {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
                 x: { beginAtZero: true, title: { display: false }},
-                y: { beginAtZero: true, title: { display: false }}
+                y: { beginAtZero: true, title: { display: false }, max: 100 }
             },
             plugins: {
                 tooltip: {
                     callbacks: {
                         label: function(tooltipItem) {
-                            return tooltipItem.label + ': ' + tooltipItem.raw;
+                            return tooltipItem.label + ': ' + tooltipItem.raw + '%';
                         }
                     }
                 },
@@ -67,7 +68,23 @@ function createChart(ctx, traits) {
     });
 }
 
+function displayCharacterStats(traits) {
+    const ctx = document.getElementById('character-chart').getContext('2d');
+    if (ctx) {
+        if (window.characterChart) {
+            window.characterChart.destroy();
+        }
+        window.characterChart = createChart(ctx, traits);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    if (selectedCharacterTraits) {
+        console.log("3 --- traits:", selectedCharacterTraits);
+
+        displayCharacterStats(selectedCharacterTraits);
+    }
+
     document.querySelectorAll('tbody tr').forEach((row, index) => {
         const traitsData = row.dataset.traits;
         if (traitsData) {

@@ -25,48 +25,63 @@
                 <canvas id="character-chart"></canvas>
             </div>
             <div class="selected-character" style="flex: 1; padding-left: 10px; display: flex; justify-content: center; align-items: center;">
-                <img src="{% if selected_character %}{{ selected_character.image_url }}{% endif %}" alt="Character Image" style="max-width: 100%; height: auto;">  
-            </div>
-        </div>
+              <!--  <img src="{% if selected_character %}{{ selected_character.image_url }}{% endif %}" alt="Character Image" style="max-width: 100%; height: auto;"> -->
+                <img src="{% if selected_character %}{{ url_for('static', filename=selected_character.image_url) }}{% endif %}" alt="Character Image" style="max-width: 100%; height: auto;">
 
-        <div id="loading-message" style="display:none;">
-            Generating...
+            </div>
         </div>
 
         <div class="character-management">
             <div class="characters-section">
                 <ul id="character-list">
                     {% for character in characters %}
-                    <li class="character-item">
-                        <button type="button" class="character-name" 
-                            data-id="{{ character.id }}" 
-                            data-name="{{ character.name }}" 
-                            data-description="{{ character.description }}" 
-                            data-traits="{{ character.traits | tojson }}"
-                            data-image-url="{{ character.image_url }}">
-                        {{ character.name }}
-                        </button>
-                        <form method="post" action="{{ url_for('player_bp.delete_character', character_id=character.id) }}" class="delete-form">
-                            <button type="submit">Delete</button>
-                        </form>
-                    </li>
+                        <li class="character-item">
+                            <button type="button" class="character-name" 
+                                    data-id="{{ character.id }}" 
+                                    data-name="{{ character.name }}" 
+                                    data-description="{{ character.description }}" 
+                                    data-life="{{ character.life }}" 
+                                    data-traits="{{ character.traits | tojson | safe }}"  
+                                    data-image-url="{{ character.image_url }}">
+                                {{ character.name }}
+                            </button>
+                            <form method="post" action="{{ url_for('player_bp.delete_character', character_id=character.id) }}" class="delete-form">
+                                <button type="submit">Delete</button>
+                            </form>
+                        </li>
                     {% endfor %}
                 </ul>
                 <p id="no-characters-message" style="display:none; color: red;">No characters available for participation in battles.</p>
             </div>
-
+        
             <div class="create-character">
                 <form id="create-character-form" method="post" action="{{ url_for('player_bp.create_character') }}">
                     <label for="name">Character Name:</label>
                     <input type="text" id="name" name="name" required>
                     <label for="description">Character Description:</label>
                     <textarea id="description" name="description" rows="6" required></textarea>
-                     <div class="extra-input-container">
-                      <!--  <input type="text" id="extraInput" name="extraInput" class="extra-input" placeholder="" readonly>-->
+                    <div class="extra-input-container">
                         <button type="submit">Create Character</button>
-                    </div> 
+                    </div>
                 </form>
             </div>
+        </div>
+        
+
+        <div id="loading-message" style="display:none;">
+            Generating...
+        </div>
+
+        <div class="create-character">
+            <!-- <form id="create-character-form" method="post" action="{{ url_for('player_bp.create_character') }}">
+                <label for="name">Character Name:</label>
+                <input type="text" id="name" name="name" required>
+                <label for="description">Character Description:</label>
+                <textarea id="description" name="description" rows="6" required></textarea>
+                <div class="extra-input-container">
+                    <button type="submit">Create Character</button>
+                </div>
+            </form> -->
         </div>
         
         <div class="chat-section">
@@ -75,7 +90,7 @@
                 {% for message in messages %}
                 <div class="chat-message {{ 'right' if message.user_id == g.user.id else 'left' }}">
                     <p>{{ message.content }}</p>
-                    <span class="timestamp">{{ message.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                    <span class="timestamp {{ message.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}"></span>
                 </div>
                 {% endfor %}
             </div>
@@ -90,5 +105,15 @@
 <script>
     const selectedCharacterTraits = {% if selected_character %}{{ selected_character.traits | tojson | safe }}{% else %}null{% endif %};
     const lastCharacterId = {{ last_character_id if last_character_id else 'null' }};
+
+    function selectCharacter(characterId) {
+        // Ваша реализация функции selectCharacter
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        if (lastCharacterId !== null) {
+            selectCharacter(lastCharacterId);
+        }
+    });
 </script>
 {% endblock %}

@@ -5,58 +5,137 @@ document.addEventListener('DOMContentLoaded', function() {
     const nameField = createCharacterForm.querySelector('#name');
     const descriptionField = createCharacterForm.querySelector('#description');
     const characterImage = document.querySelector('.selected-character img');
-    const characterButtons = document.querySelectorAll('#character-list .character-item button[data-name]');
-    const noCharactersMessage = document.getElementById('no-characters-message');
     const loadingMessage = document.getElementById('loading-message');
     const arenaButton = document.querySelector('a[href="/arena"]');
+    const characterList = document.getElementById('character-list');
+    const noCharactersMessage = document.getElementById('no-characters-message');
 
-    let characterChart;
-    let selectedCharacterId = null;
+    let selectedCharacterId = lastCharacterId; // Используем lastCharacterId, который передается из backend
 
-    function displayCharacterStats(traits) {
-        const ctx = document.getElementById('character-chart').getContext('2d');
-        if (characterChart) {
-            characterChart.destroy();
-        }
-        characterChart = createChart(ctx, traits);
+    function addCharacterToList(character) {
+        const li = document.createElement('li');
+        li.classList.add('character-item');
+
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.classList.add('character-name');
+        button.dataset.id = character.id;
+        button.dataset.name = character.name;
+        button.dataset.description = character.description;
+        button.dataset.traits = JSON.stringify(character.traits);
+        button.dataset.imageUrl = character.image_url;
+        button.textContent = character.name;
+
+        button.addEventListener('click', function() {
+            selectCharacter(character.id);
+        });
+
+        const deleteForm = document.createElement('form');
+        deleteForm.method = 'post';
+        deleteForm.action = `/delete_character/${character.id}`;
+        deleteForm.classList.add('delete-form');
+
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'submit';
+        deleteButton.textContent = 'Delete';
+
+        deleteForm.appendChild(deleteButton);
+
+        li.appendChild(button);
+        li.appendChild(deleteForm);
+        characterList.appendChild(li);
     }
-
+    
+    //-------------------- select Character (WORK)----------------------------
     function selectCharacter(characterId) {
         selectedCharacterId = characterId;
         const button = document.querySelector(`#character-list .character-item button[data-id='${characterId}']`);
         if (button) {
+            console.log("--------- ID:", characterId);
+
             nameField.value = button.dataset.name;
             descriptionField.value = button.dataset.description;
-            try {
-
-                const imageUrl = button.dataset.imageUrl.replace(/ /g, "_");
-                if (imageUrl && characterImage) {
-                    characterImage.src = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
-                    console.log("1 Image URL:", imageUrl);
-
-                } else {
-                    characterImage.src = '/static/images/default/character.png';
-                    console.log("2 Image URL:", imageUrl);
-
+            characterImage.src = `/static/${button.dataset.imageUrl.replace(/ /g, "_")}`;
+            
+            if (button.dataset.traits && button.dataset.traits !== "{}") {
+                try {
+                    const traits = JSON.parse(button.dataset.traits);
+                    traits['Life'] = 100;
+                    traits['Combat'] = 0;
+                    traits['Damage'] = 0;
+                    displayCharacterStats(traits);
+                } catch (error) {
+                    console.error("Error parsing traits JSON:", error);
                 }
-            } catch (error) {
-                console.error("Error parsing traits JSON:", error);  // Логируем ошибку парсинга
+            } else {
+                console.error("No traits data found for this character or traits are empty.");
             }
+    
+            // Добавим запрос на сервер для получения актуальной информации о персонаже
+            fetch(`/player/select_character/${characterId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Server response:", data);
+                if (data.error) {
+                    console.error("Error from server:", data.error);
+                } else {
+                    console.log("Selected character from server:", data);
+                    // Обновляем данные на клиенте, если нужно
+                    nameField.value = data.name;
+                    descriptionField.value = data.description;
+                    if (data.traits) {
+                        traits = data.traits;
+                        console.log("----sel------- Traits:", traits);
+                        traits['Life'] = data.Life;
+                        traits['Combat'] = data.Combat;
+                        traits['Damage'] = data.Damage;
+                        displayCharacterStats(traits);
+                    }
+                    if (data.image_url) {
+                        characterImage.src = `/static/${data.image_url.replace(/ /g, "_")}`;
+                    }
+                }
+            })
+            .catch(error => console.error("Error fetching character data:", error));
         }
     }
-    
-    
-    if (characterButtons.length === 0) {
-        noCharactersMessage.style.display = 'block';
-    } else {
-        noCharactersMessage.style.display = 'none';
-        characterButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                selectCharacter(this.dataset.id);
-            });
-        });
+
+    //----------- add Event Listener ---------
+    createCharacterForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        const formData = new FormData(createCharacterForm);
+
+        fetch(createCharacterForm.action, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'Character created') {
+                // Добавляем нового персонажа в список
+                addCharacterToList(data.character);
+                // Автоматически выбираем нового персонажа
+                selectCharacter(data.character.id);
+                if (characterList.children.length > 0) {
+                    noCharactersMessage.style.display = 'none';
+                }
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    });
+
+    // Вызов функции при загрузке страницы, если есть выбранный персонаж
+    if (selectedCharacterId) {
+        selectCharacter(selectedCharacterId);
     }
 
+    //------------ WORK -------------
+    // Вызов функции при генерации персонажа
     chatForm.addEventListener('submit', function(event) {
         event.preventDefault();
         const messageInput = document.getElementById('message');
@@ -76,6 +155,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.status === 'Message sent') {
+                console.log("Received data:", data);
                 const messageElement = document.createElement('div');
                 messageElement.className = 'chat-message right';
                 messageElement.innerHTML = `<p>${message}</p><span class="timestamp">${new Date().toLocaleString()}</span>`;
@@ -91,32 +171,33 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (data.character) {
                     if (data.character.name) {
-                        document.getElementById('name').value = data.character.name;
+                        nameField.value = data.character.name;
                     }
                     if (data.character.description) {
-                        document.getElementById('description').value = data.character.description;
-                    }
-                    if (data.character.strength !== undefined) {
-                        const traits = {
-                            "Strength": data.character.strength,
-                            "Dexterity": data.character.dexterity,
-                            "Intelligence": data.character.intelligence, 
-                            "Endurance": data.character.endurance,
-                            "Speed": data.character.speed,
-                            "Magic": data.character.magic,
-                            "Defense": data.character.defense,
-                            "Attack": data.character.attack,
-                            "Luck": data.character.luck,
-                            "Charisma": data.character.charisma,
-                            "Life": data.character.life,
-                            "Combat": data.character.combat,
-                            "Damage": data.character.damage
-                        };
-                        displayCharacterStats(traits);
+                        descriptionField.value = data.character.description;
                     }
 
                     if (data.image_url) {
                         characterImage.src = `/static/${data.image_url.replace(/ /g, "_")}`;
+                    }
+                    if (data.character.traits) {
+                        // Преобразование строки в объект, если traits передаются в виде строки
+                        let traits;
+                        if (typeof data.character.traits === 'string') {
+                            try {
+                                traits = JSON.parse(data.character.traits);
+                            } catch (error) {
+                                console.error("Error parsing traits JSON:", error);
+                                return;
+                            }
+                        } else {
+                            traits = data.character.traits;
+                        }
+                        console.log("Traits for generated character:", traits);
+                        traits['Life'] = 100;
+                        traits['Combat'] = 0;
+                        traits['Damage'] = 0;
+                        displayCharacterStats(traits);
                     }
                 }
             }
@@ -127,6 +208,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    //---------------------------
     if (arenaButton) {
         arenaButton.addEventListener('click', function(event) {
             event.preventDefault();
@@ -159,9 +241,54 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    if (lastCharacterId !== null) {
-        selectCharacter(lastCharacterId);
-    } else if (selectedCharacterTraits) {
-        displayCharacterStats(selectedCharacterTraits);
+    // Начальная проверка наличия персонажей
+    if (characterList.children.length === 0) {
+        noCharactersMessage.style.display = 'block';
+    } else {
+        noCharactersMessage.style.display = 'none';
     }
+
+    // Добавляем обработчики для уже существующих персонажей
+    document.querySelectorAll('#character-list .character-item button[data-id]').forEach(button => {
+        button.addEventListener('click', function() {
+            selectCharacter(this.dataset.id);
+        });
+    });
+
+    document.querySelectorAll('#character-list .delete-form').forEach(form => {
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const characterId = form.action.split('/').pop();
+
+            fetch(form.action, {
+                method: 'POST',
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'Character deleted') {
+                    // Удаляем персонажа из списка
+                    form.parentElement.remove();
+
+                    // Если персонаж был выбранным, сбрасываем выбор
+                    if (selectedCharacterId == characterId) {
+                        selectedCharacterId = null;
+                        nameField.value = '';
+                        descriptionField.value = '';
+                        characterImage.src = '';
+                        // Также можно сбросить график
+                        if (window.characterChart) {
+                            window.characterChart.destroy();
+                            window.characterChart = null;
+                        }
+                    }
+
+                    // Проверка на наличие оставшихся персонажей в списке
+                    if (characterList.children.length === 0) {
+                        noCharactersMessage.style.display = 'block';
+                    }
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    });
 });
