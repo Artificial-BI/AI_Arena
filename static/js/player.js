@@ -15,7 +15,17 @@ document.addEventListener('DOMContentLoaded', function() {
     function addCharacterToList(character) {
         const li = document.createElement('li');
         li.classList.add('character-item');
-
+        li.style.display = 'flex';
+        li.style.alignItems = 'center';
+    
+        const img = document.createElement('img');
+        img.src = `/static/${character.image_url.replace(/ /g, "_")}`;
+        img.alt = 'Character Image';
+        img.style.width = '50px';
+        img.style.height = '50px';
+        img.style.objectFit = 'cover';
+        img.style.marginRight = '10px';
+    
         const button = document.createElement('button');
         button.type = 'button';
         button.classList.add('character-name');
@@ -25,26 +35,28 @@ document.addEventListener('DOMContentLoaded', function() {
         button.dataset.traits = JSON.stringify(character.traits);
         button.dataset.imageUrl = character.image_url;
         button.textContent = character.name;
-
+    
         button.addEventListener('click', function() {
             selectCharacter(character.id);
         });
-
+    
         const deleteForm = document.createElement('form');
         deleteForm.method = 'post';
         deleteForm.action = `/delete_character/${character.id}`;
         deleteForm.classList.add('delete-form');
-
+    
         const deleteButton = document.createElement('button');
         deleteButton.type = 'submit';
         deleteButton.textContent = 'Delete';
-
+    
         deleteForm.appendChild(deleteButton);
-
+    
+        li.appendChild(img); // Добавляем изображение
         li.appendChild(button);
         li.appendChild(deleteForm);
         characterList.appendChild(li);
     }
+    
     
     //-------------------- select Character (WORK)----------------------------
     function selectCharacter(characterId) {
