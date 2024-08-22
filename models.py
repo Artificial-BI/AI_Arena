@@ -21,14 +21,23 @@ class User(db.Model):
     def __repr__(self):
         return f'<User {self.username}>'
 
+from sqlalchemy.orm import relationship
+
 class Player(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), unique=True, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Связь с User
-    characters = db.relationship('Character', backref='player', lazy=True)  # Связь с Character
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
+    # Сохранение ссылок и данных
+    last_selected_character_id = db.Column(db.Integer, nullable=True)
+    temp_character_traits = db.Column(db.Text, nullable=True)
+    current_status = db.Column(db.String(50), nullable=True)
+    arena_id = db.Column(db.Integer, nullable=True)
     
     def __repr__(self):
         return f'<Player {self.name}>'
+
+
 
 class Character(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -37,11 +46,13 @@ class Character(db.Model):
     traits = db.Column(db.Text, nullable=True)
     image_url = db.Column(db.String(200), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    player_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=True)  # Связь с Player
+    
+    # Переименованное поле
+    character_id = db.Column(db.Integer, nullable=True)  # Больше не связано с таблицей Player
     
     combat = db.Column(db.Integer, default=0)
     damage = db.Column(db.Integer, default=0)
-    life = db.Column(db.Integer, default=100)  # Поле для жизни (life)
+    life = db.Column(db.Integer, default=100)
 
     def __repr__(self):
         return f'<Character {self.name}>'

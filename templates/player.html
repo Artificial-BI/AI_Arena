@@ -25,9 +25,7 @@
                 <canvas id="character-chart"></canvas>
             </div>
             <div class="selected-character" style="flex: 1; padding-left: 10px; display: flex; justify-content: center; align-items: center;">
-              <!--  <img src="{% if selected_character %}{{ selected_character.image_url }}{% endif %}" alt="Character Image" style="max-width: 100%; height: auto;"> -->
                 <img src="{% if selected_character %}{{ url_for('static', filename=selected_character.image_url) }}{% endif %}" alt="Character Image" style="max-width: 100%; height: auto;">
-
             </div>
         </div>
 
@@ -73,18 +71,6 @@
             Generating...
         </div>
 
-        <div class="create-character">
-            <!-- <form id="create-character-form" method="post" action="{{ url_for('player_bp.create_character') }}">
-                <label for="name">Character Name:</label>
-                <input type="text" id="name" name="name" required>
-                <label for="description">Character Description:</label>
-                <textarea id="description" name="description" rows="6" required></textarea>
-                <div class="extra-input-container">
-                    <button type="submit">Create Character</button>
-                </div>
-            </form> -->
-        </div>
-        
         <div class="chat-section">
             <h2>Chat with AI</h2>
             <div id="chat-box">
@@ -104,17 +90,13 @@
 </div>
 
 <script>
-    const selectedCharacterTraits = {% if selected_character %}{{ selected_character.traits | tojson | safe }}{% else %}null{% endif %};
-    const lastCharacterId = {{ last_character_id if last_character_id else 'null' }};
-
-    function selectCharacter(characterId) {
-        // Ваша реализация функции selectCharacter
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        if (lastCharacterId !== null) {
-            selectCharacter(lastCharacterId);
-        }
-    });
+    let selectedCharacterId = {{ selected_character.character_id | tojson | safe if selected_character else 'null' }};
+    const selectedCharacterTraits = {{ selected_character.traits | tojson | safe }};
+    const selectedCharacterName = {{ selected_character.name | tojson | safe }};
+    const selectedCharacterDescription = {{ selected_character.description | tojson | safe }};
+    const selectedCharacterImageUrl = "{{ selected_character.image_url }}";
+    const selectedCharacterLife = {{ selected_character['Life'] | tojson | safe }};
+    const selectedCharacterCombat = {{ selected_character['Combat'] | tojson | safe }};
+    const selectedCharacterDamage = {{ selected_character['Damage'] | tojson | safe }};
 </script>
 {% endblock %}

@@ -78,25 +78,25 @@ function displayCharacterStats(traits) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    if (selectedCharacterTraits) {
-        console.log("3 --- traits:", selectedCharacterTraits);
+// document.addEventListener('DOMContentLoaded', function() {
+//     if (selectedCharacterTraits) {
+//         console.log("3 --- traits:", selectedCharacterTraits);
 
-        displayCharacterStats(selectedCharacterTraits);
-    }
+//         displayCharacterStats(selectedCharacterTraits);
+//     }
 
-    document.querySelectorAll('tbody tr').forEach((row, index) => {
-        const traitsData = row.dataset.traits;
-        if (traitsData) {
-            try {
-                const traits = JSON.parse(traitsData);
-                const canvas = document.getElementById(`traits-chart-${index + 1}`);
-                if (canvas) {
-                    createChart(canvas.getContext('2d'), traits);
-                }
-            } catch (e) {
-                console.error('Error parsing traits data:', e);
-            }
-        }
-    });
-});
+//     document.querySelectorAll('tbody tr').forEach((row, index) => {
+//         const traitsData = row.dataset.traits;
+//         if (traitsData) {
+//             try {
+//                 const traits = JSON.parse(traitsData);
+//                 const canvas = document.getElementById(`traits-chart-${index + 1}`);
+//                 if (canvas) {
+//                     createChart(canvas.getContext('2d'), traits);
+//                 }
+//             } catch (e) {
+//                 console.error('Error parsing traits data:', e);
+//             }
+//         }
+//     });
+// });
