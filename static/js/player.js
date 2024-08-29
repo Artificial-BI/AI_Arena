@@ -11,18 +11,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const characterList = document.getElementById('character-list');
     const noCharactersMessage = document.getElementById('no-characters-message');
 
-    // Загружаем данные при первой загрузке страницы из переданного selected_character
-    if (selectedCharacterId && selectedCharacterTraits) {
-        nameField.value = selectedCharacterName;
-        descriptionField.value = selectedCharacterDescription;
-        characterImage.src = `/static/${selectedCharacterImageUrl.replace(/ /g, "_")}`;
+// Загружаем данные при первой загрузке страницы из переданного selected_character
+if (selectedCharacterId && selectedCharacterTraits) {
+    nameField.value = selectedCharacterName || 'Unknown';
+    descriptionField.value = selectedCharacterDescription || 'No description available';
+    characterImage.src = `/static/${selectedCharacterImageUrl.replace(/ /g, "_")}`;
+    
+    if (selectedCharacterTraits && typeof selectedCharacterTraits === 'object') {
         const traits = selectedCharacterTraits;
-        traits['Life'] = selectedCharacterLife || 100; // Значение по умолчанию
+        traits['Life'] = selectedCharacterLife || 100;
         traits['Combat'] = selectedCharacterCombat || 0;
         traits['Damage'] = selectedCharacterDamage || 0;
 
         displayCharacterStats(traits);
+    } else {
+        console.error("selectedCharacterTraits is not an object or is null:", selectedCharacterTraits);
     }
+}
+
 
     function addCharacterToList(character) {
         const li = document.createElement('li');

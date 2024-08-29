@@ -1,151 +1,78 @@
-import nest_asyncio
+
 import asyncio
-from flask import Blueprint, render_template, jsonify, request, g, url_for
-from models import Character, ArenaChatMessage, GeneralChatMessage, TacticsChatMessage, Registrar, Arena
+from flask import Blueprint, render_template, jsonify, request, g, url_for, redirect, current_app
+from models import Character, ArenaChatMessage, GeneralChatMessage, TacticsChatMessage, Registrar, Statuses, Arena, PreRegistrar, Player
 import logging
 import json
 from extensions import db
-from core import BattleManager
+from core import ArenaManager, BattleManager
 from load_user import load_user
-import os
-from config import Config
+import random
 
-# Применение nest_asyncio для поддержки запуска asyncio в текущем событии
-nest_asyncio.apply()
-
-config = Config()
-# Путь к JSON-файлу
-VISIT_TRACKING_FILE = config.VISIT_TRACKING_FILE
-# Создание blueprint и battle manager
 arena_bp = Blueprint('arena', __name__)
 battle_manager = BattleManager()
-
-# Logging setup
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Проверка регистрации пользователя перед каждым запросом
 @arena_bp.before_request
 def before_request():
-    """Обработка запросов перед их выполнением: проверка пользователя."""
     response = load_user()
     if response.status_code not in [200, 201]:
         return response
-    
     user_data = response.get_json()
     g.user_id = user_data.get('user_id')
     g.cookie_id = user_data.get('cookie_id')
 
+# Основной маршрут для отображения арены
 @arena_bp.route('/')
-def arena():
-    """Основной маршрут для отображения арены."""
+async def arena():
+    registered_character = Registrar.query.filter_by(user_id=g.user_id).first()
+    if not registered_character:
+        return redirect(url_for('viewer.viewer'))
 
-    # Проверка существования JSON-файла
-    if not os.path.exists(VISIT_TRACKING_FILE):
-        with open(VISIT_TRACKING_FILE, 'w') as file:
-            json.dump({"current_game": {}}, file)
-
-    # Чтение данных из JSON-файла
-    with open(VISIT_TRACKING_FILE, 'r') as file:
-        visit_data = json.load(file)
-
-    user_id_str = str(g.user_id)
-    show_start_game_popup = False
-
-    # Проверка состояния текущей игры для пользователя
-    if visit_data["current_game"].get(user_id_str, True):
-        show_start_game_popup = True
-        visit_data["current_game"][user_id_str] = False
-        with open(VISIT_TRACKING_FILE, 'w') as file:
-            json.dump(visit_data, file)
-
-    selected_character = Character.query.filter_by(user_id=g.user_id).order_by(Character.id.desc()).first()
-    if not selected_character:
-        return "Пожалуйста выберите персонажа или создайте с помощью ассистента"
-
-    logger.info(f"Current user_id: {g.user_id}")
-
-    arena = Arena.query.order_by(Arena.date_created.desc()).first()
-    arena_image_url = arena.image_url if arena else None
     registrations = Registrar.query.all()
-
-    # characters = []
-    # for registration in registrations:
-    #     character = Character.query.get(registration.character_id)
-    #     if character:
-    #         # Создаем объект traits и добавляем необходимые параметры
-    #         traits = json.loads(character.traits) if character.traits else {}
-    #         traits['Combat'] = character.combat
-    #         traits['Damage'] = character.damage
-    #         traits['Life'] = character.life
-            
-    #         characters.append({
-    #             'name': character.name,
-    #             'traits': traits,
-    #             'description': character.description,
-    #             'image_url': character.image_url
-    #         })
-
     characters = []
     for registration in registrations:
         character = Character.query.get(registration.character_id)
         if character:
             traits = json.loads(character.traits) if character.traits else {}
-            
-            # Добавляем значения из отдельных полей базы данных
             traits['Combat'] = character.combat
             traits['Damage'] = character.damage
             traits['Life'] = character.life
-
             characters.append({
+                'user_id': registration.user_id,
                 'name': character.name,
                 'traits': traits,
                 'description': character.description,
                 'image_url': character.image_url
             })
 
-
-
+    arena = Arena.query.order_by(Arena.date_created.desc()).first()
+    arena_image_url = arena.image_url if arena else None
 
     return render_template(
-        'arena.html', 
-        characters=characters, 
-        selected_character=selected_character, 
-        arena_image_url=arena_image_url, 
+        'arena.html',
+        characters=characters,
+        arena_image_url=arena_image_url,
         enumerate=enumerate,
-        show_start_game_popup=show_start_game_popup
+        show_start_game_popup=False
     )
-
-
-
-def reset_game_state():
-    """Сброс состояния игры для всех пользователей."""
-    if os.path.exists(VISIT_TRACKING_FILE):
-        with open(VISIT_TRACKING_FILE, 'r+') as file:
-            visit_data = json.load(file)
-            for user_id in visit_data["current_game"]:
-                visit_data["current_game"][user_id] = True
-            file.seek(0)
-            json.dump(visit_data, file)
-            file.truncate()
-
 @arena_bp.route('/get_registered_characters')
-def get_registered_characters():
-    """Получение списка зарегистрированных персонажей."""
+async def get_registered_characters():
+    logger.info(f"------------ get_registered_characters ---------")
     try:
         characters = []
-        for registration in Registrar.query.all():
-            char = Character.query.get(registration.character_id)
-            if char is not None:
-                # Загружаем traits как JSON-объект, если traits не None
+        registrations = Registrar.query.all()
+        for registration in registrations:
+            char = Character.query.filter_by(character_id=registration.character_id).first()
+            if char:
+                logger.info(f"char.name: {char.name}")
                 traits = json.loads(char.traits) if char.traits else {}
-
-                # Добавляем дополнительные параметры из базы данных
                 traits.update({
                     "Combat": char.combat,
                     "Damage": char.damage,
                     "Life": char.life
                 })
-
                 characters.append({
                     "user_id": registration.user_id,
                     "name": char.name,
@@ -153,7 +80,8 @@ def get_registered_characters():
                     "image_url": char.image_url,
                     "description": char.description
                 })
-
+        logger.info(f"Fetched characters: {characters}")
+        
         return jsonify(characters)
     except Exception as e:
         logger.error(f"Error fetching registered characters: {e}", exc_info=True)
@@ -162,21 +90,18 @@ def get_registered_characters():
 
 
 @arena_bp.route('/get_arena_chat')
-def get_arena_chat():
-    """Получение сообщений чата арены."""
-    return get_chat_messages(ArenaChatMessage, "arena chat")
+async def get_arena_chat():
+    return await get_chat_messages(ArenaChatMessage, "arena chat")
 
 @arena_bp.route('/get_general_chat')
-def get_general_chat():
-    """Получение сообщений общего чата."""
-    return get_chat_messages(GeneralChatMessage, "general chat")
+async def get_general_chat():
+    return await get_chat_messages(GeneralChatMessage, "general chat")
 
 @arena_bp.route('/get_tactics_chat')
-def get_tactics_chat():
-    """Получение сообщений тактического чата."""
-    return get_chat_messages(TacticsChatMessage, "tactics chat")
+async def get_tactics_chat():
+    return await get_chat_messages(TacticsChatMessage, "tactics chat")
 
-def get_chat_messages(message_model, chat_type):
+async def get_chat_messages(message_model, chat_type):
     """Универсальная функция для получения сообщений чата."""
     try:
         messages = message_model.query.order_by(message_model.timestamp.asc()).all()
@@ -186,23 +111,10 @@ def get_chat_messages(message_model, chat_type):
         logger.error(f"Error fetching {chat_type} messages: {e}", exc_info=True)
         return jsonify({"error": "Internal server error"}), 500
 
-@arena_bp.route('/check_registered_players', methods=['GET'])
-def check_registered_players():
-    """Проверка количества зарегистрированных игроков и состояния битвы."""
-    try:
-        return jsonify({
-            'battle_in_progress': battle_manager.battle_in_progress,
-            'timer_in_progress': battle_manager.timer_in_progress,
-            'remaining_time': battle_manager.get_remaining_time(),
-            'registered_players': Registrar.query.count()
-        }), 200
-    except Exception as e:
-        logger.error(f"Ошибка при проверке количества зарегистрированных игроков: {e}", exc_info=True)
-        return jsonify({"error": "Внутренняя ошибка сервера"}), 500
+# --------------------------
 
 @arena_bp.route('/start_timer', methods=['POST'])
-def start_timer():
-    """Запуск таймера битвы."""
+async def start_timer():
     if battle_manager.battle_in_progress or battle_manager.timer_in_progress:
         return jsonify({"error": "Битва уже идет или таймер уже запущен"}), 400
     
@@ -210,30 +122,12 @@ def start_timer():
     return jsonify({'status': 'Таймер запущен'}), 200
 
 @arena_bp.route('/get_timer', methods=['GET'])
-def get_timer():
-    """Получение оставшегося времени таймера."""
+async def get_timer():
     remaining_time = battle_manager.get_remaining_time()
     return jsonify({'remaining_time': remaining_time}), 200
 
-@arena_bp.route('/start_battle', methods=['POST'])
-def start_battle():
-    """Запуск битвы."""
-    logger.info("Запрос на старт битвы получен")
-    try:
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            asyncio.create_task(battle_manager.start_battle(g.user_id))
-        else:
-            loop.run_until_complete(battle_manager.start_battle(g.user_id))
-        
-        return jsonify({'status': 'Битва началась'}), 200
-    except Exception as e:
-        logger.error(f"Ошибка при запуске битвы: {e}", exc_info=True)
-        return jsonify({"error": "Внутренняя ошибка сервера"}), 500
-
 @arena_bp.route('/get_arena_image_url/<int:arena_id>', methods=['GET'])
-def get_arena_image_url(arena_id):
-    """Получение URL изображения арены."""
+async def get_arena_image_url(arena_id):
     try: 
         arena = Arena.query.get(arena_id)
         if arena and arena.image_url:
@@ -246,10 +140,32 @@ def get_arena_image_url(arena_id):
         return jsonify({"error": "Internal server error"}), 500
 
 @arena_bp.route('/get_latest_arena_image')
-def get_latest_arena_image():
-    """Получение изображения последней созданной арены."""
+async def get_latest_arena_image():
     arena = Arena.query.order_by(Arena.date_created.desc()).first()
     if arena and arena.image_url:
         image_url = arena.image_url.replace("\\", "/")
         return jsonify({"arena_image_url": url_for('static', filename=image_url)})
     return jsonify({"arena_image_url": None})
+
+@arena_bp.route('/get_status', methods=['GET'])
+async def get_status():
+    # Просто возвращаем текущий статус без ожидания события
+    registered_players = Registrar.query.count()
+    battle_in_progress = battle_manager.battle_in_progress
+    timer_in_progress = battle_manager.timer_in_progress
+    remaining_time = battle_manager.get_remaining_time()
+
+    return jsonify({
+        'registered_players': registered_players,
+        'battle_in_progress': battle_in_progress,
+        'timer_in_progress': timer_in_progress,
+        'remaining_time': remaining_time,
+        'status_message': 'stat.cur_state'
+    }), 200
+
+@arena_bp.route('/start_async_tasks', methods=['POST'])
+async def start_async_tasks():
+    # Ваш код для запуска задач
+    return jsonify({'status': 'Tasks started'}), 200
+
+#===========================

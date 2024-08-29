@@ -3,7 +3,7 @@ import asyncio
 from flask import Blueprint, render_template, jsonify, request, redirect, url_for, g
 from sqlalchemy import desc
 from extensions import db
-from models import Message, Character, Registrar, Player
+from models import Message, Character, Registrar, Player, PreRegistrar, Statuses
 from datetime import datetime
 from gemini import GeminiAssistant
 from utils import parse_character, generate_unixid
@@ -15,6 +15,24 @@ from default import default_current_character
 
 conf = Config()
 player_bp = Blueprint('player_bp', __name__)
+
+def update_or_create_player(user_id, character_id, state):
+    player = Player.query.filter_by(user_id=user_id).first()
+
+    if player:
+        player.last_selected_character_id = character_id
+        player.current_status = state
+    else:
+        player = Player(
+            name=f"Player_{user_id}",
+            user_id=user_id,
+            last_selected_character_id=character_id,
+            current_status=state
+        )
+        db.session.add(player)
+
+    db.session.commit()
+    return player
 
 @player_bp.before_request
 def before_request():
@@ -39,34 +57,24 @@ def fetch_records(model, order_by_field=None):
         return []
 
 def get_selected_character():
-    """Получение выбранного персонажа из базы данных."""
     try:
         logger.info(f"Fetching selected character for user: {g.user_id}")
-        
-        # Получаем игрока по user_id
         player = Player.query.filter_by(user_id=g.user_id).first()
         
         if player and player.last_selected_character_id:
-            # Если есть сохраненный выбранный персонаж, получаем его данные
             selected_character_id = player.last_selected_character_id
-           # logger.info(f">> Selected character from Player table: {selected_character_id}")
         else:
-            # Если нет сохраненного персонажа, получаем последнего из списка персонажей пользователя
             data_list = Character.query.filter_by(user_id=g.user_id).order_by(desc(Character.id)).first()
             if data_list:
                 selected_character_id = data_list.character_id
-              #  logger.info(f"Selected last character from database: {selected_character_id}")
             else:
-                # Если у пользователя нет персонажей, выбираем дефолтный
                 selected_character_id = default_current_character()
-              #  logger.info(f"No characters found. Using default character: {selected_character_id}")
         
-        # Получаем данные о выбранном персонаже
         if selected_character_id:
             character = Character.query.filter_by(character_id=selected_character_id, user_id=g.user_id).first()
             if character:
                 selected_character = {
-                    "character_id": character.character_id,  # Добавляем character_id
+                    "character_id": character.character_id,
                     "name": character.name,
                     "description": character.description,
                     "Life": character.life,
@@ -75,7 +83,6 @@ def get_selected_character():
                     "traits": json.loads(character.traits),
                     "image_url": character.image_url
                 }
-              #  logger.info(f"Character data loaded successfully: {selected_character}")
                 return selected_character
             else:
                 logger.error(f"Character with ID {selected_character_id} not found.")
@@ -84,62 +91,42 @@ def get_selected_character():
         logger.error(f"Error getting selected character: {e}")
         return None
 
-
 @player_bp.route('/')
 def player():
-   # logger.info("Fetching player data")
-
-    # Получаем выбранного персонажа
-    selected_character_data = get_selected_character()
-
-    # Загружаем все сообщения и всех персонажей пользователя
-    messages = fetch_records(Message, order_by_field=Message.timestamp)
-    characters_data = fetch_records(Character)
-
-    # Логируем traits для каждого персонажа
-    num = 0
-    for character in characters_data:
-       # logger.info(f"N: {num} Character: {character.character_id} | has traits: {character.traits}")
-        num += 1
-        
-    if selected_character_data:
-        last_character_id = selected_character_data.get("character_id")
-        #last_character_id = selected_character_data.character_id
-       # logger.info(f">>>>>> Current ID: {last_character_id} | {selected_character_data['traits']}")
-    else:
-        logger.info("No selected character found.")
-        last_character_id = None
-
-    # Логирование данных перед передачей в шаблон
-   # logger.info(f"Selected Character Name: {selected_character_data.get('name')}")
-   # logger.info(f"Selected Character Description: {selected_character_data.get('description')}")
-
+    selected_character = get_selected_character()
+    characters = Character.query.filter_by(user_id=g.user_id).all()
+    messages = Message.query.filter_by(user_id=g.user_id).all()
+    
+    if selected_character:
+        player = Player.query.filter_by(user_id=g.user_id).first()
+        if player:
+            player.current_status = 'start'
+            db.session.commit()
+    
+    if selected_character is None:
+        selected_character = {
+            "character_id": None,
+            "name": "",
+            "description": "",
+            "Life": 0,
+            "Combat": 0,
+            "Damage": 0,
+            "traits": {},
+            "image_url": "default_image.png"
+        }
+    
     return render_template('player.html', 
-                           messages=messages, 
-                           characters=characters_data, 
-                           last_character_id=last_character_id,
-                           selected_character=selected_character_data)
-
+                           selected_character=selected_character,
+                           characters=characters, 
+                           messages=messages)
 
 @player_bp.route('/select_character/<int:character_num>', methods=['POST'])
 def select_character(character_num):
-   # logger.info(f"Selecting character: {character_num} for user: {g.user_id}")
     character = Character.query.get(character_num)
     if not character or character.user_id != g.user_id:
         return jsonify({"error": "Character not found or access denied"}), 404
 
-    player = Player.query.filter_by(user_id=g.user_id).first()
-    if player:
-        player.last_selected_character_id = character.character_id
-    else:
-        player = Player(
-            name=f"Player_{g.user_id}",
-            user_id=g.user_id,
-            last_selected_character_id=character.character_id
-        )
-        db.session.add(player)
-    
-    db.session.commit()
+    update_or_create_player(g.user_id, character.character_id, 'select')
 
     selected_character = {
         "name": character.name,
@@ -163,7 +150,7 @@ def create_character():
             name=name,
             description=description,
             image_url=character_data.get('image_url'),
-            traits=json.dumps(character_data.get('traits')),  # Преобразование в строку JSON
+            traits=json.dumps(character_data.get('traits')),
             user_id=g.user_id,
             character_id=character_id,
             life=100,
@@ -173,14 +160,8 @@ def create_character():
         db.session.add(new_character)
         db.session.commit()
         
-        # Сохраняем ID выбранного персонажа в базу данных Player
-        player = Player.query.filter_by(user_id=g.user_id).first()
-        if player:
-            player.last_selected_character_id = character_id
-            db.session.commit()
-       # logger.info(f"Created new character: {name} with image {character_data.get('image_url')}")
+        update_or_create_player(g.user_id, character_id, 'create')
 
-        # Возвращаем данные нового персонажа
         return jsonify({
             "status": "Character created",
             "character": {
@@ -211,7 +192,6 @@ def delete_character(character_id):
         logger.error(f"Error deleting character: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
-
 @player_bp.route('/send_message', methods=['POST'])
 def send_message():
     content = request.form.get('message', '').strip()
@@ -220,9 +200,7 @@ def send_message():
 
     user_id = g.user_id
     assistant = GeminiAssistant("Character Generator")
-   # logger.info(f"Sending message to assistant: {content}")
     response = asyncio.run(assistant.send_message(content))
-   # logger.info(f"Received response from assistant: {response}")
 
     message = Message(content=content, user_id=user_id)
     db.session.add(message)
@@ -235,8 +213,7 @@ def send_message():
             if chkey not in ['name', 'description', 'type']:
                 traits[chkey] = parsed_character[chkey]
                 
-        parsed_character['traits'] = traits  # Вместо строки передаем объект
-      #  logger.info(f"Traits dict: {traits}")
+        parsed_character['traits'] = traits
         
         designer = IMGSelector()
         character_id = generate_unixid()
@@ -251,7 +228,6 @@ def send_message():
         parsed_character['damage'] = 0
         
         conf.CURRENT_CHARACTER[user_id] = parsed_character
-       # logger.info(f"Image path: {path_img_file}")
         
         return jsonify({
             "status": "Message sent",
@@ -261,7 +237,6 @@ def send_message():
         })
     
     return jsonify({"status": "Message sent", "response": response})
-
 
 @player_bp.route('/register_for_arena', methods=['POST'])
 def register_for_arena():
@@ -277,24 +252,33 @@ def register_for_arena():
 
         character_id = selected_character.last_selected_character_id
 
-        # Проверяем, зарегистрирован ли уже персонаж для арены
-        existing_registration = Registrar.query.filter_by(user_id=user_id, arena_id=1).first()
-        if existing_registration:
-            if existing_registration.character_id != character_id:
-                existing_registration.character_id = character_id
-                db.session.commit()
-                return jsonify({"status": "updated"})
-            return jsonify({"status": "already_registered"})
+        # Проверяем, началась ли битва
+        battle_in_progress = Statuses.query.filter_by(name='battle').first()
+
+        if battle_in_progress and battle_in_progress.state == 'in_progress':
+            # Проверяем, есть ли запись в PreRegistrar
+            pre_reg_exists = PreRegistrar.query.filter_by(user_id=user_id, character_id=character_id, arena_id=1).first()
+            if not pre_reg_exists:
+                pre_reg = PreRegistrar(user_id=user_id, character_id=character_id, arena_id=1)
+                db.session.add(pre_reg)
+                logger.info(f"Registered in PreRegistrar: {user_id} with character {character_id}")
+            else:
+                logger.info(f"Character {character_id} is already registered in PreRegistrar for user {user_id}")
         else:
-            # Добавляем новую регистрацию
-            new_registration = Registrar(
-                user_id=user_id, 
-                character_id=character_id, 
-                arena_id=1
-            )
-            db.session.add(new_registration)
-            db.session.commit()
-            return jsonify({"status": "registered"})
+            # Проверяем, есть ли запись в Registrar
+            reg_exists = Registrar.query.filter_by(user_id=user_id, character_id=character_id, arena_id=1).first()
+            if not reg_exists:
+                reg = Registrar(user_id=user_id, character_id=character_id, arena_id=1)
+                db.session.add(reg)
+                logger.info(f"Registered in Registrar: {user_id} with character {character_id}")
+            else:
+                logger.info(f"Character {character_id} is already registered in Registrar for user {user_id}")
+
+        # Обновляем статус игрока
+        update_or_create_player(g.user_id, character_id, 'registered')
+
+        db.session.commit()
+        return jsonify({"status": "registered"})
     except Exception as e:
         db.session.rollback()
         logger.error(f"Error registering for arena: {e}")

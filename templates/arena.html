@@ -1,26 +1,17 @@
-{% extends 'base.html' %}
 <!-- arena.html -->
+{% extends 'base.html' %}
+
 {% block head %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/arena.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="/static/js/chart_script.js"></script>
-
+    <script src="{{ url_for('static', filename='js/chart_script.js') }}"></script>
 {% endblock %}
 
 {% block content %}
 <div class="arena-header">
-    {% if arena_image_url %}
-    <img src="{{ url_for('static', filename=arena_image_url) }}" alt="Arena Image" class="arena-image">
-    {% endif %}
+    <img id="arena-image" src="{{ url_for('static', filename=arena_image_url) if arena_image_url else '' }}" alt="Arena Image" class="arena-image">
 </div>
-{% if show_start_game_popup %}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            showNotification("Добро пожаловать на арену! Игра начинается!");
-        });
-    </script>
-{% endif %}
 
 <!-- Player Table -->
 <table id="players-table">
@@ -52,14 +43,17 @@
     </tbody>
 </table>
 
-<div id="notification-popup" class="notification-popup">
+<div id="notification-popup" class="notification-popup" style="display:none; position:fixed; top:20px; right:20px; background-color:#333; color:#fff; padding:10px; border-radius:5px;">
     <p id="notification-message"></p>
 </div>
+
+<div id="countdown" style="font-size:24px; font-weight:bold; display:none; text-align:center; margin-top:20px;"></div>
 
 <!-- Arena Chat -->
 <h2>Arena Chat</h2>
 <div id="arena-chat-box">
 </div>
+
 
 <!-- Tactics AI Chat -->
 <h2>Tactics AI Chat</h2>
@@ -82,7 +76,7 @@
 <div id="tooltip" style="position: absolute; display: none; background: #fff; border: 1px solid #ccc; padding: 10px; border-radius: 4px;"></div>
 
 <script>
-    const user_id = "{{ g.user.id }}";
+    const user_id = "{{ g.user_id }}";
 </script>
 <script src="{{ url_for('static', filename='js/arena.js') }}"></script>
 {% endblock %}

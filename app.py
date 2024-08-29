@@ -5,8 +5,11 @@ from config import Config
 from logging_config import configure_logging
 from initialization import init_extensions_and_db  # Import the unified initialization function
 from extensions import db
-from models import Registrar  # Добавляем импорт модели Registrar
+from models import PreRegistrar, Registrar, Player  # Добавляем импорт модели Registrar
 import traceback
+import asyncio
+from multiprocessing import Process
+from core import BattleManager  # Импортируем BattleManager
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -17,15 +20,20 @@ if not app.debug:
 # Initialize extensions and the database
 init_extensions_and_db(app)
 
-# Очищаем таблицу Registrar
-with app.app_context():
-    try:
-        Registrar.query.delete()
-        db.session.commit()
-        app.logger.info("Таблица Registrar была успешно очищена.")
-    except Exception as e:
-        db.session.rollback()
-        app.logger.error(f"Ошибка при очистке таблицы Registrar: {e}")
+def clear_table():
+    # Очищаем таблицы
+    with app.app_context():
+        try:
+            # Удаляем все записи из таблиц PreRegistrar и Registrar
+            db.session.query(PreRegistrar).delete()
+            db.session.query(Registrar).delete()
+            # Сохраняем изменения в базе данных
+            db.session.commit()
+            app.logger.info("Очистка Таблиц Registrar и PreRegistrar и статуса Player.")
+        except Exception as e:
+            # Откатываем изменения в случае ошибки
+            db.session.rollback()
+            app.logger.error(f"Ошибка при очистке таблиц Registrar и PreRegistrar.  Error: {e}")
 
 # Import and register blueprints
 from routes.index_routes import index_bp
@@ -49,6 +57,8 @@ app.register_blueprint(webhook_bp)
 # Add enumerate to Jinja2 environment
 app.jinja_env.globals.update(enumerate=enumerate)
 
+clear_table()
+
 # Define error handlers
 @app.errorhandler(404)
 def not_found_error(error):
@@ -64,6 +74,21 @@ def internal_error(error):
     
     return render_template('500.html', error=error, error_trace=error_trace), 500
 
+def start_game_loop():
+    """Функция для запуска ядра игры в отдельном процессе."""
+    with app.app_context():
+        battle_manager = BattleManager()
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(battle_manager.start_game())
+
 # Main entry point
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    # Запуск ядра игры в отдельном процессе
+    game_process = Process(target=start_game_loop)
+    game_process.start()
+
+    # Запуск Flask-приложения
+    app.run(debug=True, port=6511)
+
+    # Завершение процесса игры при завершении приложения
+    game_process.join()

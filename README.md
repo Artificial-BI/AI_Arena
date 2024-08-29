@@ -1,140 +1,127 @@
-# AI Arena Project
 
-## Project Goals and Objectives
-The goal of the AI Arena project is to create an online game where players can create unique characters, describe them textually, and use a neural network to visualize these characters, participate in battles, and compete with other players. The project leverages the capabilities of Google's multimodal model, Google Gemini, to generate images, descriptions, and battle analyses.
+# AI Arena: Updated Project Description
 
-### Project Objectives:
-- Provide a platform for creating and managing characters.
-- Develop dynamic combat mechanics using neural networks.
-- Implement automatic, semi-automatic, and manual game modes.
-- Ensure a user-friendly interface for players, administrators, and spectators.
-- Implement a communication and chat moderation system with automatic message translation.
-- Utilize Google Gemini's multimodal model for generating character images and descriptions, analyzing battles, and creating video content.
+## Project Goal:
+AI Arena is a networked game where players can create unique characters, visualize them using neural networks, participate in battles, and compete against other players. The game leverages multimodal models to generate images, descriptions, and battle analysis, creating an engaging environment for interaction and competition.
 
-## Interface
+## Project Objectives:
+1. **Character Creation and Management:**
+   - Players can create characters with unique traits and descriptions, visualized through neural networks.
+   - Management and editing of characters through a user-friendly interface.
 
-### Player Interface:
-- **Main Player Page**:
-  - Text field for character name: Players enter their character's name (multiple characters can be created, edited, and set against specific opponents in the future).
-  - Text field for character attributes: Players enter character attributes (weapons, strength, armor, etc.).
-  - Voice input: Ability to dictate character attributes using Google Speech-to-Text.
-  - Example prompts: Minimal prompts for structuring character descriptions.
-  - Example of character attribute description.
+2. **Dynamic Battle Mechanics:**
+   - Real-time battles using AI-driven tactics.
+   - Inclusion of automatic and semi-automatic modes with player participation in tactical decisions.
 
-- **Game Mode Selection**:
-  - Automatic Mode: The neural network fully controls all actions.
-  - Semi-Automatic Mode: Players can input commands via text or voice, and the neural network adjusts battle tactics based on these commands.
-  - Manual Mode: Players describe all actions of their character themselves.
+3. **Game Modes:**
+   - Support for automatic, semi-automatic, and manual game modes.
+   - A separate viewer mode allowing spectators to watch battles without participating in tactics chat.
 
-- **Chat**:
-  - Message sending: Ability to send messages to the general chat.
-  - Automatic translation: Messages are translated into the player's language using Google Gemini if this mode is enabled.
-  - Moderation: Messages are automatically moderated to remove offensive content.
+4. **User Interface and Interaction:**
+   - User-friendly interface for players, administrators, and spectators, with communication through chats.
+   - Support for multiplayer interaction, including chat systems and moderation.
 
-- **Battle Display**:
-  - Text descriptions of attacks and defenses: The neural network describes each attack and defense.
-  - Key moment generation: Every six moves/combinations/tricks, an image of the key moment is generated. The window shifts as the battle progresses. The size of the window is set by a parameter in the settings.
+5. **AI-Driven Visualization and Analysis:**
+   - The multimodal model is used to create character and arena images, analyze battles, and generate tactics.
+   - Tactical decision-making is managed through `tactics_manager.py`, allowing flexible strategy adjustments during battles.
 
-### Administrator Interface:
-- **Chat Management**:
-  - Message moderation: Ability to moderate and delete messages.
+## Project Architecture and Components:
 
-- **Neural Network Settings**:
-  - Parameter adjustment: Adjusting temperature, top-p, top-k, and other neural network parameters.
-  - Action and defense assessment settings: Setting specific actions, types of attacks, and defenses.
-  - Battle assessment: Setting metrics or criteria for evaluating battles.
+### Backend:
+- **Flask Application (`app.py`)**: The main server handling requests and managing routes for players, spectators, and administrators.
+- **Routes:**
+  - **Players (`player_routes.py`)**: Managing player profiles, character creation and editing, and battle participation.
+  - **Arena (`arena_routes.py`)**: Logic for organizing arena battles, managing waiting lists, and conducting fights.
+  - **Viewers (`viewer_routes.py`)**: A separate interface for spectators to watch battles without participating in tactics chat.
+  - **Main Page (`index_routes.py`)**: Tournament tables, player statistics, access to arenas, and other functionalities.
+  - **Administration (`admin_routes.py`)**: Managing system settings, users, and monitoring activity.
 
-- **User Management**:
-  - Viewing and managing users: Ability to view and manage user profiles (warn, block, etc.).
+### Frontend:
+- **Templates (`base.html`, `player.html`, `arena.html`)**: Responsible for the visual representation of data on the user side, including character management, arenas, and chat.
+- **JavaScript and CSS**: Static files for dynamic interaction, building trait charts, and enhancing the user experience.
 
-### Spectator Interface:
-- **Character Display**:
-  - Character information: Displaying the name, attributes, and image of characters.
-  - Battle description in general chat (commentator mode): Text description of each battle with key moments and images.
+### Business Logic:
+- **Tactics Management (`tactics_manager.py`)**: Logic for selecting and applying tactical decisions during battles.
+- **Core Application Logic (`core.py`)**: Ensuring interaction between components, handling messages, managing character registration, and participation in battles.
 
-## Game Mechanics
+### Data and Configuration:
+- **Data Models (`models.py`)**: The database structure, including models for users, players, characters, and battles.
+- **Application Configuration (`config.py`)**: Settings used to control the application's behavior, including timeout parameters, file paths, and other key variables.
 
-### Character Creation:
-- Players enter the name and attributes of their character.
-- The neural network generates an image and attributes of the character based on the description.
+## Development and Modifications:
+The AI Arena project is continuously evolving. For example, the viewer route (`viewer_routes.py`) will be modified to be a clone of the arena but without participation in tactics chat. This allows spectators to watch battles without directly influencing their outcome.
 
-### Battle Mechanics:
-- **Initial Point Assignment**:
-  - Each character is assigned a certain number of health points based on their attributes.
+## Conclusion:
+AI Arena is a complex platform that combines game elements, AI-driven content generation, and competitive interaction. With powerful tools for managing tactics and characters, it offers players a unique experience and immersion into the world of AI-driven battles.
 
-- **Point Calculation During Battle**:
-  - The neural network generates attacks and defenses with certain effectiveness and strength.
-  - Each effective hit deducts a certain number of points from the opponent.
+=========================================
 
-- **Determining the Winner**:
-  - The battle continues until one character runs out of health points.
-  - The character whose health points reach zero first loses, and their opponent is declared the winner.
+# AI Arena: Gameplay Walkthrough
 
-- **Bonuses for Successful and Interesting Moves**:
-  - The neural network awards bonus points for particularly successful and interesting moves.
+## 1. Registration and Login
+- **Registration:** 
+  - Players create an account by providing a username, email address, and password.
+  - After registration, the player receives a unique identifier, which will be used to track their progress in the game.
+- **Login:** 
+  - After registration, players can log in using their credentials.
 
-### Game Modes:
-- **Automatic Mode**:
-  - The neural network fully controls all actions and decisions of the character during the battle.
+## 2. Character Creation
+- **Step 1: Providing Character Preferences**
+  - The player describes to the assistant the type of character they want, including preferences for playstyle, traits, and appearance.
+  - **Example:** The player requests a character with strong magical abilities and high speed.
 
-- **Semi-Automatic Mode**:
-  - Players can input commands via text or voice.
-  - Commands can include any actions available to the character, taking their attributes into account.
-  - The neural network combines player suggestions with its strategy to create optimal attacks and defenses.
+- **Step 2: Character Generation by the Assistant**
+  - Based on the player's preferences, the assistant automatically generates the character's name, description, traits, and image.
+  - The player cannot independently modify the character's traits but can change the name and description.
 
-- **Manual Mode**:
-  - Players fully describe all actions of their character.
+- **Step 3: Character Confirmation**
+  - The player reviews the generated character, including traits and image, and makes any necessary changes to the name and description.
+  - Once confirmed, the character is saved in the system and is ready to participate in battles.
 
-## Use of Google Gemini Model in AI Arena Project
-- **Image and Description Generation**:
-  - Google Gemini is used to create character images based on players' textual descriptions and attributes.
+## 3. Arena Selection and Battle Participation
+- **Step 1: Battle Registration**
+  - The player selects their character to participate in a battle. The arena is automatically generated based on the traits of all participants.
+  - Players cannot choose the arena themselves; it is dynamically created to reflect the unique characteristics of the characters involved in the battle.
 
-- **Battle Analysis**:
-  - The neural network analyzes battles, generates text descriptions of attacks and defenses, assigns points, and determines the winner.
+- **Step 2: Battle Start**
+  - Once a sufficient number of players have gathered in the arena, the battle begins.
+  - Players are transported to the arena, where they can see their opponents and the surrounding environment.
 
-- **Post-Battle Video Creation**:
-  - Google Gemini generates scripts and texts for videos based on character images, descriptions, and battle descriptions.
-  - Visual elements are created and the video is automatically edited.
-  - The generated video is published on the platform for viewing by participants and spectators.
+## 4. Arena Interaction
+- **Step 1: Tactical Decisions**
+  - During the battle, the player makes decisions that influence the outcome, such as choosing to attack, defend, or use special abilities.
+  - **Example:** The player decides to use a powerful magical attack against an opponent with low magic resistance.
 
-- **Chat Message Translation and Moderation**:
-  - All messages are automatically translated into English and stored in a database.
-  - Based on players' local language settings, messages are translated into their native language and displayed in their chat window if this parameter is set.
-  - Messages are automatically moderated to remove offensive content.
+- **Step 2: Using the Chat**
+  - The player can communicate with other participants through the general chat.
+  - Explicit alliances are not currently supported in the game, so each player fights for themselves.
 
-## Technical Requirements
+- **Step 3: Battle Dynamics**
+  - AI Arena calculates the outcome of each action in real-time, evaluating character traits and tactical decisions.
+  - **Example:** If the player's character lands a successful hit, the opponent may lose significant health, potentially altering the course of the battle.
 
-### Web Page:
-- The game will be browser-based, opening seamlessly on both mobile and desktop devices.
-- The main page will be a single-page application (SPA) with the necessary information.
-- Separate single-page views for each player and separate views for spectators.
+## 5. Battle Conclusion and Scoring
+- **Step 1: End of Battle**
+  - The battle concludes when one participant defeats all opponents or when the allotted battle time expires.
+  - The player receives a notification about the battle's end.
 
-### Authentication and Database:
-- Using unique IDs based on cookies for player authentication.
-- Using SQLite to store player information and attributes.
-- Creating a separate table to save chat messages and maintain them for a long time.
+- **Step 2: Scoring**
+  - AI Arena calculates final scores based on the character's actions, damage dealt, survivability, and other factors.
+  - **Example:** The player earns extra points for successful tactical decisions and surviving until the end of the battle.
+
+- **Step 3: Tournament Ranking Update**
+  - The battle results impact the player's ranking in the tournament leaderboard. The better the performance, the higher the rank.
+  - **Example:** After a successful battle, the player moves up several positions in the leaderboard, increasing their chances of winning the tournament.
+
+## 6. Post-Battle Interaction
+- **Analysis and Discussion**
+  - The player can analyze their actions and discuss the battle with other participants through the general chat or AI Arena forums.
+  - **Example:** The player discusses the strategy that helped them win and receives tips on improving their tactics.
+
+- **Preparation for the Next Battle**
+  - After the battle, the player can create a new character, improve an existing one, or register for the next battle.
+  - **Example:** The player decides to improve their character's agility to be more effective in the next fight.
 
 ## Conclusion
-The AI Arena project provides a unique platform for creating and managing characters, participating in battles, and interacting with other players. Utilizing the capabilities of the Google Gemini model ensures high-quality generation of images and descriptions, battle analysis, and video creation. The flexibility of game modes and well-thought-out interface system make the game accessible and engaging for all participants.
+AI Arena offers players a unique opportunity to immerse themselves in strategic battles where every step and decision can influence the outcome. The assistant helps players create characters and arenas, providing a balanced and engaging gaming environment. Climbing the leaderboard and refining tactics become the main goals for each participant.
 
-______________________________________________________________________
-* Top-p (also known as "nucleus sampling")
-Imagine we have a box with balls of different colors, each representing a possible model response. Top-p helps select only the most likely options from this box.
-How it works:
-1. The model calculates the probability of each possible response.
-2. Then it selects only those options that sum up to probability p (e.g., 0.9 or 90%).
-3. From the remaining options, the model randomly selects one for the response.
-Thus, top-p allows considering only the most likely responses while maintaining an element of randomness, making the responses more diverse.
-
-* Top-k
-Now imagine we have a box with balls, but instead of probabilities, each ball has its rank written on it (e.g., first place, second place, and so on).
-How it works:
-1. The model selects the k most likely options (e.g., k = 10).
-2. From these k options, the model randomly selects one for the response.
-Top-k limits the model's choice to a fixed number of the most likely options, making the responses more predictable yet still diverse.
-
-
-
-======================================
-del logging from requirements
-del dotenv from requirements

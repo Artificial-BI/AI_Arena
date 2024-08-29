@@ -67,3 +67,9 @@ class Config:
     VISIT_TRACKING_FILE = 'game_visit_tracking.json'
     
     CURRENT_CHARACTER = {'410620035969326635':{}}
+    
+    ARENA_MODE = 'random'
+    
+    WAIT_COUNT = 30
+    
+    PLAYER_COUNT = 2

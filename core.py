@@ -5,12 +5,13 @@ import re
 import time
 from datetime import datetime
 from flask import current_app
-from models import (Arena, ArenaChatMessage, Character, GeneralChatMessage, PreRegistrar, Registrar, Role, TacticsChatMessage, db)
+from models import (Arena, ArenaChatMessage, Character, GeneralChatMessage, PreRegistrar, Registrar, Role, Statuses, TacticsChatMessage, db)
 from gemini import GeminiAssistant
 from open_ai import AIDesigner
 from tactics_manager import FighterManager, TacticsManager
 from utils import parse_arena, parse_referee
 import random
+from config import Config
 
 # Logging setup
 logging.basicConfig(level=logging.INFO)
@@ -41,12 +42,34 @@ class CoreCommon:
                 raise ValueError(f"Role '{role_name}' not found in the database")
             logger.info(f"Instructions received for role: {role}")
             return role.instructions
+        
+    async def get_registered_character_data(self):
+        logger.info("Fetching registered character data")
+        with current_app.app_context():
+            registrations = Registrar.query.all()
+            character_data = []
+            for registration in registrations:
+                character = Character.query.get(registration.character_id)
+                if character:
+                    character_data.append({
+                        "id": character.id,
+                        "name": character.name,
+                        "description": character.description,
+                        "traits": character.traits,
+                        "user_id": registration.user_id
+                    })
+            return character_data    
+    
+    def newTM(self):
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        return current_time
+    
+        
 
 class ArenaManager:
-    def __init__(self, loop=None):
+    def __init__(self):
         self.assistant = None
         self.ccom = CoreCommon()
-        self.loop = loop or asyncio.get_event_loop()
 
     def create_arena_image(self, new_arena, arena_description):
         designer = AIDesigner()
@@ -56,9 +79,11 @@ class ArenaManager:
         image_url = designer.create_image(arena_description, "arena", image_filename)
         return image_url
 
-    async def generate_arena(self, character_data):
+    async def generate_arena(self):
         logger.info("Generating arena")
         self.assistant = GeminiAssistant('arena')
+
+        character_data =  await self.ccom.get_registered_character_data()
 
         parameters = await self.assistant.send_message(
             f"Generate arena with the following character data: {character_data}"
@@ -90,7 +115,7 @@ class BattleManager:
         self.ccom = CoreCommon()
         self.referee_assistant = None
         self.commentator_assistant = None
-        self.arena_manager = ArenaManager(loop=loop)
+        self.arena_manager = ArenaManager()
         self.battle_count = 0
         self.round_count = 0
         self.fighter_manager = FighterManager(loop=loop)
@@ -100,23 +125,90 @@ class BattleManager:
         self.timer_start_time = None
         self.countdown_duration = 30
         self.moves_count = {}
-        self.loop = loop or asyncio.get_event_loop()
+        self.loop = loop #or asyncio.get_event_loop()
         self.count_round = 3
         self.count_steps = 4 
         self.user_expectation = 2
+        self.config = Config() 
 
-    async def start_battle(self, user_id):
+    def add_autoFighter(): # добавление бота бойца управляемого только тактиком
+        pass
+
+    async def set_state(self, name, state, descript):
+        with current_app.app_context():
+            state_tab = Statuses.query.filter_by(name=name).first()
+            if state_tab:
+                state_tab.state = state
+                state_tab.description = descript
+                db.session.commit()
+            else:
+                new_status = Statuses(name=name, state=state, description=descript)
+                db.session.add(new_status)
+                db.session.commit()
+            #logger.info(f"Status set: {name} = {state}")
+
+            
+    async def get_state(self, name):
+        with current_app.app_context():
+            state_tab = Statuses.query.filter_by(name=name).first()
+            if state_tab:
+                logger.info(f"Status retrieved: {name} = {state_tab.state}")
+                return state_tab.state
+            else:
+                logger.warning(f"Status not found: {name}")
+                return None
+
+
+    async def start_waiting_for_players(self):
+        count_sec = 0
+        logger.info(" ---------- START WAITING PLAYERS -------------- ")
+        while True:
+            registered_players = Registrar.query.count()
+            if registered_players >= self.config.PLAYER_COUNT:
+                break  # Достаточно игроков, выходим из ожидания
+          #  logger.info(f" ---------- START WAITING PLAYERS {count_sec} -------------- ")
+            await self.set_state('game', 'waiting', self.ccom.newTM())
+            await asyncio.sleep(1)  # Асинхронная пауза на 1 секунду
+            count_sec += 1
+
+    async def generate_arena(self):
+        if self.config.ARENA_MODE == 'random':
+            await self.set_state('game', 'Arena random', self.ccom.newTM())
+            logger.info(f" ---------- ARENA RANDOM -------------- ") 
+            arena_cnt = Arena.query.count()
+            if arena_cnt > 0:
+                random_offset = random.randint(0, arena_cnt - 1)
+                arena = Arena.query.offset(random_offset).first()
+            else:
+                arena_manager = ArenaManager()
+                arena = arena_manager.generate_arena()
+                db.session.add(arena)
+                db.session.commit()
+        else:
+            await self.set_state('game', 'Arena generated', self.ccom.newTM())
+            logger.info(f" ---------- ARENA GENERATE -------------- ")
+            arena_manager = ArenaManager()
+            arena = arena_manager.generate_arena()
+            db.session.add(arena)
+            db.session.commit()
+
+    # =========================== START GAME ==================================
+    async def start_game(self):
+        await self.start_waiting_for_players()
+        await self.generate_arena()
+        
+        
+        # Дальнейшая логика старта игры...
+
+    async def start_battle(self):
         logger.info(f"--- Battle {self.battle_count + 1} started ---")
         try:
             self.battle_in_progress = True
             self.battle_count += 1
             await self._clear_previous_battle()
 
-            character_data = await self.get_registered_character_data()
-            arena = await self.arena_manager.generate_arena(character_data)
-            
-            content = f"--- Battle № {self.battle_count+1} ---"
-            message_to_Arena(content, _name='sys', _sender='sys', _arena_id=arena.id)
+            character_data = await self.ccom.get_registered_character_data()
+            arena = Arena.query.order_by(Arena.date_created.desc()).first()
 
             for character in character_data:
                 self.tactics_manager.add_tactic(character['user_id'])
@@ -177,23 +269,6 @@ class BattleManager:
             ArenaChatMessage.query.delete()
             TacticsChatMessage.query.delete()
             db.session.commit()
-
-    async def get_registered_character_data(self):
-        logger.info("Fetching registered character data")
-        with current_app.app_context():
-            registrations = Registrar.query.all()
-            character_data = []
-            for registration in registrations:
-                character = Character.query.get(registration.character_id)
-                if character:
-                    character_data.append({
-                        "id": character.id,
-                        "name": character.name,
-                        "description": character.description,
-                        "traits": character.traits,
-                        "user_id": registration.user_id
-                    })
-            return character_data
 
     async def evaluate_and_comment_round(self, character_data, arena):
         # Evaluate fighters' moves

@@ -189,6 +189,16 @@ class PreRegistrar(db.Model):
     def __repr__(self):
         return f'<PreRegistrar User ID: {self.user_id}, Character ID: {self.character_id}, Arena ID: {self.arena_id}>'
 
+class Statuses(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)
+    state = db.Column(db.String(50), unique=True, nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    time_state = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<name: {self.name}, state: {self.state}, description: {self.description} , time_state: {self.time_state}>'
+
 class Registrar(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)

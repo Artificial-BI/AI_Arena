@@ -90,13 +90,14 @@
 </div>
 
 <script>
-    let selectedCharacterId = {{ selected_character.character_id | tojson | safe if selected_character else 'null' }};
-    const selectedCharacterTraits = {{ selected_character.traits | tojson | safe }};
-    const selectedCharacterName = {{ selected_character.name | tojson | safe }};
-    const selectedCharacterDescription = {{ selected_character.description | tojson | safe }};
-    const selectedCharacterImageUrl = "{{ selected_character.image_url }}";
+    let selectedCharacterId = {{ selected_character['character_id'] | tojson | safe }};
+    const selectedCharacterTraits = {{ selected_character['traits'] | tojson | safe }};
+    const selectedCharacterName = {{ selected_character['name'] | tojson | safe }};
+    const selectedCharacterDescription = {{ selected_character['description'] | tojson | safe }};
+    const selectedCharacterImageUrl = "{{ selected_character['image_url'] }}";
     const selectedCharacterLife = {{ selected_character['Life'] | tojson | safe }};
     const selectedCharacterCombat = {{ selected_character['Combat'] | tojson | safe }};
     const selectedCharacterDamage = {{ selected_character['Damage'] | tojson | safe }};
 </script>
+
 {% endblock %}
