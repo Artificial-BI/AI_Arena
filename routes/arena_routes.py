@@ -1,17 +1,19 @@
-
 import asyncio
 from flask import Blueprint, render_template, jsonify, request, g, url_for, redirect, current_app
-from models import Character, ArenaChatMessage, GeneralChatMessage, TacticsChatMessage, Registrar, Statuses, Arena, PreRegistrar, Player
+from models import Character, ArenaChatMessage, GeneralChatMessage, TacticsChatMessage, Registrar, Arena, PreRegistrar
 import logging
 import json
 from extensions import db
-from core import ArenaManager, BattleManager
 from load_user import load_user
-import random
+from multiproc import StatusManager
+
+# --- arena_routes.py ---
 
 arena_bp = Blueprint('arena', __name__)
-battle_manager = BattleManager()
 logger = logging.getLogger(__name__)
+
+# Инициализация StatusManager
+status_manager = StatusManager()
 
 # Проверка регистрации пользователя перед каждым запросом
 @arena_bp.before_request
@@ -57,6 +59,7 @@ async def arena():
         enumerate=enumerate,
         show_start_game_popup=False
     )
+
 @arena_bp.route('/get_registered_characters')
 async def get_registered_characters():
     logger.info(f"------------ get_registered_characters ---------")
@@ -64,7 +67,7 @@ async def get_registered_characters():
         characters = []
         registrations = Registrar.query.all()
         for registration in registrations:
-            char = Character.query.filter_by(character_id=registration.character_id).first()
+            char = Character.query.filter_by(id=registration.character_id).first()
             if char:
                 logger.info(f"char.name: {char.name}")
                 traits = json.loads(char.traits) if char.traits else {}
@@ -86,8 +89,6 @@ async def get_registered_characters():
     except Exception as e:
         logger.error(f"Error fetching registered characters: {e}", exc_info=True)
         return jsonify({"error": "Internal server error"}), 500
-
-
 
 @arena_bp.route('/get_arena_chat')
 async def get_arena_chat():
@@ -111,21 +112,6 @@ async def get_chat_messages(message_model, chat_type):
         logger.error(f"Error fetching {chat_type} messages: {e}", exc_info=True)
         return jsonify({"error": "Internal server error"}), 500
 
-# --------------------------
-
-@arena_bp.route('/start_timer', methods=['POST'])
-async def start_timer():
-    if battle_manager.battle_in_progress or battle_manager.timer_in_progress:
-        return jsonify({"error": "Битва уже идет или таймер уже запущен"}), 400
-    
-    battle_manager.start_timer(30)
-    return jsonify({'status': 'Таймер запущен'}), 200
-
-@arena_bp.route('/get_timer', methods=['GET'])
-async def get_timer():
-    remaining_time = battle_manager.get_remaining_time()
-    return jsonify({'remaining_time': remaining_time}), 200
-
 @arena_bp.route('/get_arena_image_url/<int:arena_id>', methods=['GET'])
 async def get_arena_image_url(arena_id):
     try: 
@@ -147,25 +133,33 @@ async def get_latest_arena_image():
         return jsonify({"arena_image_url": url_for('static', filename=image_url)})
     return jsonify({"arena_image_url": None})
 
+# Использование StatusManager в маршрутах
 @arena_bp.route('/get_status', methods=['GET'])
 async def get_status():
-    # Просто возвращаем текущий статус без ожидания события
-    registered_players = Registrar.query.count()
-    battle_in_progress = battle_manager.battle_in_progress
-    timer_in_progress = battle_manager.timer_in_progress
-    remaining_time = battle_manager.get_remaining_time()
+    try:
+        game_status = status_manager.get_state('game')
+        arena_status = status_manager.get_state('arena')
+        battle_status = status_manager.get_state('battle')
+        timer_status = status_manager.get_state('timer')
+        
+        logger.info(f"States A: {game_status} G: {arena_status} B: {battle_status} T: {timer_status}")
+        
+        registered_players = Registrar.query.count()
 
-    return jsonify({
-        'registered_players': registered_players,
-        'battle_in_progress': battle_in_progress,
-        'timer_in_progress': timer_in_progress,
-        'remaining_time': remaining_time,
-        'status_message': 'stat.cur_state'
-    }), 200
+        return jsonify({
+            'registered_players': registered_players,
+            'battle_status': battle_status,
+            'timer_status': timer_status,
+            'game_status': game_status,
+            'arena_status': arena_status
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Error fetching statuses: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
 
 @arena_bp.route('/start_async_tasks', methods=['POST'])
 async def start_async_tasks():
     # Ваш код для запуска задач
     return jsonify({'status': 'Tasks started'}), 200
-
-#===========================

@@ -1,9 +1,9 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener("DOMContentLoaded", function() {
     const playersTable = document.getElementById('players-table');
     const notificationPopup = document.getElementById('notification-popup');
     const notificationMessage = document.getElementById('notification-message');
     const arenaImage = document.getElementById('arena-image');
-    
+
     function checkStatus() {
         fetch('/arena/get_status', {
             method: 'GET',
@@ -17,9 +17,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateStatus(data) {
-        if (data.status_message !== notificationMessage.textContent) {
-            notificationMessage.textContent = data.status_message;
+        const statusMessage = `
+            Game Status: ${data.game_status} <br>
+            Arena Status: ${data.arena_status} <br>
+            Battle Status: ${data.battle_status} <br>
+            Timer Status: ${data.timer_status}
+        `;
+
+        if (notificationMessage.innerHTML !== statusMessage) {
+            notificationMessage.innerHTML = statusMessage;
             notificationPopup.style.display = 'block';
+
+            setTimeout(() => {
+                notificationPopup.style.display = 'none';
+            }, 5000);
         }
     }
 
@@ -91,15 +102,6 @@ document.addEventListener('DOMContentLoaded', function() {
     checkStatus();
     updatePlayersTable();
 
-    // fetch('/arena/start_async_tasks', {
-    //     method: 'POST',
-    //     headers: {
-    //         'Content-Type': 'application/json',
-    //     }
-    // })
-    // .then(response => response.json())
-    // .then(data => console.log(data))
-    // .catch(error => console.error('Ошибка при запуске фоновых задач:', error));
     fetch('/arena/start_async_tasks', {
         method: 'POST',
         headers: {
@@ -115,5 +117,3 @@ document.addEventListener('DOMContentLoaded', function() {
     .then(data => console.log(data))
     .catch(error => console.error('Ошибка при запуске фоновых задач:', error));
 });
-
-

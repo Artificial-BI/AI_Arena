@@ -1,163 +1,44 @@
 import asyncio
 import logging
-import json
-import re
-import time
-from datetime import datetime
+
 from flask import current_app
-from models import (Arena, ArenaChatMessage, Character, GeneralChatMessage, PreRegistrar, Registrar, Role, Statuses, TacticsChatMessage, db)
+from models import (Arena, ArenaChatMessage, Character, GeneralChatMessage, Registrar, TacticsChatMessage, db)
 from gemini import GeminiAssistant
-from open_ai import AIDesigner
+
 from tactics_manager import FighterManager, TacticsManager
-from utils import parse_arena, parse_referee
+from utils import parse_referee
 import random
 from config import Config
+from core_common import CoreCommon
+from arena_manager import ArenaManager
+from multiproc import StatusManager
 
-# Logging setup
+# --- core.py ---
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def message_to_Arena(_message, _sender='sys', _name='sys', _user_id=None, _arena_id=None):
-    if _name is None or _arena_id is None:
-        logger.error("Cannot add message to arena chat: 'name' and 'arena_id' must not be None.")
-        return
-
-    set_message = ArenaChatMessage(
-        content=f'{_message}\n', 
-        sender=_sender, 
-        user_id=_user_id, 
-        name=_name, 
-        arena_id=_arena_id, 
-        read_status=0
-    )
-    db.session.add(set_message)
-    db.session.commit()
-
-
-class CoreCommon:
-    def get_role_instructions(self, role_name):
-        with current_app.app_context():
-            role = Role.query.filter_by(name=role_name).first()
-            if not role:
-                raise ValueError(f"Role '{role_name}' not found in the database")
-            logger.info(f"Instructions received for role: {role}")
-            return role.instructions
-        
-    async def get_registered_character_data(self):
-        logger.info("Fetching registered character data")
-        with current_app.app_context():
-            registrations = Registrar.query.all()
-            character_data = []
-            for registration in registrations:
-                character = Character.query.get(registration.character_id)
-                if character:
-                    character_data.append({
-                        "id": character.id,
-                        "name": character.name,
-                        "description": character.description,
-                        "traits": character.traits,
-                        "user_id": registration.user_id
-                    })
-            return character_data    
-    
-    def newTM(self):
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        return current_time
-    
-        
-
-class ArenaManager:
-    def __init__(self):
-        self.assistant = None
-        self.ccom = CoreCommon()
-
-    def create_arena_image(self, new_arena, arena_description):
-        designer = AIDesigner()
-        filename = re.sub(r'[\\/*?:"<>|]', "", f"arena_{new_arena.id}")
-        image_filename = f"{filename}.png"
-       # asyncio.run(assistant.send_message(content))
-        image_url = designer.create_image(arena_description, "arena", image_filename)
-        return image_url
-
-    async def generate_arena(self):
-        logger.info("Generating arena")
-        self.assistant = GeminiAssistant('arena')
-
-        character_data =  await self.ccom.get_registered_character_data()
-
-        parameters = await self.assistant.send_message(
-            f"Generate arena with the following character data: {character_data}"
-        )
-
-        if not parameters.strip():
-            logger.error("Received empty parameters from assistant")
-            raise ValueError("Invalid parameters: 'parameters' must not be empty. Please provide a non-null value.")
-
-        arena_description = parameters
-        parsed_parameters = parse_arena(parameters)
-
-        new_arena = Arena(description=arena_description, parameters=json.dumps(parsed_parameters))
-        db.session.add(new_arena)
-        db.session.commit()
-
-        image_url = self.create_arena_image(new_arena, arena_description) 
-
-        new_arena.image_url = image_url
-        db.session.commit()
-
-        message_to_Arena(f"Arena description: {arena_description} \n Parameters: {parsed_parameters}", _sender='sys', _name='sys', _arena_id=new_arena.id)
-
-        logger.info(f"Arena generated with ID: {new_arena.id} and image {image_url}")
-        return new_arena
-
 class BattleManager:
-    def __init__(self, loop=None):
+    def __init__(self, status_manager: StatusManager, loop=None):
         self.ccom = CoreCommon()
         self.referee_assistant = None
         self.commentator_assistant = None
-        self.arena_manager = ArenaManager()
+        self.arena_manager = ArenaManager(status_manager)
         self.battle_count = 0
         self.round_count = 0
-        self.fighter_manager = FighterManager(loop=loop)
-        self.tactics_manager = TacticsManager(loop=loop)
+        # self.fighter_manager = FighterManager(loop=loop)
+        # self.tactics_manager = TacticsManager(loop=loop)
         self.timer_in_progress = False
         self.battle_in_progress = False
         self.timer_start_time = None
         self.countdown_duration = 30
         self.moves_count = {}
-        self.loop = loop #or asyncio.get_event_loop()
+        self.loop = loop
         self.count_round = 3
         self.count_steps = 4 
         self.user_expectation = 2
-        self.config = Config() 
-
-    def add_autoFighter(): # добавление бота бойца управляемого только тактиком
-        pass
-
-    async def set_state(self, name, state, descript):
-        with current_app.app_context():
-            state_tab = Statuses.query.filter_by(name=name).first()
-            if state_tab:
-                state_tab.state = state
-                state_tab.description = descript
-                db.session.commit()
-            else:
-                new_status = Statuses(name=name, state=state, description=descript)
-                db.session.add(new_status)
-                db.session.commit()
-            #logger.info(f"Status set: {name} = {state}")
-
-            
-    async def get_state(self, name):
-        with current_app.app_context():
-            state_tab = Statuses.query.filter_by(name=name).first()
-            if state_tab:
-                logger.info(f"Status retrieved: {name} = {state_tab.state}")
-                return state_tab.state
-            else:
-                logger.warning(f"Status not found: {name}")
-                return None
-
+        self.config = Config()
+        self.sm = status_manager
 
     async def start_waiting_for_players(self):
         count_sec = 0
@@ -166,42 +47,43 @@ class BattleManager:
             registered_players = Registrar.query.count()
             if registered_players >= self.config.PLAYER_COUNT:
                 break  # Достаточно игроков, выходим из ожидания
-          #  logger.info(f" ---------- START WAITING PLAYERS {count_sec} -------------- ")
-            await self.set_state('game', 'waiting', self.ccom.newTM())
-            await asyncio.sleep(1)  # Асинхронная пауза на 1 секунду
+            self.sm.set_state('game', 'waiting', self.ccom.newTM())
+            self.sm.set_state('timer', f'{count_sec}', self.ccom.newTM())
+            await asyncio.sleep(1)
             count_sec += 1
+        self.sm.set_state('timer', 'stop', self.ccom.newTM())
 
     async def generate_arena(self):
         if self.config.ARENA_MODE == 'random':
-            await self.set_state('game', 'Arena random', self.ccom.newTM())
-            logger.info(f" ---------- ARENA RANDOM -------------- ") 
+            self.sm.set_state('game', 'Arena random', self.ccom.newTM())
+            logger.info(" ---------- ARENA RANDOM -------------- ") 
+            self.sm.set_state('arena', 'random', self.ccom.newTM())
             arena_cnt = Arena.query.count()
             if arena_cnt > 0:
                 random_offset = random.randint(0, arena_cnt - 1)
                 arena = Arena.query.offset(random_offset).first()
             else:
-                arena_manager = ArenaManager()
-                arena = arena_manager.generate_arena()
+                arena = await self.arena_manager.generate_arena()
                 db.session.add(arena)
                 db.session.commit()
         else:
-            await self.set_state('game', 'Arena generated', self.ccom.newTM())
-            logger.info(f" ---------- ARENA GENERATE -------------- ")
-            arena_manager = ArenaManager()
-            arena = arena_manager.generate_arena()
+            self.sm.set_state('arena', 'generated', self.ccom.newTM())
+            _start = self.ccom.newTM()
+            self.sm.set_state('timer', f'{0}', self.ccom.newTM())
+            logger.info(" ---------- ARENA GENERATE -------------- ")
+            arena = await self.arena_manager.generate_arena()
+            _end = self.ccom.newTM()
+            self.sm.set_state('timer', f'{_end-_start}', self.ccom.newTM())
             db.session.add(arena)
             db.session.commit()
 
-    # =========================== START GAME ==================================
     async def start_game(self):
         await self.start_waiting_for_players()
         await self.generate_arena()
-        
-        
-        # Дальнейшая логика старта игры...
 
     async def start_battle(self):
         logger.info(f"--- Battle {self.battle_count + 1} started ---")
+        self.sm.set_state('battle', 'start', self.ccom.newTM())
         try:
             self.battle_in_progress = True
             self.battle_count += 1
@@ -210,65 +92,49 @@ class BattleManager:
             character_data = await self.ccom.get_registered_character_data()
             arena = Arena.query.order_by(Arena.date_created.desc()).first()
 
-            for character in character_data:
-                self.tactics_manager.add_tactic(character['user_id'])
-                self.fighter_manager.add_fighter(character['user_id'])
+            # for character in character_data:
+            #     self.tactics_manager.add_tactic(character['user_id'])
+            #     self.fighter_manager.add_fighter(character['user_id'])
             logger.info("-------------- STARTING MAIN BATTLE CYCLE ---------------")
 
             for round_number in range(self.count_round):
                 if not self.battle_in_progress:
                     break
                 logger.info(f"Round {round_number + 1} started")
-                message_to_Arena(f"Round N: {round_number + 1}", _name='sys', _arena_id=arena.id)
+                self.sm.set_state('battle', f'Round {round_number + 1}', self.ccom.newTM())
+                
+                self.ccom.message_to_Arena(f"Round N: {round_number + 1}", _name='sys', _arena_id=arena.id)
                 await self.manage_battle_round(character_data, arena, self.count_steps, self.user_expectation)
 
-            message_to_Arena("--- Battle stop ---", _sender='sys', _name='sys', _arena_id=arena.id)
+            self.ccom.message_to_Arena("--- Battle stop ---", _sender='sys', _name='sys', _arena_id=arena.id)
             logger.info("Battle finished")
+            self.sm.set_state('battle', 'finished', self.ccom.newTM())
         except Exception as e:
+            self.sm.set_state('battle', 'error', self.ccom.newTM())
             logger.error(f"Error in battle: {e}", exc_info=True)
 
     async def manage_battle_round(self, character_data, arena, max_moves, user_expectation):
         self.round_count += 1
         random.shuffle(character_data)
         for step_move in range(max_moves):
+            self.sm.set_state('battle', f'Step {step_move}', self.ccom.newTM())
+            
             for char in character_data:
                 logger.info("Processing actions for the fighter ")
                 tactical_recommendation, character = await self.tactics_manager.generate_tactics(arena, char['user_id'])
-                
                 await self.fighter_manager.generate_fighter(char['user_id'], character, tactical_recommendation, user_expectation, step_move, arena)
-                
                 logger.info("Fighter actions completed")
 
             logger.info("All fighters have finished their moves, starting evaluation and commentary generation.")
             await self.evaluate_and_comment_round(character_data, arena)
             logger.info("Round completed, checking for battle end.")
 
-    def start_timer(self, duration):
-        self.countdown_duration = duration
-        self.timer_start_time = time.time()
-        self.timer_in_progress = True
-        logger.info(f"Timer started for {duration} seconds")
-
-    def get_remaining_time(self):
-        if not self.timer_in_progress:
-            return 0
-        elapsed_time = time.time() - self.timer_start_time
-        remaining_time = self.countdown_duration - elapsed_time
-        if remaining_time <= 0:
-            self.timer_in_progress = False
-            return 0
-        return remaining_time
-
-    def stop_timer(self):
-        self.timer_in_progress = False
-        self.timer_start_time = None
-        logger.info("Timer stopped")
-
     async def _clear_previous_battle(self):
         with current_app.app_context():
             ArenaChatMessage.query.delete()
             TacticsChatMessage.query.delete()
             db.session.commit()
+
 
     async def evaluate_and_comment_round(self, character_data, arena):
         # Evaluate fighters' moves
@@ -289,16 +155,6 @@ class BattleManager:
         db.session.add(general_chat_message)
         db.session.commit()
 
-    async def wait_for_moves(self, arena_id, num_participants):
-        logger.info("Waiting for moves from participants")
-        while True:
-            unread_count = ArenaChatMessage.query.filter_by(arena_id=arena_id, read_status=0, sender='fighter').count()
-            logger.info(f">>>>> {unread_count} >= {num_participants}")
-            if unread_count >= num_participants:
-                break
-            await asyncio.sleep(1)
-        logger.info("All moves received")
-
     async def evaluate_moves(self, character_data, arena, moves):
         logger.info("Evaluating moves by referee")
         if self.referee_assistant is None:
@@ -315,12 +171,13 @@ class BattleManager:
         for parsed_grade in parsed_grades:
             if parsed_grade["name"]:
                 logger.info(f"Referee evaluation: {parsed_grade['name']} | Combat: {parsed_grade['combat']} | Damage: {parsed_grade['damage']}")
-                message_to_Arena(f"--- Referee: {parsed_grade['name']} | Combat: {parsed_grade['combat']} | Damage: {parsed_grade['damage']} ---", _sender='referee', _name='referee', _arena_id=arena.id)
+                self.ccom.message_to_Arena(f"--- Referee: {parsed_grade['name']} | Combat: {parsed_grade['combat']} | Damage: {parsed_grade['damage']} ---", _sender='referee', _name='referee', _arena_id=arena.id)
                 # Update character combat and damage
                 self.update_character_combat_and_damage(parsed_grade)
-        message_to_Arena(evaluation, _sender='referee', _name='referee', _arena_id=arena.id)
+        self.ccom.message_to_Arena(evaluation, _sender='referee', _name='referee', _arena_id=arena.id)
         return evaluation
-
+    
+    
     def update_character_combat_and_damage(self, parsed_grade):
         """Updates character Combat, Damage, and Life based on referee evaluation."""
         with current_app.app_context():
@@ -357,22 +214,4 @@ class BattleManager:
   
         return commentary
 
-    async def handle_post_battle_registration(self):
-        with current_app.app_context():
-            Registrar.query.delete()
-            db.session.commit()
-
-            pre_registrations = PreRegistrar.query.all()
-            for pre_reg in pre_registrations:
-                new_registration = Registrar(
-                    user_id=pre_reg.user_id,
-                    character_id=pre_reg.character_id,
-                    arena_id=pre_reg.arena_id
-                )
-                db.session.add(new_registration)
-            db.session.commit()
-
-            PreRegistrar.query.delete()
-            db.session.commit()
-
-            logger.info("Registration table updated with data from pre-registration")
+   

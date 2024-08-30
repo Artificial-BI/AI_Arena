@@ -73,3 +73,6 @@ class Config:
     WAIT_COUNT = 30
     
     PLAYER_COUNT = 2
+    
+    STAT_PUB_PORT =  "tcp://*:6568" 
+    STAT_PORT =  "tcp://localhost:6570" 

@@ -4,10 +4,15 @@ from flask import current_app
 from models import Character, TacticsChatMessage, Registrar, Arena, ArenaChatMessage
 from extensions import db
 from gemini import GeminiAssistant
+from datetime import datetime
 
 # Logging setup
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+def newTM():
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return current_time
 
 def message_to_Arena(_message, _sender=None, _user_id=None, _name=None, _arena_id=None):
     if _name is None or _arena_id is None:
@@ -26,11 +31,12 @@ def message_to_Arena(_message, _sender=None, _user_id=None, _name=None, _arena_i
     db.session.commit()
 
 class TacticsManager:
-    def __init__(self, loop=None):
+    def __init__(self, status_manager, loop=None):
         self.assistant = None
         self.running = False
         self.tactic = {}
         self.loop = loop or asyncio.get_event_loop()
+        self.status_manager = status_manager
 
     def add_tactic(self, user_id):
         self.tactic[user_id] = None  # Initialize without character data
@@ -66,6 +72,8 @@ class TacticsManager:
         logger.info(f"Starting tactical recommendations generation process for user {user_id}")
         self.running = True
 
+        self.status_manager.set_state(f'tactic_{user_id}', 'generate', newTM())
+
         arena, character, opponent_moves_text = await self.gather_arena_info(arena.id, user_id)
         if not arena or not character:
             return
@@ -94,15 +102,15 @@ class TacticsManager:
         logger.info(f"Tactical recommendation for {character.name} saved.")
     
         return response, character
-    
 
 class FighterManager:
-    def __init__(self, loop=None):
+    def __init__(self, status_manager, loop=None):
         self.assistant = None
         self.running = False
         self.fighters = {}
         self.moves_count = {}
         self.loop = loop or asyncio.get_event_loop()
+        self.status_manager = status_manager
 
     def add_fighter(self, user_id):
         self.fighters[user_id] = None  # Initialize without character data
@@ -111,7 +119,8 @@ class FighterManager:
     async def generate_fighter(self, user_id, character, tactical_recommendation, user_expectation, step_move, arena):
         """Generates the fighter's move based on the tactician's instructions and player's input."""
         assistant = GeminiAssistant("fighter")
-
+        self.status_manager.set_state(f'fighter_{user_id}', 'generate', newTM())
+        
         prompt = f"Character name: {character.name}\nCharacter traits: {character.traits} Life: {character.life}\n\n"
         prompt += f"Tactician's advice: {tactical_recommendation}\n"
         player_content = await self.get_player_input(user_id)
@@ -135,7 +144,6 @@ class FighterManager:
 
         with current_app.app_context():
             message_to_Arena(f"fighter: {character.name} step: {step_move} |/n {response}", _sender="fighter", _user_id=character.user_id, _name=character.name, _arena_id=arena.id)
-            # Check that the record is saved
             saved_move = ArenaChatMessage.query.filter_by(content=response, user_id=character.user_id, arena_id=arena.id).first()
             if saved_move:
                 logger.info(f"Fighter's move for {character.name} successfully saved to the database.")
