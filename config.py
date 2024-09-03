@@ -8,6 +8,10 @@ from utils import win_to_unix_path
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
+
+
+
 def load_dotenv(dotenv_path):
     res = {}
     try:
@@ -52,6 +56,10 @@ class Config:
         'connect_args': {'timeout': 1}  # Set timeout to 1 seconds
     }
     
+   # MESSAGES_DB = 'sqlite:///messages.db'
+    MESSAGES_DB = 'sqlite:///' + win_to_unix_path(os.path.join(BASE_DIR, 'instance', 'messages.db'))
+    
+    SYS_ID = 3210123
     # Folder for storing uploaded images
     IMAGE_UPLOADS = win_to_unix_path(os.path.join('static', 'images'))
     
@@ -74,5 +82,10 @@ class Config:
     
     PLAYER_COUNT = 2
     
-    STAT_PUB_PORT =  "tcp://*:6568" 
-    STAT_PORT =  "tcp://localhost:6570" 
+    STAT_PUB_PORT =  "tcp://*:6566" 
+    STAT_PORT =  "tcp://localhost:6571" 
+    MESS_PUB_PORT =  "tcp://*:6568" 
+    MESS_PORT=  6573 #"tcp://localhost:6573" 
+    
+    COUNT_ROUND = 3
+    WAITING_STEPS = 10

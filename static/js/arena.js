@@ -28,9 +28,9 @@ document.addEventListener("DOMContentLoaded", function() {
             notificationMessage.innerHTML = statusMessage;
             notificationPopup.style.display = 'block';
 
-            setTimeout(() => {
-                notificationPopup.style.display = 'none';
-            }, 5000);
+            // setTimeout(() => {
+            //     notificationPopup.style.display = 'none';
+            // }, 5000);
         }
     }
 
@@ -44,9 +44,6 @@ document.addEventListener("DOMContentLoaded", function() {
         })
         .catch(error => console.error('Error fetching latest arena image:', error));
     }
-
-    setInterval(checkStatus, 1000);
-    setInterval(updateArenaImage, 5000);
 
     function loadCharacterCharts() {
         document.querySelectorAll('tbody tr').forEach((row, index) => {
@@ -69,14 +66,14 @@ document.addEventListener("DOMContentLoaded", function() {
         fetch('/arena/get_registered_characters')
         .then(response => response.json())
         .then(data => {
-            console.log("--- Received characters:", data); // Логирование данных
+            console.log("--- Received characters:", data);
             const tbody = playersTable.querySelector('tbody');
-            tbody.innerHTML = ''; // Очищаем таблицу перед заполнением
-    
+            tbody.innerHTML = '';
+
             data.forEach((character, index) => {
                 const row = document.createElement('tr');
                 row.dataset.traits = JSON.stringify(character.traits);
-    
+
                 row.innerHTML = `
                     <td>${index + 1}</td>
                     <td>${character.user_id}</td>
@@ -90,15 +87,19 @@ document.addEventListener("DOMContentLoaded", function() {
                         <img src="/static/${character.image_url}" alt="Character Image" class="character-image" data-description="${character.description}">
                     </td>
                 `;
-    
+
                 tbody.appendChild(row);
             });
-    
+
             loadCharacterCharts();
         })
         .catch(error => console.error('Error updating players table:', error));
     }
     
+    setInterval(checkStatus, 1000);
+    setInterval(updateArenaImage, 5000);
+    setInterval(updatePlayersTable, 5000);
+
     checkStatus();
     updatePlayersTable();
 
@@ -109,7 +110,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     })
     .then(response => {
-        if (!response.ok) {  // Проверка на успешный статус HTTP
+        if (!response.ok) { 
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         return response.json();

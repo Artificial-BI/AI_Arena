@@ -6,6 +6,7 @@ from gemini import GeminiAssistant
 from open_ai import AIDesigner
 import logging
 from core_common import CoreCommon
+from multiproc import StatusManager
 from utils import parse_arena
 from models import (Arena, db)
 # Logging setup
@@ -13,10 +14,10 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class ArenaManager:
-    def __init__(self, status_manager):
+    def __init__(self):
         self.assistant = None
         self.ccom = CoreCommon()
-        self.sm = status_manager
+        self.sm = StatusManager()
 
     def create_arena_image(self, new_arena, arena_description):
         designer = AIDesigner()

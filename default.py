@@ -228,60 +228,75 @@ def add_default_values():
             role.instructions = role_data['instructions']
     db.session.commit()
 
-    if not User.query.filter_by(username='default_user').first():
-        default_user = User(username='default_user', name='Default User', email='default@example.com', password='password')
-        db.session.add(default_user)
-        db.session.commit()
+    if not User.query.get(100000001):
+        default_user1 = User(id=100000001, username='default_user1', name='Default User1', email='default1@example.com', password='password')
+        db.session.add(default_user1)
 
-    default_user = User.query.filter_by(username='default_user').first()
+    if not User.query.get(100000002):
+        default_user2 = User(id=100000002, username='default_user2', name='Default User2', email='default2@example.com', password='password')
+        db.session.add(default_user2)
+
+    db.session.commit()     
+
+    default_user1 = User.query.filter_by(username='default_user1').first()
+    default_user2 = User.query.filter_by(username='default_user2').first()
     if not Character.query.filter_by(name='Mage').first():
         mage_traits = {
-            "Health": 50,
-            "Intelligence": 80,
-            "Strength": 30,
-            "Magic": 90,
-            "Attack": 40,
-            "Defense": 50,
-            "Speed": 60,
-            "Agility": 70,
-            "Endurance": 40,
-            "Luck": 50
+            "strength": 50,
+            "dexterity": 80,
+            "intelligence": 30,
+            "endurance": 90,
+            "speed": 40,
+            "magic": 50,
+            "defense": 60,
+            "attack": 70,
+            "charisma": 40,
+            "luck": 50
         }
         mage = Character(
-            user_id=default_user.id,
+            user_id=default_user1.id,
             name='Mage',
             description='A master of magic with high intelligence and magical power.',
             image_url='images/default/mage.png',
-            traits=json.dumps(mage_traits)
+            traits=json.dumps(mage_traits),
+            combat = 0,
+            damage = 0,
+            life = 100,
+            character_id=12345678,
         )
         db.session.add(mage)
         db.session.commit()
 
     if not Character.query.filter_by(name='Warrior').first():
         warrior_traits = {
-            "Health": 80,
-            "Intelligence": 40,
-            "Strength": 90,
-            "Magic": 20,
-            "Attack": 70,
-            "Defense": 60,
-            "Speed": 50,
-            "Agility": 40,
-            "Endurance": 70,
-            "Luck": 50
+            "strength": 80,
+            "dexterity": 40,
+            "intelligence": 90,
+            "endurance": 20,
+            "speed": 70,
+            "magic": 60,
+            "defense": 50,
+            "attack": 40,
+            "charisma": 70,
+            "luck": 50
         }
         warrior = Character(
-            user_id=default_user.id,
+            user_id=default_user2.id,
             name='Warrior',
             description='A strong and enduring warrior with powerful attacks.',
             image_url='images/default/warrior.png',
-            traits=json.dumps(warrior_traits)
+            traits=json.dumps(warrior_traits),
+            combat = 0,
+            damage = 0,
+            life = 100,
+            character_id=12345679,
         )
         db.session.add(warrior)
         db.session.commit()
 
 def remove_default_values():
-    User.query.filter_by(username='default_user').delete()
+    User.query.filter_by(username='default_user1').delete()
+    User.query.filter_by(username='default_user2').delete()
     Role.query.filter_by(name='character_creator').delete()
     Character.query.filter_by(user_id=None).delete()
     db.session.commit()
@@ -291,7 +306,6 @@ def default_current_character():
     current_character = {
         "name": 'Brother-Captain Marius Corvus',
         "traits":{
-            "type": None,
             "strength": 90,
             "agility": 1,
             "intelligence": 70,

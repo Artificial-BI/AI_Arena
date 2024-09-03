@@ -1,11 +1,13 @@
-import asyncio
-from flask import Blueprint, render_template, jsonify, request, g, url_for, redirect, current_app
-from models import Character, ArenaChatMessage, GeneralChatMessage, TacticsChatMessage, Registrar, Arena, PreRegistrar
+#import asyncio
 import logging
 import json
-from extensions import db
+from flask import Blueprint, render_template, jsonify, request, g, url_for, redirect, current_app
+from models import Character, ArenaChatMessage, GeneralChatMessage, TacticsChatMessage, Registrar, Arena, PreRegistrar
+from tactics_manager import PlayerManager, TacticsManager, FighterManager
+#from extensions import db
 from load_user import load_user
 from multiproc import StatusManager
+from message_buffer import MessageManager
 
 # --- arena_routes.py ---
 
@@ -13,7 +15,9 @@ arena_bp = Blueprint('arena', __name__)
 logger = logging.getLogger(__name__)
 
 # Инициализация StatusManager
-status_manager = StatusManager()
+sm = StatusManager()
+mm = MessageManager()
+plm = PlayerManager()
 
 # Проверка регистрации пользователя перед каждым запросом
 @arena_bp.before_request
@@ -67,7 +71,7 @@ async def get_registered_characters():
         characters = []
         registrations = Registrar.query.all()
         for registration in registrations:
-            char = Character.query.filter_by(id=registration.character_id).first()
+            char = Character.query.filter_by(character_id=registration.character_id).first()
             if char:
                 logger.info(f"char.name: {char.name}")
                 traits = json.loads(char.traits) if char.traits else {}
@@ -83,7 +87,7 @@ async def get_registered_characters():
                     "image_url": char.image_url,
                     "description": char.description
                 })
-        logger.info(f"Fetched characters: {characters}")
+        logger.info(f"-----OK---->>> Fetched characters: {len(characters)}")
         
         return jsonify(characters)
     except Exception as e:
@@ -137,15 +141,17 @@ async def get_latest_arena_image():
 @arena_bp.route('/get_status', methods=['GET'])
 async def get_status():
     try:
-        game_status = status_manager.get_state('game')
-        arena_status = status_manager.get_state('arena')
-        battle_status = status_manager.get_state('battle')
-        timer_status = status_manager.get_state('timer')
+        game_status = sm.get_state('game')
+        arena_status = sm.get_state('arena')
+        battle_status = sm.get_state('battle')
+        timer_status = sm.get_state('timer')
         
         logger.info(f"States A: {game_status} G: {arena_status} B: {battle_status} T: {timer_status}")
         
         registered_players = Registrar.query.count()
 
+        await plm.battle_start(g.user_id , game_status)
+        
         return jsonify({
             'registered_players': registered_players,
             'battle_status': battle_status,
@@ -161,5 +167,5 @@ async def get_status():
 
 @arena_bp.route('/start_async_tasks', methods=['POST'])
 async def start_async_tasks():
-    # Ваш код для запуска задач
+
     return jsonify({'status': 'Tasks started'}), 200

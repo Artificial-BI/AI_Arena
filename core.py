@@ -12,22 +12,21 @@ from config import Config
 from core_common import CoreCommon
 from arena_manager import ArenaManager
 from multiproc import StatusManager
-
+from message_buffer import MessageManager
 # --- core.py ---
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class BattleManager:
-    def __init__(self, status_manager: StatusManager, loop=None):
+    def __init__(self, loop=None):
+
         self.ccom = CoreCommon()
         self.referee_assistant = None
         self.commentator_assistant = None
-        self.arena_manager = ArenaManager(status_manager)
+        self.arena_manager = ArenaManager()
         self.battle_count = 0
         self.round_count = 0
-        # self.fighter_manager = FighterManager(loop=loop)
-        # self.tactics_manager = TacticsManager(loop=loop)
         self.timer_in_progress = False
         self.battle_in_progress = False
         self.timer_start_time = None
@@ -38,7 +37,9 @@ class BattleManager:
         self.count_steps = 4 
         self.user_expectation = 2
         self.config = Config()
-        self.sm = status_manager
+        self.sm = StatusManager()
+        #self.mm = MessageManager()
+        
 
     async def start_waiting_for_players(self):
         count_sec = 0
@@ -54,6 +55,7 @@ class BattleManager:
         self.sm.set_state('timer', 'stop', self.ccom.newTM())
 
     async def generate_arena(self):
+        self.sm.set_state('arena', 'start', self.ccom.newTM())
         if self.config.ARENA_MODE == 'random':
             self.sm.set_state('game', 'Arena random', self.ccom.newTM())
             logger.info(" ---------- ARENA RANDOM -------------- ") 
@@ -79,56 +81,92 @@ class BattleManager:
 
     async def start_game(self):
         await self.start_waiting_for_players()
+        self.sm.set_state('game', 'players ok', self.ccom.newTM())
         await self.generate_arena()
+        self.sm.set_state('game', 'arena ok', self.ccom.newTM())
+       
+        await self.start_battle()
 
     async def start_battle(self):
         logger.info(f"--- Battle {self.battle_count + 1} started ---")
+        self.sm.set_state('game', 'battle', self.ccom.newTM())
         self.sm.set_state('battle', 'start', self.ccom.newTM())
         try:
             self.battle_in_progress = True
             self.battle_count += 1
             await self._clear_previous_battle()
+            arena = self.ccom.get_arena()
+            #cur_arena_txt = self.ccom.convert_dict_toStr(arena)
+            characters_data = await self.ccom.get_registered_character_data()
 
-            character_data = await self.ccom.get_registered_character_data()
-            arena = Arena.query.order_by(Arena.date_created.desc()).first()
-
-            # for character in character_data:
-            #     self.tactics_manager.add_tactic(character['user_id'])
-            #     self.fighter_manager.add_fighter(character['user_id'])
             logger.info("-------------- STARTING MAIN BATTLE CYCLE ---------------")
+            message = '--- START GAME ---\n\n'
+            for character in characters_data:
+                message += f'User: {character["user_id"]}\n\n'
+                message += f'Fighter: {character["name"]}\n\n'
 
-            for round_number in range(self.count_round):
+            self.ccom.message_to_Arena(message, "system", arena.id, self.config.SYS_ID, 'system')
+            
+            for round_number in range(self.config.COUNT_ROUND):
                 if not self.battle_in_progress:
                     break
                 logger.info(f"Round {round_number + 1} started")
                 self.sm.set_state('battle', f'Round {round_number + 1}', self.ccom.newTM())
+                message = f"Round N: {round_number + 1}\n\n"
+                self.ccom.message_to_Arena(message, "system", arena.id, self.config.SYS_ID, 'system')
                 
-                self.ccom.message_to_Arena(f"Round N: {round_number + 1}", _name='sys', _arena_id=arena.id)
-                await self.manage_battle_round(character_data, arena, self.count_steps, self.user_expectation)
+                #reg_character_list = self.ccom.get_registered_character_data()  # получение списка зарегистрированных персонажей
 
-            self.ccom.message_to_Arena("--- Battle stop ---", _sender='sys', _name='sys', _arena_id=arena.id)
+                await asyncio.sleep(self.config.WAITING_STEPS)
+                
+                fighters_moves_list = self.ccom.get_message_chatArena(sender='fighter',arena_id=arena.id)
+                
+                res = await self.referee_evaluation_fighters(arena, characters_data, fighters_moves_list)
+                self.ccom.message_to_Arena(res, "referee", arena.id, self.config.SYS_ID, 'system')
+
             logger.info("Battle finished")
             self.sm.set_state('battle', 'finished', self.ccom.newTM())
+            self.sm.set_state('game', 'over', self.ccom.newTM())
+
+            self.ccom.message_to_Arena("--- Battle finished ---", "system", arena.id, self.config.SYS_ID, 'system')
+
         except Exception as e:
+            self.sm.set_state('game', 'stop', self.ccom.newTM())
             self.sm.set_state('battle', 'error', self.ccom.newTM())
             logger.error(f"Error in battle: {e}", exc_info=True)
 
-    async def manage_battle_round(self, character_data, arena, max_moves, user_expectation):
+    async def referee_evaluation_fighters(self, arena, characters_data, fighters_moves_list):
         self.round_count += 1
-        random.shuffle(character_data)
-        for step_move in range(max_moves):
-            self.sm.set_state('battle', f'Step {step_move}', self.ccom.newTM())
+
+        prompt = f"Arena: {arena.to_str}\n\n"
+        for character in characters_data:
+            character_txt = self.ccom.convert_dict_toStr(character)
+            prompt += f"Fighter: {character_txt}\n\n"
             
-            for char in character_data:
-                logger.info("Processing actions for the fighter ")
-                tactical_recommendation, character = await self.tactics_manager.generate_tactics(arena, char['user_id'])
-                await self.fighter_manager.generate_fighter(char['user_id'], character, tactical_recommendation, user_expectation, step_move, arena)
-                logger.info("Fighter actions completed")
+        for fighter_step in fighters_moves_list:  
+            fighter_step_txt = self.ccom.convert_dict_toStr(fighter_step)
+            prompt += f"fighter step: {fighter_step_txt}\n\n"
+        
+        response = None
+        try:
+            assistant = GeminiAssistant("referee")
+            response = await assistant.send_message(prompt)
+        except Exception as e:
+            logger.error(f"Error sending message sys: {e}")
+        
+        return response
+        
+        
+        
+        
+        
 
-            logger.info("All fighters have finished their moves, starting evaluation and commentary generation.")
-            await self.evaluate_and_comment_round(character_data, arena)
-            logger.info("Round completed, checking for battle end.")
 
+        #await self.evaluate_and_comment_round(character_data, arena)
+        
+        
+        
+        
     async def _clear_previous_battle(self):
         with current_app.app_context():
             ArenaChatMessage.query.delete()

@@ -8,6 +8,7 @@ import traceback
 import asyncio
 from core import BattleManager
 from multiproc import StatusManager
+from message_buffer import MessageManager, ZMQServer
 from threading import Thread
 
 # --- app.py ---
@@ -31,6 +32,7 @@ def clear_table():
             db.session.rollback()
             app.logger.error(f"Ошибка при очистке таблиц Registrar и PreRegistrar. Error: {e}")
 
+# Подключение маршрутов
 from routes.index_routes import index_bp
 from routes.common_routes import common_bp
 from routes.player_routes import player_bp
@@ -63,21 +65,28 @@ def internal_error(error):
     app.logger.error(f'Server Error: {error}, route: {request.url}')
     return render_template('500.html', error=error, error_trace=error_trace), 500
 
+# Функция для запуска игрового цикла
 def start_game_loop():
     with app.app_context():
-        status_manager = StatusManager()
-        battle_manager = BattleManager(status_manager)
+        battle_manager = BattleManager()
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.run_until_complete(battle_manager.start_game())
 
-def start_zmq_server():
+# Функция для запуска серверов ZeroMQ
+def start_zmq_servers():
     status_manager = StatusManager()
     status_manager.start_server()
+    conf = Config()
+    
+    server = ZMQServer()
+    server.run()
+    #message_manager = MessageManager()
+    #message_manager.start_server()
 
 if __name__ == "__main__":
-    # Запуск ZeroMQ сервера в отдельном потоке
-    zmq_thread = Thread(target=start_zmq_server)
+    # Запуск серверов ZeroMQ в отдельном потоке
+    zmq_thread = Thread(target=start_zmq_servers)
     zmq_thread.start()
 
     # Запуск игрового процесса в отдельном потоке

@@ -54,6 +54,17 @@ class Character(db.Model):
     damage = db.Column(db.Integer, default=0)
     life = db.Column(db.Integer, default=100)
 
+    def to_str(self):
+        return (f"ID: {self.id}, "
+                f"name: {self.name}, "
+                f"Description: {self.description}, "
+                f"traits: {self.traits}, "
+                f"user_id: {self.user_id}, "
+                f"character_id: {self.character_id}, "
+                f"combat: {self.combat}, "
+                f"damage: {self.damage}, "
+                f"life: {self.life}")
+
     def __repr__(self):
         return f'<Character {self.name}>'
 
@@ -80,6 +91,13 @@ class ArenaChatMessage(db.Model):
 
     def __repr__(self):
         return f'<ArenaChatMessage {self.content[:15]}>'
+
+class AssistantReadStatus(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.String(64), nullable=False)  # Идентификатор user
+    message_id = db.Column(db.Integer, db.ForeignKey('arena_chat_message.id'))
+    read_status = db.Column(db.Boolean, default=False)  # Статус прочтения: False - не прочитано, True - прочитано
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
 
 class GeneralChatMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -124,7 +142,12 @@ class Arena(db.Model):
     parameters = db.Column(db.Text)
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
     image_url = db.Column(db.String(255), nullable=True)  # Добавляем поле для хранения URL изображения арены
-
+    def to_str(self):
+        return (f"Arena ID: {self.id}, "
+                f"Description: {self.description}, "
+                f"Parameters: {self.parameters}, "
+                f"Date Created: {self.date_created.strftime('%Y-%m-%d %H:%M:%S')}, "
+                f"Image URL: {self.image_url if self.image_url else 'No Image'}")
 
 class Tournament(db.Model):
     id = db.Column(db.Integer, primary_key=True)
