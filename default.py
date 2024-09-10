@@ -3,7 +3,12 @@ from extensions import db
 from models import User, Role, Character
 from config import Config 
 
+#from sqlalchemy import create_engine, inspect
+#from sqlalchemy.orm import sessionmaker
+
+
 conf = Config()
+
 
 default_roles = [
     {'name': 'referee', 'instructions':"""You are an AI assistant designed to act as a referee in virtual arena battles.

@@ -2,7 +2,7 @@
 
 import re
 import json
-from gemini import GeminiAssistant
+from assistant import Assistant
 from open_ai import AIDesigner
 import logging
 from core_common import CoreCommon
@@ -28,13 +28,11 @@ class ArenaManager:
 
     async def generate_arena(self):
         logger.info("Generating arena")
-        self.assistant = GeminiAssistant('arena')
+        self.assistant = Assistant('arena')
 
         character_data = await self.ccom.get_registered_character_data()
 
-        parameters = await self.assistant.send_message(
-            f"Generate arena with the following character data: {character_data}"
-        )
+        parameters = await self.assistant.send_message(character_data, 'gemini')
 
         if not parameters.strip():
             logger.error("Received empty parameters from assistant")
@@ -51,8 +49,8 @@ class ArenaManager:
 
         new_arena.image_url = image_url
         db.session.commit()
-
-        self.ccom.message_to_Arena(f"Arena description: {arena_description} \n Parameters: {parsed_parameters}", _sender='sys', _name='sys', _arena_id=new_arena.id)
+                                    #  message, sender, arena_id, user_id, name
+        #self.ccom.message_to_Arena(f"Arena description: {arena_description} \n Parameters: {parsed_parameters}", _sender='sys', _name='sys', _arena_id=new_arena.id)
 
         logger.info(f"Arena generated with ID: {new_arena.id} and image {image_url}")
         return new_arena

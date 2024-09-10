@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, jsonify, request, g
-from models import Character, ArenaChatMessage, GeneralChatMessage, User
+from models import Character, User
+#from chats_models import ReadStatus, ArenaChatMessage, TacticsChatMessage, GeneralChatMessage
 import logging
 import json
 from extensions import db
@@ -61,7 +62,7 @@ def get_characters():
 @viewer_bp.route('/get_arena_chat')
 def get_arena_chat():
     try:
-        messages = ArenaChatMessage.query.order_by(ArenaChatMessage.timestamp.asc()).all()
+        messages = "" #ArenaChatMessage.query.order_by(ArenaChatMessage.timestamp.asc()).all()
         chat_data = [{'content': msg.content, 'timestamp': msg.timestamp, 'sender': msg.sender, 'user_id': msg.user_id} for msg in messages]
         return jsonify(chat_data)
     except Exception as e:
@@ -71,7 +72,7 @@ def get_arena_chat():
 @viewer_bp.route('/get_general_chat')
 def get_general_chat():
     try:
-        messages = GeneralChatMessage.query.order_by(GeneralChatMessage.timestamp.asc()).all()
+        messages = "" #GeneralChatMessage.query.order_by(GeneralChatMessage.timestamp.asc()).all()
         chat_data = [{'content': msg.content, 'timestamp': msg.timestamp, 'sender': msg.sender, 'user_id': msg.user_id} for msg in messages]
         return jsonify(chat_data)
     except Exception as e:
@@ -89,7 +90,7 @@ def send_arena_chat():
         if not content or not sender or not user_id:
             return jsonify({"error": "Invalid data"}), 400
 
-        message = ArenaChatMessage(content=content, sender=sender, user_id=user_id)
+        message = ""#ArenaChatMessage(content=content, sender=sender, user_id=user_id)
         db.session.add(message)
         db.session.commit()
         return jsonify({"status": "Message sent"}), 200
@@ -108,7 +109,7 @@ def send_general_chat():
         if not content or not sender or not user_id:
             return jsonify({"error": "Invalid data"}), 400
 
-        message = GeneralChatMessage(content=content, sender=sender, user_id=user_id)
+        message = "" #GeneralChatMessage(content=content, sender=sender, user_id=user_id)
         db.session.add(message)
         db.session.commit()
         return jsonify({"status": "Message sent"}), 200

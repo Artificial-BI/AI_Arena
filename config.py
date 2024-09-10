@@ -66,7 +66,7 @@ class Config:
     IMAGE_QUALITY = 'standard'
     IMAGE_SIZE = '1024x1024'
     
-    DEBUG = False
+    DEBUG = True
 
     # Путь к JSON-файлу
     FIRST_VISIT_FILE = 'first_visit.json'
@@ -87,5 +87,5 @@ class Config:
     MESS_PUB_PORT =  "tcp://*:6568" 
     MESS_PORT=  6573 #"tcp://localhost:6573" 
     
-    COUNT_ROUND = 3
+    COUNT_ROUND = 1 #3
     WAITING_STEPS = 10

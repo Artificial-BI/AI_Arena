@@ -1,25 +1,23 @@
-#import asyncio
 import logging
 import json
 from flask import Blueprint, render_template, jsonify, request, g, url_for, redirect, current_app
-from models import Character, ArenaChatMessage, GeneralChatMessage, TacticsChatMessage, Registrar, Arena, PreRegistrar
-from tactics_manager import PlayerManager, TacticsManager, FighterManager
-#from extensions import db
-from load_user import load_user
+from models import Character, Registrar, Arena, PreRegistrar
 from multiproc import StatusManager
-from message_buffer import MessageManager
-
-# --- arena_routes.py ---
+from core_common import CoreCommon
+#from message_buffer import MessageManager
+from load_user import load_user
+from tactics_manager import PlayerManager
 
 arena_bp = Blueprint('arena', __name__)
 logger = logging.getLogger(__name__)
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
 
-# Инициализация StatusManager
 sm = StatusManager()
-mm = MessageManager()
+#mm = MessageManager()
 plm = PlayerManager()
+ccom = CoreCommon()
 
-# Проверка регистрации пользователя перед каждым запросом
 @arena_bp.before_request
 def before_request():
     response = load_user()
@@ -29,7 +27,6 @@ def before_request():
     g.user_id = user_data.get('user_id')
     g.cookie_id = user_data.get('cookie_id')
 
-# Основной маршрут для отображения арены
 @arena_bp.route('/')
 async def arena():
     registered_character = Registrar.query.filter_by(user_id=g.user_id).first()
@@ -66,14 +63,13 @@ async def arena():
 
 @arena_bp.route('/get_registered_characters')
 async def get_registered_characters():
-    logger.info(f"------------ get_registered_characters ---------")
     try:
         characters = []
         registrations = Registrar.query.all()
         for registration in registrations:
             char = Character.query.filter_by(character_id=registration.character_id).first()
             if char:
-                logger.info(f"char.name: {char.name}")
+                #logger.info(f"Персонаж: {char.name}")
                 traits = json.loads(char.traits) if char.traits else {}
                 traits.update({
                     "Combat": char.combat,
@@ -87,31 +83,27 @@ async def get_registered_characters():
                     "image_url": char.image_url,
                     "description": char.description
                 })
-        logger.info(f"-----OK---->>> Fetched characters: {len(characters)}")
-        
         return jsonify(characters)
     except Exception as e:
         logger.error(f"Error fetching registered characters: {e}", exc_info=True)
         return jsonify({"error": "Internal server error"}), 500
 
-@arena_bp.route('/get_arena_chat')
-async def get_arena_chat():
-    return await get_chat_messages(ArenaChatMessage, "arena chat")
-
-@arena_bp.route('/get_general_chat')
-async def get_general_chat():
-    return await get_chat_messages(GeneralChatMessage, "general chat")
-
-@arena_bp.route('/get_tactics_chat')
-async def get_tactics_chat():
-    return await get_chat_messages(TacticsChatMessage, "tactics chat")
-
-async def get_chat_messages(message_model, chat_type):
-    """Универсальная функция для получения сообщений чата."""
+@arena_bp.route('/get_chat_message')
+async def get_chat_messages(chat_type):
+    """Универсальная функция для получения сообщений чата через CoreCommon."""
+    
+    logger.info(f'>>>>>>>>>>>> chat_type:{chat_type}')
     try:
-        messages = message_model.query.order_by(message_model.timestamp.asc()).all()
-        chat_data = [{'content': msg.content, 'timestamp': msg.timestamp, 'sender': msg.sender, 'user_id': msg.user_id} for msg in messages]
-        return jsonify(chat_data)
+        # Вызов метода из CoreCommon для получения сообщений
+        if chat_type == "arena chat":
+            messages = await ccom.get_message_chatArena(sender="referee", arena_id=1)
+        elif chat_type == "general chat":
+            messages = await ccom.get_message_GeneralChat(sender="user", arena_id=1)
+        elif chat_type == "tactics chat":
+            messages = await ccom.get_message_chatTactics(sender="tactician", user_id=g.user_id)
+        logger.info(f'<<<<<<<<------<<<<<<<<< chat_type:{messages}')
+        return jsonify(messages)
+        
     except Exception as e:
         logger.error(f"Error fetching {chat_type} messages: {e}", exc_info=True)
         return jsonify({"error": "Internal server error"}), 500
@@ -137,7 +129,6 @@ async def get_latest_arena_image():
         return jsonify({"arena_image_url": url_for('static', filename=image_url)})
     return jsonify({"arena_image_url": None})
 
-# Использование StatusManager в маршрутах
 @arena_bp.route('/get_status', methods=['GET'])
 async def get_status():
     try:
@@ -145,13 +136,12 @@ async def get_status():
         arena_status = sm.get_state('arena')
         battle_status = sm.get_state('battle')
         timer_status = sm.get_state('timer')
-        
-        logger.info(f"States A: {game_status} G: {arena_status} B: {battle_status} T: {timer_status}")
+        if game_status or arena_status or battle_status or timer_status:
+            logger.info(f"States A: {game_status} G: {arena_status} B: {battle_status} T: {timer_status}")
+            await plm.battle_start(g.user_id , game_status)
         
         registered_players = Registrar.query.count()
 
-        await plm.battle_start(g.user_id , game_status)
-        
         return jsonify({
             'registered_players': registered_players,
             'battle_status': battle_status,
@@ -164,8 +154,6 @@ async def get_status():
         logger.error(f"Error fetching statuses: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
-
 @arena_bp.route('/start_async_tasks', methods=['POST'])
 async def start_async_tasks():
-
     return jsonify({'status': 'Tasks started'}), 200

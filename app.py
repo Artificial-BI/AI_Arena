@@ -1,16 +1,18 @@
 from flask import Flask, render_template, request, g
 from config import Config
-from logging_config import configure_logging
+from logging_config import configure_logging 
 from initialization import init_extensions_and_db
 from extensions import db
 from models import PreRegistrar, Registrar, Player
 import traceback
-import asyncio
+import asyncio 
 from core import BattleManager
 from multiproc import StatusManager
-from message_buffer import MessageManager, ZMQServer
-from threading import Thread
-
+from message_buffer import ZMQServer
+#from default import initialize_database
+from threading import Thread, Event
+import logging
+ 
 # --- app.py ---
 
 app = Flask(__name__)
@@ -19,18 +21,23 @@ app.config.from_object(Config)
 if not app.debug:
     configure_logging(app)
 
+# Инициализация расширений и базы данных
 init_extensions_and_db(app)
 
+# Логгер приложения
+logger = logging.getLogger(__name__)
+
 def clear_table():
+    """Очищаем таблицы PreRegistrar и Registrar"""
     with app.app_context():
         try:
             db.session.query(PreRegistrar).delete()
             db.session.query(Registrar).delete()
             db.session.commit()
-            app.logger.info("Очистка таблиц Registrar и PreRegistrar и статуса Player.")
+            app.logger.info("Очистка таблиц Registrar и PreRegistrar.")
         except Exception as e:
             db.session.rollback()
-            app.logger.error(f"Ошибка при очистке таблиц Registrar и PreRegistrar. Error: {e}")
+            app.logger.error(f"Ошибка при очистке таблиц Registrar и PreRegistrar: {e}")
 
 # Подключение маршрутов
 from routes.index_routes import index_bp
@@ -50,10 +57,13 @@ app.register_blueprint(arena_bp, url_prefix='/arena')
 from webhook import webhook_bp
 app.register_blueprint(webhook_bp)
 
+# Доступ к глобальным переменным Jinja
 app.jinja_env.globals.update(enumerate=enumerate)
 
+# Очистка таблиц при запуске приложения
 clear_table()
 
+# Обработчики ошибок
 @app.errorhandler(404)
 def not_found_error(error):
     return render_template('404.html'), 404
@@ -66,36 +76,65 @@ def internal_error(error):
     return render_template('500.html', error=error, error_trace=error_trace), 500
 
 # Функция для запуска игрового цикла
-def start_game_loop():
+def start_game_loop(stop_event):
+    """Запуск игрового цикла с использованием asyncio"""
     with app.app_context():
         battle_manager = BattleManager()
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
+        #while not stop_event.is_set():
         loop.run_until_complete(battle_manager.start_game())
+            # Добавляем небольшую задержку, чтобы избежать высокой нагрузки
+            #asyncio.sleep(1)
 
 # Функция для запуска серверов ZeroMQ
-def start_zmq_servers():
-    status_manager = StatusManager()
-    status_manager.start_server()
-    conf = Config()
-    
-    server = ZMQServer()
-    server.run()
-    #message_manager = MessageManager()
-    #message_manager.start_server()
+def start_zmq_servers(stop_event):
+    """Запуск серверов ZeroMQ для обработки сообщений"""
+    #initialize_database()  # Инициализация базы данных перед запуском серверов
 
+    status_manager = StatusManager()
+    
+    # Запускаем сервер для управления статусами (ZeroMQ)
+    zmq_thread_status = Thread(target=status_manager.start_server)
+    zmq_thread_status.start()
+  
+    # Создаем сервер сообщений
+    zmq_server = ZMQServer()
+ 
+    try:
+        while not stop_event.is_set():
+            zmq_server.run()  # Запуск ZeroMQ сервера для обработки сообщений
+    except Exception as e:
+        logger.error(f"Ошибка в ZMQ-сервере: {e}")
+    finally:
+        logger.info("ZeroMQ сервер завершён.")
+        zmq_thread_status.join()
+
+# Основная точка входа
 if __name__ == "__main__":
+    # Создаём событие для остановки потоков
+    stop_event = Event()
+
     # Запуск серверов ZeroMQ в отдельном потоке
-    zmq_thread = Thread(target=start_zmq_servers)
+    zmq_thread = Thread(target=start_zmq_servers, args=(stop_event,))
     zmq_thread.start()
 
     # Запуск игрового процесса в отдельном потоке
-    game_thread = Thread(target=start_game_loop)
+    game_thread = Thread(target=start_game_loop, args=(stop_event,))
     game_thread.start()
 
-    # Запуск сервера Flask
-    app.run(debug=True, port=6511)
+    try:
+        # Запуск сервера Flask
+        app.run(debug=True, port=6511)
+    except KeyboardInterrupt:
+        logger.info("Остановка приложения...")
 
-    # Ожидание завершения потоков (если нужно)
-    zmq_thread.join()
-    game_thread.join()
+    finally:
+        # Устанавливаем флаг для завершения потоков
+        stop_event.set()
+
+        # Ожидание завершения потоков
+        zmq_thread.join()
+        game_thread.join()
+
+        logger.info("Приложение завершено корректно.")

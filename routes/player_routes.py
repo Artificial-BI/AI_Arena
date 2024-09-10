@@ -5,7 +5,7 @@ from sqlalchemy import desc
 from extensions import db
 from models import Message, Character, Registrar, Player, PreRegistrar, Statuses
 from datetime import datetime
-from gemini import GeminiAssistant
+from assistant import Assistant
 from utils import parse_character, generate_unixid
 from load_user import load_user
 from img_selector import IMGSelector
@@ -199,8 +199,8 @@ def send_message():
         return jsonify({"error": "Invalid input: 'content' must not be empty."}), 400
 
     user_id = g.user_id
-    assistant = GeminiAssistant("Character Generator")
-    response = asyncio.run(assistant.send_message(content))
+    assistant = Assistant("Character Generator")
+    response = asyncio.run(assistant.send_message(content,'gemini'))
 
     message = Message(content=content, user_id=user_id)
     db.session.add(message)

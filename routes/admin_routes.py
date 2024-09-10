@@ -3,7 +3,7 @@ import asyncio
 from flask import Blueprint, request, jsonify, render_template, g
 from extensions import db
 from models import Message, Role, User
-from gemini import GeminiAssistant
+from assistant import Assistant
 import logging
 from load_user import load_user
 
@@ -45,10 +45,10 @@ def send_message():
         user_id = g.user_id  # Используем ID текущего пользователя
 
         # Создаем ассистента с выбранной ролью
-        assistant = GeminiAssistant(role_name)
+        assistant = Assistant(role_name)
         
         # Используем asyncio.run для выполнения асинхронной функции
-        response = asyncio.run(assistant.send_message(content))
+        response = asyncio.run(assistant.send_message(content, 'gemini'))
 
         # Сохраняем сообщение и ответ в базе данных
         message = Message(content=content, user_id=user_id)

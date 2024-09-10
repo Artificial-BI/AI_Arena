@@ -27,10 +27,6 @@ document.addEventListener("DOMContentLoaded", function() {
         if (notificationMessage.innerHTML !== statusMessage) {
             notificationMessage.innerHTML = statusMessage;
             notificationPopup.style.display = 'block';
-
-            // setTimeout(() => {
-            //     notificationPopup.style.display = 'none';
-            // }, 5000);
         }
     }
 
@@ -117,4 +113,40 @@ document.addEventListener("DOMContentLoaded", function() {
     })
     .then(data => console.log(data))
     .catch(error => console.error('Ошибка при запуске фоновых задач:', error));
+
+
+    function updateChats() {
+        // Обновление арена чата
+        fetch('/arena/get_arena_chat')
+            .then(response => response.json())
+            .then(data => updateChatBox('arena-chat-box', data))
+            .catch(error => console.error('Ошибка обновления арена чата:', error));
+    
+        // Обновление тактического чата
+        fetch('/arena/get_tactics_chat')
+            .then(response => response.json())
+            .then(data => updateChatBox('tactics-chat-box', data))
+            .catch(error => console.error('Ошибка обновления тактического чата:', error));
+    
+        // Обновление общего чата
+        fetch('/arena/get_general_chat')
+            .then(response => response.json())
+            .then(data => updateChatBox('general-chat-box', data))
+            .catch(error => console.error('Ошибка обновления общего чата:', error));
+    }
+    
+    function updateChatBox(chatBoxId, messages) {
+        const chatBox = document.getElementById(chatBoxId);
+        chatBox.innerHTML = '';  // Очищаем старые сообщения
+    
+        messages.forEach(msg => {
+            const msgElement = document.createElement('p');
+            msgElement.textContent = `[${msg.timestamp}] ${msg.sender}: ${msg.content}`;
+            chatBox.appendChild(msgElement);
+        });
+    }
+    
+    // Запуск обновления чатов каждые 1 секунду
+    setInterval(updateChats, 1000);
+
 });

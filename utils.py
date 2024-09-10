@@ -151,3 +151,22 @@ def generate_unixid():
     # Получаем текущее Unix-время в секундах
     unix_time = int(time.time())
     return str(unix_time)
+
+def count_runs(filename="run_count.txt"):
+    # Проверяем, существует ли файл с количеством запусков
+    if os.path.exists(filename):
+        # Если файл существует, читаем текущее количество запусков
+        with open(filename, "r") as file:
+            count = int(file.read().strip())  # Прочитываем и преобразуем в число
+    else:
+        # Если файл не существует, устанавливаем начальное значение
+        count = 0
+
+    # Увеличиваем количество запусков на 1
+    count += 1
+
+    # Записываем обновленное количество запусков обратно в файл
+    with open(filename, "w") as file:
+        file.write(str(count))
+
+    return count
