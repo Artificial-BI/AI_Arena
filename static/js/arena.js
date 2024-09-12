@@ -62,7 +62,7 @@ document.addEventListener("DOMContentLoaded", function() {
         fetch('/arena/get_registered_characters')
         .then(response => response.json())
         .then(data => {
-            console.log("--- Received characters:", data);
+            //console.log("--- Received characters:", data);
             const tbody = playersTable.querySelector('tbody');
             tbody.innerHTML = '';
 
@@ -115,28 +115,41 @@ document.addEventListener("DOMContentLoaded", function() {
     .catch(error => console.error('Ошибка при запуске фоновых задач:', error));
 
 
+    // function updateChats() {
+    //     // Обновление арена чата
+    //     fetch('/arena/get_arena_chat')
+    //         .then(response => response.json())
+    //         .then(data => updateChatBox('arena-chat-box', data))
+    //         .catch(error => console.error('Ошибка обновления арена чата:', error));
+    
+    //     // Обновление тактического чата
+    //     fetch('/arena/get_tactics_chat')
+    //         .then(response => response.json())
+    //         .then(data => updateChatBox('tactics-chat-box', data))
+    //         .catch(error => console.error('Ошибка обновления тактического чата:', error));
+    
+    //     // Обновление общего чата
+    //     fetch('/arena/get_general_chat')
+    //         .then(response => response.json())
+    //         .then(data => updateChatBox('general-chat-box', data))
+    //         .catch(error => console.error('Ошибка обновления общего чата:', error));
+    // }
+    
     function updateChats() {
-        // Обновление арена чата
-        fetch('/arena/get_arena_chat')
-            .then(response => response.json())
-            .then(data => updateChatBox('arena-chat-box', data))
-            .catch(error => console.error('Ошибка обновления арена чата:', error));
+        const chatTypes = ['arena', 'tactics', 'general'];
     
-        // Обновление тактического чата
-        fetch('/arena/get_tactics_chat')
-            .then(response => response.json())
-            .then(data => updateChatBox('tactics-chat-box', data))
-            .catch(error => console.error('Ошибка обновления тактического чата:', error));
-    
-        // Обновление общего чата
-        fetch('/arena/get_general_chat')
-            .then(response => response.json())
-            .then(data => updateChatBox('general-chat-box', data))
-            .catch(error => console.error('Ошибка обновления общего чата:', error));
+        chatTypes.forEach(chatType => {
+            fetch(`/arena/get_chat_messages/${chatType}`)
+                .then(response => response.json())
+                .then(data => updateChatBox(`${chatType}-chat-box`, data))
+                .catch(error => console.error(`Ошибка обновления ${chatType} чата:`, error));
+        });
     }
     
+
     function updateChatBox(chatBoxId, messages) {
         const chatBox = document.getElementById(chatBoxId);
+        //console.log("chatBoxId:",chatBoxId,"messages:",messages)
         chatBox.innerHTML = '';  // Очищаем старые сообщения
     
         messages.forEach(msg => {

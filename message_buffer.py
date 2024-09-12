@@ -31,7 +31,6 @@ class MessageManager:
         self.saving_thread = threading.Thread(target=self.save_messages_to_db)
         self.saving_thread.daemon = True
         self.saving_thread.start()
-        
 
     def initialize_database(self):
         """Создаем таблицы в базе данных, если их нет"""
@@ -58,7 +57,6 @@ class MessageManager:
             if field not in message:
                 raise ValueError(f"Missing required field: {field}")
 
-
     def add_message_to_buffer(self, message_json):
         try:
             with self.lock:
@@ -77,7 +75,7 @@ class MessageManager:
                     if self.message_buffer:
                         session = self.Session()
                         try:
-                            logger.info(f"Buffer: {len(self.message_buffer)}")
+                            #logger.info(f"Buffer: {self.message_buffer}")
 
                             for message_json in self.message_buffer:
                                 # Десериализуем JSON обратно в словарь
@@ -107,6 +105,8 @@ class MessageManager:
                                     new_message = TacticsChatMessage(**message['data'])
                                 elif message['table'] == 'arena_chat_message':
                                     new_message = ArenaChatMessage(**message['data'])
+                                elif message['table'] == 'read_status':
+                                    new_message = ReadStatus(**message['data'])
                                 else:
                                     logger.error(f"Unknown table: {message['table']}")
                                     continue  # Пропускаем неизвестные типы таблиц
@@ -119,7 +119,7 @@ class MessageManager:
                             self.sm.set_state('game', 'stop', self.ccom.newTM())
                             self.sm.set_state('battle', 'error', self.ccom.newTM())
                             self.sm.set_state('error', f'Error saving message to DB: {e}', self.ccom.newTM())
-                            logger.error(f"Error saving messages: {e}")
+                            logger.error(f"Saving messages: {e}\n MESS ERR:{message}")
                             session.rollback()
                             self.buffer_cicle = False
                         finally:
@@ -138,90 +138,68 @@ class MessageManager:
             logger.error(f"Error receiving response from buffer: {e}")
             return {"status": "error", "message": [str(e)]}
 
-    
-
-    # def get_messages_from_buffer(self, chat_type, limit=100):
-    #     """Получаем сообщения из базы данных по типу чата и заполняем буфер."""
-    #     session = self.Session()
-    #     try:
-    #         if chat_type == "arena_chat_message":
-    #             messages = session.query(ArenaChatMessage).order_by(ArenaChatMessage.timestamp.desc()).limit(limit).all()
-    #         elif chat_type == "tactics_chat_message":
-    #             messages = session.query(TacticsChatMessage).order_by(TacticsChatMessage.timestamp.desc()).limit(limit).all()
-    #         elif chat_type == "general_chat_message":
-    #             messages = session.query(GeneralChatMessage).order_by(GeneralChatMessage.timestamp.desc()).limit(limit).all()
-    #         else:
-    #             raise ValueError(f"Unknown chat type: {chat_type}")
-
-    #         # Заполняем буфер сообщениями
-    #         with self.lock:
-    #             for message in messages:
-    #                 # Преобразуем объект ORM в словарь
-    #                 data = {
-    #                     "id": message.id,
-    #                     "user_id": message.user_id,
-    #                     "content": message.content,
-    #                     "sender": message.sender,
-    #                     "timestamp": message.timestamp.strftime('%Y-%m-%d %H:%M:%S')
-    #                 }
-
-    #                 if isinstance(message, ArenaChatMessage):
-    #                     data["arena_id"] = message.arena_id
-
-    #                 # Добавляем сообщение в буфер
-    #                 message_data = {
-    #                     "table": chat_type,
-    #                     "data": data
-    #                 }
-    #                 self.message_buffer.append(message_data)
-
-    #         logger.info(f"Messages for {chat_type} | {len(messages)} added to buffer.")
-    #         return {"status": "ok", "messages": messages}
-
-    #     except Exception as e:
-    #         logger.error(f"Error fetching messages from buffer: {e}")
-    #         return {"status": "error", "messages": [str(e)]}
-
-    #     finally:
-    #         session.close()
     def get_messages_from_buffer(self, chat_type, limit=100):
         """Получаем сообщения из базы данных по типу чата и заполняем буфер."""
         session = self.Session()
         try:
+            messages_data = []
+            #logger.info(f'GET DB to buffer: {chat_type}')
             if chat_type == "arena_chat_message":
                 messages = session.query(ArenaChatMessage).order_by(ArenaChatMessage.timestamp.desc()).limit(limit).all()
+                for message in messages:
+                    data = {
+                        "id": message.id,
+                        "user_id": message.user_id,
+                        "content": message.content,
+                        "sender": message.sender,
+                        "timestamp": message.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+                        "arena_id": message.arena_id,
+                        "name": message.name,
+                        "read_status":message.read_status
+                    }
+                    messages_data.append({"table": chat_type,"data": data})
             elif chat_type == "tactics_chat_message":
                 messages = session.query(TacticsChatMessage).order_by(TacticsChatMessage.timestamp.desc()).limit(limit).all()
+                for message in messages:
+                    #logger.info(f'--- content: {message.content}')
+                    data = {
+                        "id": message.id,
+                        "user_id": message.user_id,
+                        "content": message.content,
+                        "sender": message.sender,
+                        "timestamp": message.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+                        "read_status":message.read_status
+                    }
+                    messages_data.append({"table": chat_type,"data": data})
             elif chat_type == "general_chat_message":
                 messages = session.query(GeneralChatMessage).order_by(GeneralChatMessage.timestamp.desc()).limit(limit).all()
+                for message in messages:
+                    data = {
+                        "id": message.id,
+                        "user_id": message.user_id,
+                        "content": message.content,
+                        "sender": message.sender,
+                        "timestamp": message.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+                    }
+                    messages_data.append({"table": chat_type,"data": data})
+            elif chat_type == "read_status":
+                messages = session.query(ReadStatus).order_by(ReadStatus.timestamp.desc()).limit(limit).all()
+                for message in messages:
+                    data = {
+                        "id": message.id,
+                        "user_id": message.user_id,
+                        "message_id": message.message_id,
+                        "timestamp": message.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+                        "read_status":message.read_status
+                    }
+                    messages_data.append({"table": chat_type,"data": data})  
             else:
                 raise ValueError(f"Unknown chat type: {chat_type}")
-
-            # Заполняем буфер сообщениями, обращаясь к полям объекта напрямую
-            messages_data = []
-            for message in messages:
-                data = {
-                    "id": message.id,
-                    "user_id": message.user_id,
-                    "content": message.content,
-                    "sender": message.sender,
-                    "timestamp": message.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
-                    "read_status": message.read_status
-                }
-                if chat_type == "arena_chat_message":
-                    data["arena_id"] = message.arena_id
-                    data["name"] = message.name
-
-                messages_data.append({
-                    "table": chat_type,
-                    "data": data
-                })
-
             # Возвращаем список сообщений
             return {"status": "ok", "messages": messages_data}
 
         except Exception as e:
-            logger.error(f"Error fetching messages from buffer: {e}")
+            logger.error(f"Fetching messages from buffer: {e}")
             return {"status": "error", "messages": [str(e)]}
 
         finally:

@@ -88,25 +88,36 @@ async def get_registered_characters():
         logger.error(f"Error fetching registered characters: {e}", exc_info=True)
         return jsonify({"error": "Internal server error"}), 500
 
-@arena_bp.route('/get_chat_message')
+@arena_bp.route('/get_chat_messages/<chat_type>', methods=['GET'])
 async def get_chat_messages(chat_type):
-    """Универсальная функция для получения сообщений чата через CoreCommon."""
+    """Универсальная функция для получения сообщений чатов."""
     
-    logger.info(f'>>>>>>>>>>>> chat_type:{chat_type}')
+    #logger.info(f'==========: {chat_type} ===================')
+    # get_message_chatTactics(self, sender, user_id)
     try:
         # Вызов метода из CoreCommon для получения сообщений
-        if chat_type == "arena chat":
-            messages = await ccom.get_message_chatArena(sender="referee", arena_id=1)
-        elif chat_type == "general chat":
-            messages = await ccom.get_message_GeneralChat(sender="user", arena_id=1)
-        elif chat_type == "tactics chat":
+        if chat_type == "arena":
+            messages = await ccom.get_message_chatArena(sender="referee", arena_id=None, user_id=None, mark_user_id=g.user_id)
+            #logger.info(f'==========: {chat_type} messages: {messages}')
+        elif chat_type == "general":
+            messages = await ccom.get_message_GeneralChat(sender=None, arena_id=None, user_id=None)
+            #logger.info(f'==========: {chat_type} messages: {messages}')
+        elif chat_type == "tactics":
             messages = await ccom.get_message_chatTactics(sender="tactician", user_id=g.user_id)
-        logger.info(f'<<<<<<<<------<<<<<<<<< chat_type:{messages}')
+            #logger.info(f'==========: {chat_type} messages: {messages}')
+        else:
+            return jsonify({"error": f"Invalid chat type: {chat_type}"}), 400
+
+        #logger.info(f'Messages fetched for {chat_type}: {len(messages)}')
+        
+        #test_format = ['test mess1','test mess2','test mess3']
+        
         return jsonify(messages)
         
     except Exception as e:
         logger.error(f"Error fetching {chat_type} messages: {e}", exc_info=True)
         return jsonify({"error": "Internal server error"}), 500
+
 
 @arena_bp.route('/get_arena_image_url/<int:arena_id>', methods=['GET'])
 async def get_arena_image_url(arena_id):
@@ -137,7 +148,7 @@ async def get_status():
         battle_status = sm.get_state('battle')
         timer_status = sm.get_state('timer')
         if game_status or arena_status or battle_status or timer_status:
-            logger.info(f"States A: {game_status} G: {arena_status} B: {battle_status} T: {timer_status}")
+            #logger.info(f"States A: {game_status} G: {arena_status} B: {battle_status} T: {timer_status}")
             await plm.battle_start(g.user_id , game_status)
         
         registered_players = Registrar.query.count()

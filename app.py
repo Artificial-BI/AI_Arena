@@ -51,8 +51,8 @@ app.register_blueprint(index_bp)
 app.register_blueprint(common_bp, url_prefix='/common')
 app.register_blueprint(player_bp, url_prefix='/player')
 app.register_blueprint(viewer_bp, url_prefix='/viewer')
-app.register_blueprint(admin_bp, url_prefix='/admin')
-app.register_blueprint(arena_bp, url_prefix='/arena')
+app.register_blueprint(admin_bp,  url_prefix='/admin')
+app.register_blueprint(arena_bp,  url_prefix='/arena')
 
 from webhook import webhook_bp
 app.register_blueprint(webhook_bp)

@@ -27,11 +27,14 @@ class Assistant:
         self.use_history = use_history
         self.conf = Config()
         self.instructions = self.get_instructions(role_name)
+        self.role_name = role_name
         self.old_request = ""
 
     async def send_message(self, message, assistant, max_retries=6):
         if self.conf.DEBUG:
-            return f"Заглушка RETURN: {message}."
+            debug_mess = ['какие то данные', 'случайный выбор', 'неопределенно', 'эотносительно отладки', ' это письмо ', 'Рассылки',' письма точнее','С учетом позиции','Также на счету','есть консерванты','вкус другой','Качество продуктов высокое','Почта учится','в начале августа' ]
+            rnd_mess = random.choice(debug_mess)
+            return f"Заглушка assistant DEBUG MODE: {assistant}\n role: {self.role_name}\n send count: {len(message)}\n RETURN: {rnd_mess} ."
         else:
             retries = 0
             while retries < max_retries:

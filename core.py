@@ -28,6 +28,12 @@ class BattleManager:
         self.sm = StatusManager()
         #self.mm = MessageManager()
 
+    def clear_state(self):
+        self.sm.set_state('arena', None, self.ccom.newTM())
+        self.sm.set_state('timer', None, self.ccom.newTM())
+        self.sm.set_state('game', None, self.ccom.newTM())
+        self.sm.set_state('battle', None, self.ccom.newTM())
+        
     async def start_waiting_for_players(self):
         count_sec = 0
         logger.info(" ---------- START WAITING PLAYERS -------------- ")
@@ -66,6 +72,7 @@ class BattleManager:
 
     async def start_game(self):
         start_count = count_runs(filename="run_count.txt")
+        self.clear_state()
         logger.info(f" ---------- NEW START GAME {start_count} -------------- ")
         
         # if start_count > 1:
@@ -126,14 +133,17 @@ class BattleManager:
             if self.battle_in_progress:
                 self.sm.set_state('battle', 'finished', self.ccom.newTM())
                 self.sm.set_state('game', 'game over', self.ccom.newTM())
-                logger.info("--- Battle finished ---")
-                await self.ccom.message_to_Arena("--- Battle finished ---", "system", arena.id, self.config.SYS_ID, 'system')
                 
-                #await self.generate_commentary(characters_data, arena, sum_fighters_moves_list)
+                await self.ccom.message_to_Arena("--- Battle finished ---", "system", arena.id, self.config.SYS_ID, 'system')
+                #logger.info(f">>NONE?: {characters_data}, {arena}, {sum_fighters_moves_list}")
+                await self.generate_commentary(characters_data, arena, sum_fighters_moves_list)
+                self.sm.set_state('battle', 'finished', self.ccom.newTM())
+                self.sm.set_state('game', 'game over', self.ccom.newTM())
             else:
                 logger.info("--- Battle stopped ---")
-            
-            
+            await asyncio.sleep(10)
+            logger.info("--- Battle finished ---")
+            self.clear_state()
 
         except Exception as e:
             self.sm.set_state('game', 'stop', self.ccom.newTM())
@@ -175,15 +185,15 @@ class BattleManager:
 
         try:
             assistant = Assistant("commentator")
-            response = await assistant.send_message(prompt,'auto')
+            response = await assistant.send_message(prompt,'gemini')
         except Exception as e:
             logger.error(f"Error sending message sys: {e}")
-
+        logger.info(f"COMMENT +=+=+== {response}") 
         await self.ccom.message_to_GeneralChat(response, "commentator", self.config.SYS_ID)    
 
     async def get_list_messages(self, name, arena):
         
-        unread_messages = await self.ccom.get_message_chatArena(name, arena.id, user_id=self.config.SYS_ID)
+        unread_messages = await self.ccom.get_message_chatArena(name, None, user_id=None, mark_user_id=self.config.SYS_ID)
         list_moves = [(msg["user_id"], msg["content"]) for msg in unread_messages]
 
         return list_moves

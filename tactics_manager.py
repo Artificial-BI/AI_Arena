@@ -67,10 +67,10 @@ class PlayerManager:
                 for user_reg in user_ids:
                     if user_reg != user_reg:
                         # Запрашиваем сообщения через буфер сообщений
-                        opponent_mov = await self.ccom.get_message_chatArena(sender='fighter', arena_id=cur_arena.id, user_id=user_reg)
+                        opponent_mov = await self.ccom.get_message_chatArena(sender='fighter', arena_id=None, user_id=None, mark_user_id=user_reg)
                         opponent_moves_list.append(opponent_mov)
 
-                referee_rating_list = await self.ccom.get_message_chatArena(sender='referee', arena_id=cur_arena.id)
+                referee_rating_list = await self.ccom.get_message_chatArena(sender='referee', arena_id=None, user_id=None, mark_user_id=user_reg)
                 logger.info(f"--- Gen. Tact. Opp char: {len(opponent_character_list)} Opp mess:{len(opponent_moves_list)} ref: {len(referee_rating_list)} ---")    
                 # Генерация тактических рекомендаций
                 await self.tcm.generate_tactics(user_id, cur_arena, cur_character, opponent_character_list, opponent_moves_list, referee_rating_list)
@@ -110,21 +110,18 @@ class TacticsManager:
 
         try:
             assistant = Assistant("tactician")
-            response = await assistant.send_message(prompt,'auto')
+            response = await assistant.send_message(prompt,'gemini')
             if not response.strip():
                 logger.error("Received empty response from assistant")
                 await asyncio.sleep(10)
             else:
-                logger.info(f"Tactical recommendation for {user_id} saved.")
+                #logger.info(f"Tactical recommendation (response) for ({user_id}) saved.")
 
                 await self.ccom.message_to_Tactics(response, sender="tactician", user_id=user_id)
 
         except Exception as e:
             logger.error(f"Error sending message for {user_id}: {e}")
             return None, None
-
-        
-    
 
 class FighterManager:
     

@@ -87,5 +87,5 @@ class Config:
     MESS_PUB_PORT =  "tcp://*:6568" 
     MESS_PORT=  6573 #"tcp://localhost:6573" 
     
-    COUNT_ROUND = 1 #3
+    COUNT_ROUND = 30
     WAITING_STEPS = 10
