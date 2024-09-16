@@ -5,58 +5,68 @@ import uuid
 import hashlib
 from hashlib import sha256
 import logging
+from cookies import Cookies  # Импортируем класс Cookies
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def uuid_to_int(uuid_str):
-    # Generate a hash using SHA256
+    """
+    Преобразует строковое представление UUID в целое число через SHA256,
+    чтобы гарантировать уникальность, и делает результат совместимым с SQLite INTEGER.
+    """
     hash_object = hashlib.sha256(uuid_str.encode())
     hash_code = hash_object.hexdigest()
-
-    # Convert the hash to an integer
     hash_int = int(hash_code, 16)
-
-    # Use modulo to ensure the integer fits within the SQLite Integer range
-    max_int_value = 2**63 - 1  # Maximum value for SQLite INTEGER
+    max_int_value = 2**63 - 1
     unique_int = hash_int % max_int_value
-
     return unique_int
 
 def load_user():
+    cok = Cookies()
     try:
-        # Проверяем, существует ли пользовательский идентификатор в сессии
         user_id = session.get('user_id')
 
         if user_id:
-            # Если user_id уже есть в сессии, проверяем, существует ли пользователь с таким id
             user = User.query.get(user_id)
             if user:
-                #logger.info(f"User with ID {user_id} already exists.")
                 g.user = user
-                return make_response(jsonify({"status": "existing_user", "user_id": user.id, "cookie_id": user.cookie_id}), 200)
-            else:
-                logger.error(f"User with ID {user_id} not found in the database.")
-                session.pop('user_id', None)  # Удаляем некорректный user_id из сессии
+                response = make_response(jsonify({
+                    "status": "existing_user", 
+                    "user_id": user.id,
+                    "step_read": cok.get_cookie_for_user(user.id, 'step_read')
+                }))
+                
+                # Увеличиваем значение step_read для этого пользователя
+                response = cok.increment_cookie_for_user(response, user.id, 'step_read', max_age=86400)
+                
+                return response  # Возвращаем единый объект ответа
 
-        # Если user_id нет в сессии или он некорректен, создаем нового пользователя
-        cookie_id = request.cookies.get('user_cookie_id')
+        # Если user_id нет в сессии, проверяем cookie
+        cookie_id = cok.get_cookie('user_cookie_id')
+        response = make_response()
+        
         if not cookie_id:
             cookie_id = str(uuid.uuid4())
-            response = make_response()
-            response.set_cookie('user_cookie_id', cookie_id)
-
+            response = cok.set_cookie(response, 'user_cookie_id', cookie_id)
+        
         user_id = uuid_to_int(cookie_id)
         user = User(id=user_id, cookie_id=cookie_id)
         db.session.add(user)
         db.session.commit()
 
-        # Сохраняем новый user_id в сессии
         session['user_id'] = user_id
-
-        logger.info(f"Created new user with ID {user_id}.")
         g.user = user
-        return make_response(jsonify({"status": "new_user", "user_id": user.id, "cookie_id": user.cookie_id}), 201)
+
+        # Устанавливаем переменную step_read для пользователя на 24 часа
+        response = cok.increment_cookie_for_user(response, user.id, 'step_read', max_age=86400)
+
+        response_data = jsonify({
+            "status": "new_user", 
+            "user_id": user.id, 
+            "step_read": cok.get_cookie_for_user(user.id, 'step_read')
+        })
+        return make_response(response_data)  # Возвращаем корректный объект ответа с данными
 
     except Exception as e:
         db.session.rollback()

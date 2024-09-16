@@ -169,5 +169,5 @@ def count_runs(filename):
 def is_odd():
     number = count_runs(filename="app_count.txt")
     res = number % 2 != 0
-    print(">>> APP:",res)
+    print("DEBUG APP:",res)
     return res

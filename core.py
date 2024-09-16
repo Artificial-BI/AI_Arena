@@ -29,10 +29,12 @@ class BattleManager:
         self.sm = StatusManager()
     
     def clear_registrar(self):
+        self.sm.set_state('characters', False, self.ccom.newTM())
         db.session.query(Registrar).delete()
         db.session.commit()
 
     def clear_state(self):
+        self.sm.set_state('characters', None, self.ccom.newTM())
         self.sm.set_state('arena', None, self.ccom.newTM())
         self.sm.set_state('timer', None, self.ccom.newTM())
         self.sm.set_state('battle', None, self.ccom.newTM())
@@ -61,6 +63,7 @@ class BattleManager:
             registered_players = Registrar.query.count()  # Это часть базы aiarena.db, ее оставляем
             if registered_players > 0:
                 if registered_players >= self.config.PLAYER_COUNT:
+                    self.sm.set_state('characters', True, self.ccom.newTM())
                     res = True
                     break  # Достаточно игроков, выходим из ожидания
                 self.sm.set_state('timer', f'{count_sec}', self.ccom.newTM())
@@ -129,7 +132,7 @@ class BattleManager:
                 message += f"User: {character['user_id']}  "
                 message += f"Fighter: {character['name']}\n"
 
-            logger.info(f"---* {message} *---")
+            logger.info(f"{message}")
 
             await self.ccom.message_to_Arena(message, "system", arena.id, self.config.SYS_ID, 'system')
 

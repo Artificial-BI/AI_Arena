@@ -45,7 +45,7 @@ class StatusManager:
             return response.get("state", None)
         except Exception as e:
             #logger.error(f"Failed to get state: {e}")
-            return {"":""}
+            return {"not state"}
 
     def start_server(self):
         """Starts the ZeroMQ server for handling state requests."""

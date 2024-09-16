@@ -8,6 +8,7 @@ from assistant import Assistant
 from datetime import datetime
 from core_common import CoreCommon
 from multiproc import StatusManager
+from config import Config
 #from message_buffer import MessageManager
 # --- tactic_manager.py ---
 logging.basicConfig(level=logging.INFO)
@@ -15,14 +16,18 @@ logger = logging.getLogger(__name__)
 
 class PlayerManager:
     def __init__(self, loop=None):
+        self.step_number = 0
+        self.step_tactic = 0
+        self.start_step = 0
         self.stm = StatusManager()
         self.ccom = CoreCommon()
         self.ReadState = False
         self.tcm = TacticsManager(self)
         self.flm = FighterManager(self)
-        
+        self.config = Config()
         self.battle_state = False
         self.arena_id = None
+        self.battleStart = True
 
     def get_cur_character(self, user_id):
         # Оставляем логику работы с персонажами напрямую, так как они не связаны с буфером сообщений
@@ -38,15 +43,16 @@ class PlayerManager:
 
     async def battle_start(self, user_id, battle_state):
         self.battle_state = (battle_state == 'start')
-        #print('---------- BATTLE STATE:',self.battle_state,'STATE:',self.stm.get_state('game'))
         if self.battle_state:
             await self.battle_process(user_id)
+            self.battleStart = False
 
     async def battle_process(self, user_id):
         cur_arena = await self.ccom.get_arena()  # получение арены
         reg_character_list = await self.ccom.get_registered_character_data()  # получение списка зарегистрированных персонажей
         opponent_character_list = []
-
+        #logger.info(f"User: {user_id} start battle num: {self.start_step}")
+        self.start_step+=1
         cur_character = self.get_cur_character(user_id)
 
         for character in reg_character_list:
@@ -57,44 +63,52 @@ class PlayerManager:
         register_users = Registrar.query.all()
         user_ids = [user.user_id for user in register_users]
         
-        logger.info(f"Registrar user count: {len(register_users)}")
+        #logger.info(f"Registrar user count: {len(register_users)}")
 
-        while self.battle_state:
+        #while self.battle_state:
             
-            game_state = self.stm.get_state('game')
-            battle_state  = self.stm.get_state('game')
-            if game_state == 'stop' or game_state == 'error':
+        game_state = self.stm.get_state('game')
+        battle_state  = self.stm.get_state('game')
+            
+        if game_state == 'stop' or game_state == 'error' or battle_state == 'stop' or battle_state == 'error':
                 self.battle_state = False
-            if battle_state == 'stop' or battle_state == 'error':
-                self.battle_state = False
+                logger.warning(f"User {user_id} Stop!!!! game_state: {game_state} | error: {self.stm.get_state('error')}")
+                logger.warning(f"User {user_id} Stop!!!! battle_state: {battle_state} | error: {self.stm.get_state('error')}")
+        else:        
+            if self.battle_state:   
                 
-            if  self.battle_state:   
-                opponent_moves_list = []
-                # получаем ходы зарегистрированный пользователей (кроме своего)
-                for user_reg in user_ids: 
-                    if user_reg != user_id:
-                        opponent_mov = await self.ccom.get_message_chatArena(sender='fighter', arena_id=None, user_id=user_reg, mark_user_id=user_id)
-                        opponent_moves_list.append(opponent_mov)
-                # получаем оценки рефери
-                referee_rating_list = await self.ccom.get_message_chatArena(sender='referee', arena_id=None, user_id=None, mark_user_id=user_id)
+                self.tactic_step = True
+                
+                while self.tactic_step:
+                
+                    opponent_moves_list = []
+                    # получаем ходы зарегистрированный пользователей (кроме своего)
+                    for user_reg in user_ids: 
+                        if user_reg != user_id:
+                            opponent_mov = await self.ccom.get_message_chatArena(sender='fighter', arena_id=None, user_id=user_reg, mark_user_id=user_id)
+                            opponent_moves_list.append(opponent_mov)
+                    # получаем оценки рефери
+                    referee_rating_list = await self.ccom.get_message_chatArena(sender='referee', arena_id=None, user_id=self.config.SYS_ID, mark_user_id=user_id)
+                    
+                    if self.stm.get_state(str(user_id)) == False:
+                        recomendation = await self.tcm.generate_tactics(user_id, cur_arena, cur_character, opponent_character_list, opponent_moves_list, referee_rating_list)
+                        await self.ccom.message_to_Tactics(f'For: {cur_character.name} - {recomendation}', sender="tactician", user_id=user_id)
+                        self.stm.set_state(str(user_id), True, self.ccom.newTM())
+                    await asyncio.sleep(1)
+                    
+                    read_state = self.stm.get_state(str(user_id))
+                    logger.info(f'UID: {user_id} RS: {read_state}')
 
-                # Генерация тактических рекомендаций на основе собранных данных
-                if self.ReadState == False:
-                    recomendation = await self.tcm.generate_tactics(user_id, cur_arena, cur_character, opponent_character_list, opponent_moves_list, referee_rating_list)
-                    if recomendation:
-                        await self.ccom.message_to_Tactics(recomendation, sender="tactician", user_id=user_id)
-                        self.ReadState = True
-                        logger.info(f"Tactic Gen - User: {user_id}")
-
-                # Генерация хода бойца на основе рекомендаций тактика и пожеланий игрока
-                if self.ReadState == True:
-                    fighter_step = await self.flm.generate_fighter(user_id, cur_arena, cur_character, opponent_moves_list, referee_rating_list)
-                    if fighter_step:
-                        message = f"fighter: {cur_character.name}\n"
-                        message += f"step: {fighter_step}\n"
-                        await self.ccom.message_to_Arena(message, "fighter", cur_arena.id, user_id, cur_character.name)
-                        self.ReadState = False
-                        logger.info(f"Fighter step - User: {user_id} ??? = {self.ReadState}")
+                    if self.stm.get_state(str(user_id)):
+                        fighter_step = await self.flm.generate_fighter(user_id, cur_arena, cur_character, opponent_moves_list, referee_rating_list)
+                        if fighter_step:
+                            message = f"fighter: {cur_character.name}\n"
+                            message += f"step: {fighter_step}\n"
+                            await self.ccom.message_to_Arena(message, "fighter", cur_arena.id, user_id, cur_character.name)
+                            self.stm.set_state(str(user_id), False, self.ccom.newTM())
+                            self.step_number +=1
+                            self.tactic_step = False
+                    await asyncio.sleep(1)        
 
             
 class TacticsManager:

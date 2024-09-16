@@ -12,6 +12,7 @@ from img_selector import IMGSelector
 import logging
 from config import Config
 from default import default_current_character
+from multiproc import StatusManager
 
 conf = Config()
 player_bp = Blueprint('player_bp', __name__)
@@ -244,7 +245,8 @@ def register_for_arena():
     
     try:
         user_id = g.user_id
-
+        sm = StatusManager()
+        sm.set_state(str(user_id), False, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         # Получаем текущего выбранного персонажа для данного пользователя
         selected_character = Player.query.filter_by(user_id=user_id).first()
         if not selected_character or not selected_character.last_selected_character_id:

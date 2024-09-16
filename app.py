@@ -97,17 +97,6 @@ def start_zmq_servers(stop_event):
     zmq_thread_status = Thread(target=status_manager.start_server)
     zmq_thread_status.start()
   
-    # Создаем сервер сообщений
-    #zmq_server = ZMQServer()
- 
-    # try:
-    #     while not stop_event.is_set():
-    #         zmq_server.run()  # Запуск ZeroMQ сервера для обработки сообщений
-    # except Exception as e:
-    #     logger.error(f"Ошибка в ZMQ-сервере: {e}")
-    # finally:
-    #     logger.info("ZeroMQ сервер завершён.")
-    #     zmq_thread_status.join()
 
 # Основная точка входа
 if __name__ == "__main__":

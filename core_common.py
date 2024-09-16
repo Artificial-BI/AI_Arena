@@ -74,6 +74,7 @@ class CoreCommon:
                 "timestamp": self.newTM()
             }
         })
+        #logger.info(f'>>>>>> message_json: {message_json}')
         self.mm.add_message_to_buffer(message_json)
 
     # Method to get messages
@@ -135,7 +136,7 @@ class CoreCommon:
             }
         })
         self.mm.add_message_to_buffer(message_json)
-
+    # sender=None, user_id=None, mark_user_id=None
     async def get_message_GeneralChat(self, sender, user_id, mark_user_id):
         messages = await self.get_unread_messages("general_chat_message", user_id, sender)
         chat_messages = []
@@ -156,18 +157,30 @@ class CoreCommon:
     # Universal method to get messages
     async def get_unread_messages(self, table, user_id, sender=None, arena_id=None):
         try:
+            # Получаем все сообщения из буфера
             response = self.mm.receive_response_from_buffer(table, user_id)
+
             if response.get("status") == "ok":
                 messages = response.get("messages", [])
                 filtered_messages = []
+
+                # Фильтруем сообщения по user_id и дополнительным параметрам (sender, arena_id)
                 for message in messages:
-                    if sender:
-                        if message['data'].get('sender') != sender:
-                            continue
-                    if arena_id:
-                        if message['data'].get('arena_id') != arena_id:
-                            continue
+                    # Фильтрация по user_id
+                    if user_id and message['data'].get('user_id') != user_id:
+                        continue
+
+                    # Фильтрация по sender (если указано)
+                    if sender and message['data'].get('sender') != sender:
+                        continue
+
+                    # Фильтрация по arena_id (если указано)
+                    if arena_id and message['data'].get('arena_id') != arena_id:
+                        continue
+
+                    # Добавляем сообщение в список, если все фильтры пройдены
                     filtered_messages.append(message)
+
                 return filtered_messages
         except Exception as e:
             logger.error(f"Error fetching messages from buffer: {e}")

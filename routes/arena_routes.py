@@ -1,6 +1,7 @@
 import logging
 import json
-from flask import Blueprint, render_template, jsonify, request, g, url_for, redirect, current_app
+from flask import Blueprint, render_template, jsonify, request, g, url_for, redirect, current_app, make_response
+from cookies import Cookies
 from models import Character, Registrar, Arena, PreRegistrar
 from multiproc import StatusManager
 from core_common import CoreCommon
@@ -13,11 +14,11 @@ logger = logging.getLogger(__name__)
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
 
+cok = Cookies()
 sm = StatusManager()
-#mm = MessageManager()
 plm = PlayerManager()
 ccom = CoreCommon()
-
+battle_start = False
 @arena_bp.before_request
 def before_request():
     response = load_user()
@@ -29,10 +30,12 @@ def before_request():
 
 @arena_bp.route('/')
 async def arena():
+    # Проверяем, зарегистрирован ли персонаж для пользователя
     registered_character = Registrar.query.filter_by(user_id=g.user_id).first()
     if not registered_character:
         return redirect(url_for('viewer.viewer'))
 
+    # Получаем всех зарегистрированных персонажей
     registrations = Registrar.query.all()
     characters = []
     for registration in registrations:
@@ -50,16 +53,29 @@ async def arena():
                 'image_url': character.image_url
             })
 
+    # Получаем последнее состояние арены
     arena = Arena.query.order_by(Arena.date_created.desc()).first()
     arena_image_url = arena.image_url if arena else None
 
-    return render_template(
+    # Создаем ответ и увеличиваем значение step_read для текущего пользователя
+    response = make_response(render_template(
         'arena.html',
         characters=characters,
         arena_image_url=arena_image_url,
         enumerate=enumerate,
         show_start_game_popup=False
-    )
+    ))
+
+    # Инкрементируем значение step_read в cookies для пользователя
+    # response = cok.increment_cookie_for_user(response, g.user_id, 'step_read', max_age=86400)
+
+    # logger.info(f'{g.user_id} arena start: ({cok.is_odd(g.user_id)})')
+    # if cok.is_odd(g.user_id) == False:
+    #     response = cok.increment_cookie_for_user(response, g.user_id, 'step_read', max_age=86400)
+    #     logger.info(f'{g.user_id} new arena start: ({cok.is_odd(g.user_id)})')
+
+    return response  # Возвращаем ответ с инкрементированным значением в cookies
+
 
 @arena_bp.route('/get_registered_characters')
 async def get_registered_characters():
@@ -108,7 +124,7 @@ async def get_chat_messages(chat_type):
         else:
             return jsonify({"error": f"Invalid chat type: {chat_type}"}), 400
 
-        #logger.info(f'Messages fetched for {chat_type}: {len(messages)}')
+        #logger.info(f'Chats Update {chat_type}: {len(messages)}')
         
         #test_format = ['test mess1','test mess2','test mess3']
         
@@ -142,19 +158,21 @@ async def get_latest_arena_image():
 
 @arena_bp.route('/get_status', methods=['GET'])
 async def get_status():
+    
     try:
+        characters = sm.get_state('characters')
         game_status = sm.get_state('game')
         arena_status = sm.get_state('arena')
         battle_status = sm.get_state('battle')
         timer_status = sm.get_state('timer')
-        if game_status or arena_status or battle_status or timer_status:
-            #logger.info(f"States A: {game_status} G: {arena_status} B: {battle_status} T: {timer_status}")
-            await plm.battle_start(g.user_id , game_status)
-        
-        registered_players = Registrar.query.count()
+
+        if characters:
+            if game_status or arena_status or battle_status or timer_status:
+                await plm.battle_start(g.user_id , game_status)
+                logger.info(f" {characters} | {game_status} | {arena_status} | {battle_status} | {timer_status}")
 
         return jsonify({
-            'registered_players': registered_players,
+            #'registered_players': registered_players,
             'battle_status': battle_status,
             'timer_status': timer_status,
             'game_status': game_status,
@@ -168,3 +186,11 @@ async def get_status():
 @arena_bp.route('/start_async_tasks', methods=['POST'])
 async def start_async_tasks():
     return jsonify({'status': 'Tasks started'}), 200
+
+@arena_bp.route('/increment_step')
+def increment_step():
+    response = make_response()
+    response = Cookies.increment_cookie_for_user(response, g.user_id, 'step_read', max_age=86400)
+    # Устанавливаем переменную StepRead в значение '1' с временем жизни 1 час (3600 секунд)
+    return response
+
