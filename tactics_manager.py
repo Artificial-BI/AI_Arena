@@ -17,8 +17,10 @@ class PlayerManager:
     def __init__(self, loop=None):
         self.stm = StatusManager()
         self.ccom = CoreCommon()
-        self.tcm = TacticsManager()
-        self.flm = FighterManager()
+        self.ReadState = False
+        self.tcm = TacticsManager(self)
+        self.flm = FighterManager(self)
+        
         self.battle_state = False
         self.arena_id = None
 
@@ -34,8 +36,8 @@ class PlayerManager:
             logger.error(f"Character with ID {registration.character_id} not found")
         return character
 
-    async def battle_start(self, user_id, game_status):
-        self.battle_state = (game_status == 'battle')
+    async def battle_start(self, user_id, battle_state):
+        self.battle_state = (battle_state == 'start')
         #print('---------- BATTLE STATE:',self.battle_state,'STATE:',self.stm.get_state('game'))
         if self.battle_state:
             await self.battle_process(user_id)
@@ -43,11 +45,9 @@ class PlayerManager:
     async def battle_process(self, user_id):
         cur_arena = await self.ccom.get_arena()  # получение арены
         reg_character_list = await self.ccom.get_registered_character_data()  # получение списка зарегистрированных персонажей
-
         opponent_character_list = []
 
         cur_character = self.get_cur_character(user_id)
-        #cur_character_txt = cur_character.to_str()  # Переводим текущего персонажа в строку
 
         for character in reg_character_list:
             if character['character_id'] != cur_character.character_id:  # Используем character_id для сравнения
@@ -56,33 +56,47 @@ class PlayerManager:
 
         register_users = Registrar.query.all()
         user_ids = [user.user_id for user in register_users]
+        
+        logger.info(f"Registrar user count: {len(register_users)}")
 
         while self.battle_state:
-            game_status = self.stm.get_state('game')
-            if game_status != 'stop':
+            
+            game_state = self.stm.get_state('game')
+            battle_state  = self.stm.get_state('game')
+            if game_state == 'stop' or game_state == 'error':
                 self.battle_state = False
-                logger.info(f"tactic stop: {self.battle_state}")
-
+            if battle_state == 'stop' or battle_state == 'error':
+                self.battle_state = False
+                
+            if  self.battle_state:   
                 opponent_moves_list = []
-                for user_reg in user_ids:
-                    if user_reg != user_reg:
-                        # Запрашиваем сообщения через буфер сообщений
-                        opponent_mov = await self.ccom.get_message_chatArena(sender='fighter', arena_id=None, user_id=None, mark_user_id=user_reg)
+                # получаем ходы зарегистрированный пользователей (кроме своего)
+                for user_reg in user_ids: 
+                    if user_reg != user_id:
+                        opponent_mov = await self.ccom.get_message_chatArena(sender='fighter', arena_id=None, user_id=user_reg, mark_user_id=user_id)
                         opponent_moves_list.append(opponent_mov)
+                # получаем оценки рефери
+                referee_rating_list = await self.ccom.get_message_chatArena(sender='referee', arena_id=None, user_id=None, mark_user_id=user_id)
 
-                referee_rating_list = await self.ccom.get_message_chatArena(sender='referee', arena_id=None, user_id=None, mark_user_id=user_reg)
-                logger.info(f"--- Gen. Tact. Opp char: {len(opponent_character_list)} Opp mess:{len(opponent_moves_list)} ref: {len(referee_rating_list)} ---")    
-                # Генерация тактических рекомендаций
-                await self.tcm.generate_tactics(user_id, cur_arena, cur_character, opponent_character_list, opponent_moves_list, referee_rating_list)
+                # Генерация тактических рекомендаций на основе собранных данных
+                if self.ReadState == False:
+                    recomendation = await self.tcm.generate_tactics(user_id, cur_arena, cur_character, opponent_character_list, opponent_moves_list, referee_rating_list)
+                    if recomendation:
+                        await self.ccom.message_to_Tactics(recomendation, sender="tactician", user_id=user_id)
+                        self.ReadState = True
+                        logger.info(f"Tactic Gen - User: {user_id}")
 
-                tactical_recommendation = await self.ccom.get_message_chatTactics(sender='tactic', user_id=user_id)
+                # Генерация хода бойца на основе рекомендаций тактика и пожеланий игрока
+                if self.ReadState == True:
+                    fighter_step = await self.flm.generate_fighter(user_id, cur_arena, cur_character, opponent_moves_list, referee_rating_list)
+                    if fighter_step:
+                        message = f"fighter: {cur_character.name}\n"
+                        message += f"step: {fighter_step}\n"
+                        await self.ccom.message_to_Arena(message, "fighter", cur_arena.id, user_id, cur_character.name)
+                        self.ReadState = False
+                        logger.info(f"Fighter step - User: {user_id} ??? = {self.ReadState}")
 
-                user_wishes = await self.ccom.get_message_chatTactics(sender='wishes', user_id=user_id)
-
-                logger.info(f"--- Gen. Fight. Tact.Rec: {len(tactical_recommendation)} Usr mess:{len(user_wishes)} ---") 
-                # Генерация хода бойца
-                await self.flm.generate_fighter(user_id, cur_arena, cur_character, tactical_recommendation, user_wishes, opponent_moves_list, referee_rating_list)
-
+            
 class TacticsManager:
     def __init__(self, loop=None):
         self.loop = loop or asyncio.get_event_loop()
@@ -92,9 +106,7 @@ class TacticsManager:
     #================= TACTIC =========================
         
     async def generate_tactics(self, user_id, cur_arena, cur_character, opponent_character_list, opponent_moves_list, referee_rating_list):
-        
-        #logger.info(f"Recommendations for Fighter: {cur_character.name}")
-        
+
         cur_arena_txt = cur_arena.to_str() 
         cur_character_txt = cur_character.to_str() 
 
@@ -111,17 +123,11 @@ class TacticsManager:
         try:
             assistant = Assistant("tactician")
             response = await assistant.send_message(prompt,'gemini')
-            if not response.strip():
-                logger.error("Received empty response from assistant")
-                await asyncio.sleep(10)
-            else:
-                #logger.info(f"Tactical recommendation (response) for ({user_id}) saved.")
-
-                await self.ccom.message_to_Tactics(response, sender="tactician", user_id=user_id)
-
+            return response 
         except Exception as e:
-            logger.error(f"Error sending message for {user_id}: {e}")
-            return None, None
+            logger.error(f"Sending message tectic for {user_id}: {e}")
+            self.battle_state = False
+        return None 
 
 class FighterManager:
     
@@ -132,9 +138,11 @@ class FighterManager:
 
     #================== FIGHTER ===================== 
 
-    async def generate_fighter(self, user_id, cur_arena, cur_character, tactical_recommendation, user_wishes, opponent_moves_list, referee_rating_list):
+    async def generate_fighter(self, user_id, cur_arena, cur_character, opponent_moves_list, referee_rating_list):
         
-        #logger.info(f"step Fighter: {cur_character.name}")
+        tactical_recommendation = await self.ccom.get_message_chatTactics(sender='tactic', user_id=user_id, mark_user_id=user_id)
+        user_wishes = await self.ccom.get_message_chatTactics(sender='user', user_id=user_id, mark_user_id=user_id)
+
         cur_arena_txt = cur_arena.to_str() 
         cur_character_txt =cur_character.to_str() 
         prompt = f"Arena: {cur_arena_txt}\n\n"
@@ -148,25 +156,17 @@ class FighterManager:
             prompt += f"referee rating: {referee_rating}\n\n"
         prompt += "Generate the character's next move based on the information above."
 
-        await asyncio.sleep(2)
-
         try:
             assistant = Assistant("fighter")
             response = await assistant.send_message(prompt,'gemini')
-            if not response.strip():
-                logger.error("Received empty response from assistant")
-                return "Received empty response from assistant"
-            else:
-                with current_app.app_context():
-                    
-                    message = f"fighter: {cur_character.name}\n"
-                    message += f"step: {response}\n"
-                    #message, sender, arena_id, user_id, name
-                    await self.ccom.message_to_Arena(message, "fighter", cur_arena.id, user_id, cur_character.name)
+            if response:
+                return response
 
         except Exception as e:
-            logger.error(f"Error sending message for {user_id}: {e}")
-            return "Error sending message"
+            logger.error(f"Sending sending message fighter for {user_id}: {e}")
+            self.battle_state = False
+
+        return None
 
 
 

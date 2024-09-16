@@ -48,8 +48,7 @@ class ArenaManager:
         image_url = self.create_arena_image(new_arena, arena_description) 
 
         new_arena.image_url = image_url
-        db.session.commit()
-                                    #  message, sender, arena_id, user_id, name
+                                     #  message, sender, arena_id, user_id, name
         #self.ccom.message_to_Arena(f"Arena description: {arena_description} \n Parameters: {parsed_parameters}", _sender='sys', _name='sys', _arena_id=new_arena.id)
 
         logger.info(f"Arena generated with ID: {new_arena.id} and image {image_url}")

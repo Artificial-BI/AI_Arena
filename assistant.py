@@ -31,6 +31,8 @@ class Assistant:
         self.old_request = ""
 
     async def send_message(self, message, assistant, max_retries=6):
+        
+        await asyncio.sleep(self.conf.WAITING_STEPS)
         if self.conf.DEBUG:
             debug_mess = ['какие то данные', 'случайный выбор', 'неопределенно', 'эотносительно отладки', ' это письмо ', 'Рассылки',' письма точнее','С учетом позиции','Также на счету','есть консерванты','вкус другой','Качество продуктов высокое','Почта учится','в начале августа' ]
             rnd_mess = random.choice(debug_mess)
@@ -97,22 +99,23 @@ class GeminiAssistant:
                 result = response.candidates[0].content.parts[0].text
                 return result
             else:
-                logger.error(f"Error {self.model} NONE")  
-                return None
+                logger.warning(f"{self.model} no response")  
+                return ""
         except Exception as e:        
             if "429" in str(e):
-                logger.error(f"Error {self.model} NONE")
-                return None
+                logger.error(f"{self.model} err: 429")
+                await asyncio.sleep(10) 
+                return ""
             else:
-                logger.error(f"Error {self.model} fetching instructions: {e}")
-                return None
-            
+                logger.error(f"{self.model} fetching instructions: {e}")
+                return ""
 
 class ChatGPTAssistant:
     def __init__(self, role_instructions):
         self.conf = Config()
         self.instructions = role_instructions
-        self.client = AsyncOpenAI(api_key=self.conf.OPENAI_API_KEY)
+        self.client = AsyncOpenAI()
+        self.client.api_key = self.conf.OPENAI_API_KEY
         self.model = "gpt-4o-mini-2024-07-18"  # либо "gpt-4-turbo"
 
     async def send_message(self, msg):
@@ -124,19 +127,18 @@ class ChatGPTAssistant:
                     model=self.model, 
                     messages=messages
                 )
-                # Доступ через атрибут 'content', а не как к словарю
-                result =  response.choices[0].message.content.strip()
+                result = response.choices[0].message.content.strip()
                 return result
             except RateLimitError as e:
-                logger.warning(f"Превышение лимита запросов {self.model}. {e} ")
-                return None
+                logger.warning(f"Превышение лимита запросов {self.model}. {e}")
+                await asyncio.sleep(10) 
+                return ""
             except APIError as e:
                 logger.error(f"Ошибка {self.model} в send_message: {e}")
-                return None
+                return ""
         else:
-            logger.error(f"Error: пустой запрос: {messages}")
-            return None
-
+            logger.warning(f"Error: пустой запрос: {messages}")
+            return ""
 #---------------------------------------------------------------------------
 
     def convert_role(self, message):

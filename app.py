@@ -8,8 +8,7 @@ import traceback
 import asyncio 
 from core import BattleManager
 from multiproc import StatusManager
-from message_buffer import ZMQServer
-#from default import initialize_database
+from utils import count_runs, is_odd
 from threading import Thread, Event
 import logging
  
@@ -79,13 +78,13 @@ def internal_error(error):
 def start_game_loop(stop_event):
     """Запуск игрового цикла с использованием asyncio"""
     with app.app_context():
+        
         battle_manager = BattleManager()
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         #while not stop_event.is_set():
         loop.run_until_complete(battle_manager.start_game())
-            # Добавляем небольшую задержку, чтобы избежать высокой нагрузки
-            #asyncio.sleep(1)
+
 
 # Функция для запуска серверов ZeroMQ
 def start_zmq_servers(stop_event):
@@ -99,29 +98,30 @@ def start_zmq_servers(stop_event):
     zmq_thread_status.start()
   
     # Создаем сервер сообщений
-    zmq_server = ZMQServer()
+    #zmq_server = ZMQServer()
  
-    try:
-        while not stop_event.is_set():
-            zmq_server.run()  # Запуск ZeroMQ сервера для обработки сообщений
-    except Exception as e:
-        logger.error(f"Ошибка в ZMQ-сервере: {e}")
-    finally:
-        logger.info("ZeroMQ сервер завершён.")
-        zmq_thread_status.join()
+    # try:
+    #     while not stop_event.is_set():
+    #         zmq_server.run()  # Запуск ZeroMQ сервера для обработки сообщений
+    # except Exception as e:
+    #     logger.error(f"Ошибка в ZMQ-сервере: {e}")
+    # finally:
+    #     logger.info("ZeroMQ сервер завершён.")
+    #     zmq_thread_status.join()
 
 # Основная точка входа
 if __name__ == "__main__":
     # Создаём событие для остановки потоков
     stop_event = Event()
+    
+    if is_odd(): # Если Debug = True
+        # Запуск серверов ZeroMQ в отдельном потоке
+        zmq_thread = Thread(target=start_zmq_servers, args=(stop_event,))
+        zmq_thread.start()
 
-    # Запуск серверов ZeroMQ в отдельном потоке
-    zmq_thread = Thread(target=start_zmq_servers, args=(stop_event,))
-    zmq_thread.start()
-
-    # Запуск игрового процесса в отдельном потоке
-    game_thread = Thread(target=start_game_loop, args=(stop_event,))
-    game_thread.start()
+        # Запуск игрового процесса в отдельном потоке
+        game_thread = Thread(target=start_game_loop, args=(stop_event,))
+        game_thread.start()
 
     try:
         # Запуск сервера Flask

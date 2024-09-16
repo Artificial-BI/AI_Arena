@@ -152,21 +152,22 @@ def generate_unixid():
     unix_time = int(time.time())
     return str(unix_time)
 
-def count_runs(filename="run_count.txt"):
-    # Проверяем, существует ли файл с количеством запусков
+def count_runs(filename):
     if os.path.exists(filename):
-        # Если файл существует, читаем текущее количество запусков
         with open(filename, "r") as file:
-            count = int(file.read().strip())  # Прочитываем и преобразуем в число
+            count = int(file.read().strip())  
     else:
-        # Если файл не существует, устанавливаем начальное значение
         count = 0
-
-    # Увеличиваем количество запусков на 1
     count += 1
 
-    # Записываем обновленное количество запусков обратно в файл
     with open(filename, "w") as file:
         file.write(str(count))
 
     return count
+
+# Функция для проверки, является ли число нечетным
+def is_odd():
+    number = count_runs(filename="app_count.txt")
+    res = number % 2 != 0
+    print(">>> APP:",res)
+    return res

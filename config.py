@@ -78,6 +78,7 @@ class Config:
     
     ARENA_MODE = 'random'
     
+    NEW_BATTLE_WAIT = 20
     WAIT_COUNT = 30
     
     PLAYER_COUNT = 2
@@ -87,5 +88,5 @@ class Config:
     MESS_PUB_PORT =  "tcp://*:6568" 
     MESS_PORT=  6573 #"tcp://localhost:6573" 
     
-    COUNT_ROUND = 30
+    COUNT_ROUND = 3
     WAITING_STEPS = 10

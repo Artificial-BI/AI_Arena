@@ -97,13 +97,13 @@ async def get_chat_messages(chat_type):
     try:
         # Вызов метода из CoreCommon для получения сообщений
         if chat_type == "arena":
-            messages = await ccom.get_message_chatArena(sender="referee", arena_id=None, user_id=None, mark_user_id=g.user_id)
+            messages = await ccom.get_message_chatArena(sender=None, arena_id=None, user_id=None, mark_user_id=None)
             #logger.info(f'==========: {chat_type} messages: {messages}')
         elif chat_type == "general":
-            messages = await ccom.get_message_GeneralChat(sender=None, arena_id=None, user_id=None)
+            messages = await ccom.get_message_GeneralChat(sender=None, user_id=None, mark_user_id=None)
             #logger.info(f'==========: {chat_type} messages: {messages}')
         elif chat_type == "tactics":
-            messages = await ccom.get_message_chatTactics(sender="tactician", user_id=g.user_id)
+            messages = await ccom.get_message_chatTactics(sender=None, user_id=g.user_id, mark_user_id=None)
             #logger.info(f'==========: {chat_type} messages: {messages}')
         else:
             return jsonify({"error": f"Invalid chat type: {chat_type}"}), 400
@@ -162,7 +162,7 @@ async def get_status():
         }), 200
 
     except Exception as e:
-        logger.error(f"Error fetching statuses: {e}")
+        logger.error(f"fetching statuses: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
 @arena_bp.route('/start_async_tasks', methods=['POST'])
