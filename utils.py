@@ -165,9 +165,44 @@ def count_runs(filename):
 
     return count
 
+
+def get_glob_var(name):
+    if os.path.exists('glob_var.csv'):
+        with open('glob_var.csv', "r") as file:
+            count = file.read()  
+    else:
+        count = 0
+    count += 1
+
+    with open('glob_var.csv', "w") as file:
+        file.write(str(count))
+
+    return count
+
+
 # Функция для проверки, является ли число нечетным
 def is_odd():
     number = count_runs(filename="app_count.txt")
     res = number % 2 != 0
     print("DEBUG APP:",res)
     return res
+
+# ==========================================================
+GLOBAL_VARS_FILE = 'global_vars.json'
+def set_glob_var(name, value):
+    if os.path.exists(GLOBAL_VARS_FILE):
+        with open(GLOBAL_VARS_FILE, 'r') as file:
+            global_vars = json.load(file)
+    else:
+        global_vars = {}
+    global_vars[name] = value
+    with open(GLOBAL_VARS_FILE, 'w') as file:
+        json.dump(global_vars, file)
+
+def get_glob_var(name):
+    if os.path.exists(GLOBAL_VARS_FILE):
+        with open(GLOBAL_VARS_FILE, 'r') as file:
+            global_vars = json.load(file)
+        return global_vars.get(name, None)
+    else:
+        return None

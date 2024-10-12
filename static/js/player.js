@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const descriptionField = createCharacterForm.querySelector('#description');
     const characterImage = document.querySelector('.selected-character img');
     const loadingMessage = document.getElementById('loading-message');
-    //const arenaButton = document.getElementById('to-arena-button'); // Используем идентификатор для надежности
     const toArenaButton = document.getElementById('to-arena-button');
     const characterList = document.getElementById('character-list');
     const noCharactersMessage = document.getElementById('no-characters-message');

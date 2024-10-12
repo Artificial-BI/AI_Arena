@@ -3,8 +3,8 @@ import json
 from datetime import datetime
 from flask import current_app
 from models import Arena, Character, Registrar, Role
-from multiproc import StatusManager
-from message_buffer import MessageManager
+from status_manager import StatusManager
+from messaging_manager import MessageManager
 
 # Logging setup
 logging.basicConfig(level=logging.INFO)
@@ -14,7 +14,7 @@ class CoreCommon:
     
     def __init__(self):
         self.sm = StatusManager()
-        self.mm = MessageManager(self)
+        self.mm = MessageManager()
 
     def newTM(self):
         # Returns the current time in string format
@@ -65,7 +65,7 @@ class CoreCommon:
         message_json = json.dumps({
             "table": "arena_chat_message",
             "data": {
-                "content": message,
+                "message": message,
                 "sender": sender,
                 "user_id": user_id,
                 "name": name,
@@ -99,7 +99,7 @@ class CoreCommon:
         message_json = json.dumps({
             "table": "tactics_chat_message",
             "data": {
-                "content": message,
+                "message": message,
                 "sender": sender,
                 "user_id": user_id,
                 "read_status": read_status,
@@ -129,7 +129,7 @@ class CoreCommon:
         message_json = json.dumps({
             "table": "general_chat_message",
             "data":{
-                "content": message,
+                "message": message,
                 "sender": sender,
                 "user_id": user_id,
                 "timestamp": self.newTM()

@@ -1,6 +1,5 @@
 
 # --- initialization.py --
-
 from extensions import db, migrate
 from default import add_default_values
 
@@ -17,3 +16,6 @@ def init_extensions_and_db(app):
     with app.app_context():
         db.create_all()
         add_default_values()
+
+
+    

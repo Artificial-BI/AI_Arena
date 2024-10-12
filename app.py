@@ -1,3 +1,11 @@
+#=============================================================================================
+
+import sys
+import asyncio
+if sys.platform.startswith('win'):
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+import tornado.platform.asyncio
 from flask import Flask, render_template, request, g
 from config import Config
 from logging_config import configure_logging 
@@ -5,14 +13,12 @@ from initialization import init_extensions_and_db
 from extensions import db
 from models import PreRegistrar, Registrar, Player
 import traceback
-import asyncio 
 from core import BattleManager
-from multiproc import StatusManager
-from utils import count_runs, is_odd
+from status_manager import StatusManager
+from message_server import startMessagesServer
+from utils import count_runs, is_odd, set_glob_var, get_glob_var
 from threading import Thread, Event
 import logging
- 
-# --- app.py ---
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -23,11 +29,14 @@ if not app.debug:
 # Инициализация расширений и базы данных
 init_extensions_and_db(app)
 
-# Логгер приложения
 logger = logging.getLogger(__name__)
 
+def one_start():
+    res = is_odd()
+
+    return res
+
 def clear_table():
-    """Очищаем таблицы PreRegistrar и Registrar"""
     with app.app_context():
         try:
             db.session.query(PreRegistrar).delete()
@@ -50,19 +59,17 @@ app.register_blueprint(index_bp)
 app.register_blueprint(common_bp, url_prefix='/common')
 app.register_blueprint(player_bp, url_prefix='/player')
 app.register_blueprint(viewer_bp, url_prefix='/viewer')
-app.register_blueprint(admin_bp,  url_prefix='/admin')
-app.register_blueprint(arena_bp,  url_prefix='/arena')
+app.register_blueprint(admin_bp, url_prefix='/admin')
+app.register_blueprint(arena_bp, url_prefix='/arena')
 
 from webhook import webhook_bp
 app.register_blueprint(webhook_bp)
 
-# Доступ к глобальным переменным Jinja
 app.jinja_env.globals.update(enumerate=enumerate)
 
 # Очистка таблиц при запуске приложения
 clear_table()
 
-# Обработчики ошибок
 @app.errorhandler(404)
 def not_found_error(error):
     return render_template('404.html'), 404
@@ -74,56 +81,62 @@ def internal_error(error):
     app.logger.error(f'Server Error: {error}, route: {request.url}')
     return render_template('500.html', error=error, error_trace=error_trace), 500
 
-# Функция для запуска игрового цикла
-def start_game_loop(stop_event):
-    """Запуск игрового цикла с использованием asyncio"""
+# ===============================================      
+async def start_game_loop(stop_event):
     with app.app_context():
-        
         battle_manager = BattleManager()
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        #while not stop_event.is_set():
-        loop.run_until_complete(battle_manager.start_game())
+        await battle_manager.start_game(stop_event)
+        
+def start_game_server(stop_event): 
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    tornado.platform.asyncio.AsyncIOMainLoop().install()
+    game_thread = Thread(target=loop.run_until_complete, args=(start_game_loop(stop_event),))
+    game_thread.start()
+    return game_thread
 
+def start_messages_loop(stop_event):
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        loop.run_until_complete(startMessagesServer(stop_event))
+    except OSError as e:
+        logger.error(f"Ошибка при запуске MessageServer: {e}")
+    finally:
+        loop.close()
 
-# Функция для запуска серверов ZeroMQ
-def start_zmq_servers(stop_event):
-    """Запуск серверов ZeroMQ для обработки сообщений"""
-    #initialize_database()  # Инициализация базы данных перед запуском серверов
+def start_messages_server(stop_event):
+    messages_thread = Thread(target=start_messages_loop, args=(stop_event,))
+    messages_thread.start()
+    return messages_thread
 
-    status_manager = StatusManager()
-    
-    # Запускаем сервер для управления статусами (ZeroMQ)
-    zmq_thread_status = Thread(target=status_manager.start_server)
-    zmq_thread_status.start()
-  
+def run_flask_app(app, stop_event, base_port=6511):
+    port = base_port
+    while not stop_event.is_set():
+        try:
+            app.run(debug=True, port=port)
+        except OSError as e:
+            if "Address already in use" in str(e):
+                logger.warning(f"Порт {port} занят. Flak уже запущен.")
+            else:
+                logger.error(f"Ошибка при запуске Flask: {e}")
 
-# Основная точка входа
 if __name__ == "__main__":
-    # Создаём событие для остановки потоков
     stop_event = Event()
     
-    if is_odd(): # Если Debug = True
-        # Запуск серверов ZeroMQ в отдельном потоке
-        zmq_thread = Thread(target=start_zmq_servers, args=(stop_event,))
-        zmq_thread.start()
-
-        # Запуск игрового процесса в отдельном потоке
-        game_thread = Thread(target=start_game_loop, args=(stop_event,))
-        game_thread.start()
-
+    print('START:',get_glob_var('flask'))
+    
+    messages_thread = start_messages_server(stop_event)
+    
+    if not get_glob_var('flask'):
+        set_glob_var('flask', True)
+        game_thread = start_game_server(stop_event)    
     try:
-        # Запуск сервера Flask
-        app.run(debug=True, port=6511)
+        run_flask_app(app, stop_event)
     except KeyboardInterrupt:
         logger.info("Остановка приложения...")
-
     finally:
-        # Устанавливаем флаг для завершения потоков
+        set_glob_var('flask', False)
         stop_event.set()
-
-        # Ожидание завершения потоков
-        zmq_thread.join()
-        game_thread.join()
-
-        logger.info("Приложение завершено корректно.")
+        print(f"Приложение завершено корректно, status: {get_glob_var('flask')}")
+        

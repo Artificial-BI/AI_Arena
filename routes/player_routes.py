@@ -12,7 +12,7 @@ from img_selector import IMGSelector
 import logging
 from config import Config
 from default import default_current_character
-from multiproc import StatusManager
+from status_manager import StatusManager
 
 conf = Config()
 player_bp = Blueprint('player_bp', __name__)
@@ -240,24 +240,28 @@ def send_message():
     return jsonify({"status": "Message sent", "response": response})
 
 @player_bp.route('/register_for_arena', methods=['POST'])
-def register_for_arena():
+async def register_for_arena():
     logger.info(f"----------register_for_arena------------")
     
     try:
         user_id = g.user_id
         sm = StatusManager()
-        sm.set_state(str(user_id), False, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        res = await sm.create_status(f'stat_{user_id}')
+        print('PlR:',res)
+        res1 = await sm.set_status(f'stat_{user_id}', False)
+        print('PlR 1:',res1)
         # Получаем текущего выбранного персонажа для данного пользователя
         selected_character = Player.query.filter_by(user_id=user_id).first()
         if not selected_character or not selected_character.last_selected_character_id:
             return jsonify({"error": "No character selected"}), 400
 
         character_id = selected_character.last_selected_character_id
-
+        print('PlR 2:',character_id)
         # Проверяем, началась ли битва
-        battle_in_progress = Statuses.query.filter_by(name='battle').first()
+        battle_process = await sm.get_status('battle_process')
+        print('PlR 3:',battle_process)
 
-        if battle_in_progress and battle_in_progress.state == 'in_progress':
+        if battle_process == True:
             # Проверяем, есть ли запись в PreRegistrar
             pre_reg_exists = PreRegistrar.query.filter_by(user_id=user_id, character_id=character_id, arena_id=1).first()
             if not pre_reg_exists:
@@ -277,7 +281,7 @@ def register_for_arena():
                 logger.info(f"Character {character_id} is already registered in Registrar for user {user_id}")
 
         # Обновляем статус игрока
-        update_or_create_player(g.user_id, character_id, 'registered')
+        #update_or_create_player(g.user_id, character_id, 'registered')
 
         db.session.commit()
         return jsonify({"status": "registered"})

@@ -79,47 +79,6 @@ class Message(db.Model):
     def __repr__(self):
         return f'<Message {self.content[:15]}>'
 
-# class ArenaChatMessage(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-#     content = db.Column(db.Text, nullable=False)
-#     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-#     sender = db.Column(db.String(64), nullable=False)  # 'player1', 'player2', 'referee'
-#     name = db.Column(db.String(64), nullable=False)  # 'fighter name'
-#     arena_id = db.Column(db.Integer, db.ForeignKey('arena.id'), nullable=True)
-#     read_status = db.Column(db.Integer, default=0)
-
-#     def __repr__(self):
-#         return f'<ArenaChatMessage {self.content[:15]}>'
-
-# class AssistantReadStatus(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     user_id = db.Column(db.String(64), nullable=False)  # Идентификатор user
-#     message_id = db.Column(db.Integer, db.ForeignKey('arena_chat_message.id'))
-#     read_status = db.Column(db.Boolean, default=False)  # Статус прочтения: False - не прочитано, True - прочитано
-#     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-
-# class GeneralChatMessage(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-#     content = db.Column(db.Text, nullable=False)
-#     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-#     sender = db.Column(db.String(64), nullable=False)  # 'player', 'viewer', 'referee'
-
-#     def __repr__(self):
-#         return f'<GeneralChatMessage {self.content[:15]}>'
-
-# class TacticsChatMessage(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-#     content = db.Column(db.Text, nullable=False)
-#     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-#     sender = db.Column(db.String(64), nullable=False)  # 'player', 'viewer', 'referee'
-#     read_status = db.Column(db.Integer, default=0)
-
-#     def __repr__(self):
-#         return f'<TacticsChatMessage {self.content[:15]}>'
-
 class RefereePrompt(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     prompt_text = db.Column(db.Text)
@@ -198,6 +157,16 @@ class Role(db.Model):
     name = db.Column(db.String(50), unique=True, nullable=False)
     instructions = db.Column(db.Text, nullable=False)
 
+class Statuses(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)
+    state = db.Column(db.String(50), unique=True, nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    time_state = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<name: {self.name}, state: {self.state}, description: {self.description} , time_state: {self.time_state}>'
+
 class PreRegistrar(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -211,16 +180,6 @@ class PreRegistrar(db.Model):
 
     def __repr__(self):
         return f'<PreRegistrar User ID: {self.user_id}, Character ID: {self.character_id}, Arena ID: {self.arena_id}>'
-
-class Statuses(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), unique=True, nullable=False)
-    state = db.Column(db.String(50), unique=True, nullable=False)
-    description = db.Column(db.Text, nullable=False)
-    time_state = db.Column(db.DateTime, default=datetime.utcnow)
-
-    def __repr__(self):
-        return f'<name: {self.name}, state: {self.state}, description: {self.description} , time_state: {self.time_state}>'
 
 class Registrar(db.Model):
     id = db.Column(db.Integer, primary_key=True)

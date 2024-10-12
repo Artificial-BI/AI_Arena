@@ -1,4 +1,5 @@
 import threading
+import asyncio
 import time
 import logging
 from sqlalchemy import create_engine, inspect
@@ -6,7 +7,8 @@ from sqlalchemy.orm import sessionmaker
 from chats_models import ReadStatus, ArenaChatMessage, GeneralChatMessage, TacticsChatMessage, Base
 from config import Config
 from datetime import datetime
-from multiproc import StatusManager
+from status_manager import StatusManager
+from message_client import MessageClient
 import json
 
 logging.basicConfig(level=logging.INFO)
@@ -18,6 +20,7 @@ class MessageManager:
         self.engine = create_engine(self.conf.MESSAGES_DB)
         self.Session = sessionmaker(bind=self.engine)
         self.sm = StatusManager()
+        self.client = MessageClient()
         self.ccom = core_com
         self.buffer_cicle = True
         # Initialize database
@@ -27,7 +30,7 @@ class MessageManager:
         self.lock = threading.Lock()
 
         # Start background thread for saving messages to the database
-        self.saving_thread = threading.Thread(target=self.save_messages_to_db)
+        self.saving_thread = threading.Thread(target=self._run_event_loop)
         self.saving_thread.daemon = True
         self.saving_thread.start()
 
@@ -36,6 +39,44 @@ class MessageManager:
             "tactics_chat_message": TacticsChatMessage,
             "general_chat_message": GeneralChatMessage
         }
+
+    async def box_extraction(self, message_box):
+        if isinstance(message_box, dict):
+            message_resp = message_box['message']
+            #print('message_resp:',message_resp)
+            if isinstance(message_resp, dict):
+                message = message_resp['message']
+                return message
+            else:
+                return message_resp
+        return message_box
+
+    async def create_channels(self):
+        channel_list = ['tactic_chat', 'arena_chat', 'general_chat']
+        for channel in channel_list:
+            await self.client.create_channel(channel)
+    
+    async def send_message(self, name, message):
+        resp = await self.client.send(message, name)
+        return await self.box_extraction(resp)
+                
+    async def get_message(self, name):
+        message_box = await self.client.get_message(name)
+        return self.box_extraction(message_box)
+    
+    async def get_messages(self, name):
+        messages = await self.client.get_messages(name)
+        mess_list = []
+        for message_box in messages:
+            message = self.box_extraction(message_box)
+            mess_list.append(message)
+        return mess_list    
+
+    def _run_event_loop(self):
+        """Запуск отдельного цикла событий в потоке"""
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        #loop.run_until_complete(self.asinc_save_messages_to_db())
 
     def initialize_database(self):
         """Create tables in the database if they don't exist"""
@@ -46,6 +87,8 @@ class MessageManager:
                 Base.metadata.tables[table_class.__tablename__].create(self.engine)
                 logger.info(f"Table '{table_class.__tablename__}' created.")
 
+
+
     def add_message_to_buffer(self, message_json):
         try:
             with self.lock:
@@ -53,13 +96,15 @@ class MessageManager:
         except Exception as e:
             logger.error(f"Error adding message to buffer: {e}")
 
-    def save_messages_to_db(self):
-        """Save messages from buffer to database"""
+    async def asinc_save_messages_to_db(self):
+        """Асинхронное сохранение сообщений из буфера в базу данных"""
         while self.buffer_cicle:
-            game_state = self.sm.get_state('game')
-            time.sleep(1)  # Wait 1 second before each buffer check
+            game_state = await self.sm.get_status('game')
+            await asyncio.sleep(1)  # Асинхронная пауза перед каждой проверкой буфера
+
             if game_state == 'stop' or game_state == 'error':
                 self.buffer_cicle = False
+
             if self.buffer_cicle:    
                 with self.lock:
                     if self.message_buffer:
@@ -93,9 +138,9 @@ class MessageManager:
                                     continue  # Move on to the next message
                             session.commit()
                         except Exception as e:
-                            self.sm.set_state('game', 'error', self.ccom.newTM())
-                            self.sm.set_state('battle', 'error', self.ccom.newTM())
-                            self.sm.set_state('error', f'Error saving message to DB: {e}', self.ccom.newTM())
+                            await self.sm.set_status('game', 'error', self.ccom.newTM())
+                            await self.sm.set_status('battle', 'error', self.ccom.newTM())
+                            await self.sm.set_status('error', f'Error saving message to DB: {e}', self.ccom.newTM())
                             logger.error(f"Saving messages: {e}\n MESS ERR:{message}")
                             session.rollback()
                             self.buffer_cicle = False

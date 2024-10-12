@@ -6,7 +6,7 @@ from assistant import Assistant
 from open_ai import AIDesigner
 import logging
 from core_common import CoreCommon
-from multiproc import StatusManager
+from status_manager import StatusManager
 from utils import parse_arena
 from models import (Arena, db)
 # Logging setup

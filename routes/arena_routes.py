@@ -3,11 +3,11 @@ import json
 from flask import Blueprint, render_template, jsonify, request, g, url_for, redirect, current_app, make_response
 from cookies import Cookies
 from models import Character, Registrar, Arena, PreRegistrar
-from multiproc import StatusManager
+from status_manager import StatusManager
 from core_common import CoreCommon
-#from message_buffer import MessageManager
+from messaging_manager import MessageManager
 from load_user import load_user
-from tactics_manager import PlayerManager
+from player_manager import PlayerManager
 
 arena_bp = Blueprint('arena', __name__)
 logger = logging.getLogger(__name__)
@@ -16,8 +16,9 @@ log.setLevel(logging.ERROR)
 
 cok = Cookies()
 sm = StatusManager()
+mm = MessageManager()
 plm = PlayerManager()
-ccom = CoreCommon()
+#ccom = CoreCommon()
 battle_start = False
 @arena_bp.before_request
 def before_request():
@@ -57,6 +58,7 @@ async def arena():
     arena = Arena.query.order_by(Arena.date_created.desc()).first()
     arena_image_url = arena.image_url if arena else None
 
+
     # Создаем ответ и увеличиваем значение step_read для текущего пользователя
     response = make_response(render_template(
         'arena.html',
@@ -66,14 +68,8 @@ async def arena():
         show_start_game_popup=False
     ))
 
-    # Инкрементируем значение step_read в cookies для пользователя
-    # response = cok.increment_cookie_for_user(response, g.user_id, 'step_read', max_age=86400)
-
-    # logger.info(f'{g.user_id} arena start: ({cok.is_odd(g.user_id)})')
-    # if cok.is_odd(g.user_id) == False:
-    #     response = cok.increment_cookie_for_user(response, g.user_id, 'step_read', max_age=86400)
-    #     logger.info(f'{g.user_id} new arena start: ({cok.is_odd(g.user_id)})')
-
+    plm.initial(g.user_id, response)
+    
     return response  # Возвращаем ответ с инкрементированным значением в cookies
 
 
@@ -111,16 +107,17 @@ async def get_chat_messages(chat_type):
     #logger.info(f'==========: {chat_type} ===================')
     # get_message_chatTactics(self, sender, user_id)
     try:
+        messages = ""
         # Вызов метода из CoreCommon для получения сообщений
         if chat_type == "arena":
-            messages = await ccom.get_message_chatArena(sender=None, arena_id=None, user_id=None, mark_user_id=None)
-            #logger.info(f'==========: {chat_type} messages: {messages}')
+            messages = await mm.get_all_message_chatArena(sender=None, arena_id=None, user_id=None)
+            #logger.info(f'==========: {chat_type} messages: {len(messages)} | {messages}')
         elif chat_type == "general":
-            messages = await ccom.get_message_GeneralChat(sender=None, user_id=None, mark_user_id=None)
-            #logger.info(f'==========: {chat_type} messages: {messages}')
+            messages = await mm.get_all_message_GeneralChat(sender=None, user_id=None)
+            #logger.info(f'==========: {chat_type} messages: {len(messages)} | {messages}')
         elif chat_type == "tactics":
-            messages = await ccom.get_message_chatTactics(sender=None, user_id=g.user_id, mark_user_id=None)
-            #logger.info(f'==========: {chat_type} messages: {messages}')
+            messages = await mm.get_all_message_chatTactics(sender=None, user_id=g.user_id)
+           # logger.info(f'==========: {chat_type} messages: {len(messages)} | {messages}')
         else:
             return jsonify({"error": f"Invalid chat type: {chat_type}"}), 400
 
@@ -160,23 +157,24 @@ async def get_latest_arena_image():
 async def get_status():
     
     try:
-        characters = sm.get_state('characters')
-        game_status = sm.get_state('game')
-        arena_status = sm.get_state('arena')
-        battle_status = sm.get_state('battle')
-        timer_status = sm.get_state('timer')
+        # characters = await sm.get_state('characters')
+        # game_status = await sm.get_state('game')
+        # arena_status = await sm.get_state('arena')
+        # battle_status = await sm.get_state('battle')
+        # timer_status = await sm.get_state('timer')
 
-        if characters:
-            if game_status or arena_status or battle_status or timer_status:
-                await plm.battle_start(g.user_id , game_status)
-                logger.info(f" {characters} | {game_status} | {arena_status} | {battle_status} | {timer_status}")
-
+        # if characters:
+        #     if game_status or arena_status or battle_status or timer_status:
+        #         await plm.battle_start(g.user_id , game_status)
+        #         logger.info(f" {characters} | {game_status} | {arena_status} | {battle_status} | {timer_status}")
+        await plm.battle_trigger(g.user_id)
+        
         return jsonify({
             #'registered_players': registered_players,
-            'battle_status': battle_status,
-            'timer_status': timer_status,
-            'game_status': game_status,
-            'arena_status': arena_status
+            'battle_status': plm.battle_status,
+            'timer_status': plm.timer_status,
+            'game_status': plm.game_status,
+            'arena_status': plm.arena_status
         }), 200
 
     except Exception as e:

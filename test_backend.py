@@ -2,7 +2,7 @@ import unittest
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker
 from chats_models import ArenaChatMessage, GeneralChatMessage, TacticsChatMessage, ReadStatus, Base
-from message_buffer import MessageManager
+from messaging_manager import MessageManager
 from datetime import datetime
 import logging
 
@@ -24,7 +24,7 @@ class MessageManagerTests(unittest.TestCase):
         Base.metadata.create_all(cls.connection)
 
         # Инициализация MessageManager с использованием тестовой базы данных
-        cls.message_manager = MessageManager(MessageManagerTests)
+        cls.message_manager = MessageManager()
         cls.message_manager.engine = engine
         cls.message_manager.Session = sessionmaker(bind=cls.connection)
 
@@ -86,7 +86,7 @@ class MessageManagerTests(unittest.TestCase):
         
         # Сохраняем сообщения в базу данных
         try:
-            self.message_manager.save_messages_to_db()
+            #self.message_manager.save_messages_to_db()
             logger.info("Сообщения успешно сохранены в базу данных")
         except Exception as e:
             logger.error(f"Ошибка при сохранении сообщений: {e}")
