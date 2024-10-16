@@ -14,6 +14,31 @@ import json
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
+class ChatArena:
+    message = None
+    sender = None
+    user_id = None
+    arena_id = None
+    name = None
+
+    def __init__(self, message, sender, user_id, arena_id, name):
+        self.message = message
+        self.sender = sender
+        self.user_id = user_id
+        self.arena_id = arena_id
+        self.name = name
+
+class ChatTactic:
+    message = None
+    sender = None
+    user_id = None
+    
+    def __init__(self, message, sender, user_id):
+        message = message,
+        sender = sender,
+        user_id = user_id,
+
 class MessageManager:
     def __init__(self):
         self.conf = Config()
@@ -25,25 +50,58 @@ class MessageManager:
         self.initialize_database()
 
     async def box_extraction(self, transport):
-        print('MM transport:',transport)
+        #print('MM transport:',transport)
         if isinstance(transport, Transport):
             message_box = transport.message
-            print('MM message_box dict:',transport.channel, message_box)
+           # print('MM message_box:',type(message_box), message_box)
             if message_box:
                 if isinstance(message_box, dict):
                     mess = message_box.get('message')
                     if isinstance(mess, dict):
                         mess = mess['message']
                     return mess
+                elif isinstance(message_box, list):
+                    mess = message_box
+                    return mess
         else:
             message_box = transport
         return message_box    
 
+    async def get_list_extract(self, messages):
+        res_list = []
+        for mess in messages:
+            if isinstance(mess, dict):
+                res = mess['message']
+                res_list.append(res)
+            else:
+                res_list.append(mess)    
+        return res_list        
     
+    async def to_chatArena(self, message, sender, user_id, arena_id, name):
+        chatMess =ChatArena(
+            message = message,
+            sender = sender,
+            user_id = user_id,
+            arena_id = arena_id,
+            name = name
+            )
+        return chatMess
+    
+    async def get_chatArena(self, chat_mess):
+        if isinstance(chat_mess, ChatArena):
+            message_box = {
+                "message": chat_mess.message,
+                "sender": chat_mess.sender,
+                "user_id": chat_mess.user_id,
+                "arena_id": chat_mess.arena_id,
+                "name": chat_mess.name
+            }
+        return message_box
+
     #======================================================
     async def create_channel_message(self, channel):
         response = await self.client.create_channel(channel)
-        return self.box_extraction(response)
+        return await self.box_extraction(response)
 
     async def create_message_channels(self):
         channel_list = ['arena_chat', 'general_chat']
@@ -71,13 +129,15 @@ class MessageManager:
     
     async def get_messages(self, name):
         response = await self.client.get_messages(name)
-        print('MM name:',name,response)
         messages = await self.box_extraction(response)
-        print('MM--->>:',messages)
         mess_list = []
-        for message_box in messages:
-            message = await self.box_extraction(message_box)
-            mess_list.append(message)
+       # print('get_messages:',type(messages),messages)
+        if isinstance(messages, list): 
+            for message_box in messages:
+                message = await self.box_extraction(message_box)
+                mess_list.append(message)
+        else:
+            return messages       
         return mess_list    
 
     async def get_name_channels(self):
@@ -95,38 +155,47 @@ class MessageManager:
 #----------------------------------------------------------------------------------
 
     async def message_to_Arena(self, message, sender, arena_id, user_id, name):
-        message_box = {
-                "message": message,
-                "sender": sender,
-                "user_id": user_id,
-                "arena_id": arena_id,
-                "name": name
-            }
+       
+        message_box = await self.to_chatArena(message, sender, user_id, arena_id, name)
         await self.send_message('arena_chat', message_box)
 
-    async def get_message_chatArena(self):
-        resp = self.get_message('arena_chabattle_processt')
-        box_message = await self.box_extraction(resp) 
-        print('box_message:', box_message)
-        return box_message
-    
-    
+    async def get_message_chatArena(self, sender, arena_id, user_id):
+        resp = await self.get_message('arena_chat')
+        if isinstance(resp, dict):
+            mess_box = await self.box_extraction(resp) 
+            if isinstance(mess_box, dict):
+                chat_box = mess_box['message']
+                if isinstance(chat_box, ChatArena):
+                    if sender != None:
+                        if sender not in chat_box.sender:
+                            return ''
+                    if arena_id != None:
+                        if arena_id not in chat_box.arena_id:
+                            return ''          
+                    if user_id != None:
+                        if user_id not in chat_box.user_id:
+                            return ''
+       
     async def get_all_message_chatArena(self, sender, arena_id, user_id):
         res_list = []
         message_list = await self.get_messages('arena_chat')    
-        print('>> message_list:',message_list)
         for message_box in message_list:
-            mess_box = await self.box_extraction(message_box) 
-            if sender != None:
-                if sender not in mess_box:
-                    continue  
-            if arena_id != None:
-                if arena_id not in mess_box:
-                    continue
-            if user_id != None:
-                if user_id not in mess_box:
-                    continue
-            res_list.append(mess_box)
+            if isinstance(message_box, dict):
+                mess_box = await self.box_extraction(message_box) 
+                if isinstance(mess_box, dict):
+                    chat_box = mess_box['message']
+                    if isinstance(chat_box, ChatArena):
+                        if sender != None:
+                            if sender not in chat_box.sender:
+                                continue
+                        if arena_id != None:
+                            if arena_id not in chat_box.arena_id:
+                                continue          
+                        if user_id != None:
+                            if user_id not in chat_box.user_id:
+                                continue
+                            
+                        res_list.append(chat_box.message)
         return res_list
     
     #--------------------------------------------------------------------------
@@ -150,6 +219,7 @@ class MessageManager:
                 if user_id not in mess_box:
                     continue
             res_list.append(mess_box)
+        print('GeneralChat:',res_list)
         return res_list
         
         
@@ -165,36 +235,51 @@ class MessageManager:
                 if user_id not in mess_box:
                     continue
             res_list.append(mess_box)
+            
+        print('All GeneralChat:',res_list)
+            
         return res_list   
     #--------------------------------------------------------------------------
     async def message_to_Tactics(self, message, sender, user_id):
-        message_box = {
-                "message": message,
-                "sender": sender,
-                "user_id": user_id,
-            }
-        await self.send_message(f'chat_{user_id}', message_box)
+        chatMess = ChatTactic(
+            message = message,
+            sender = sender,
+            user_id = user_id,
+            )
+        res = await self.send_message(f'chat_{user_id}', chatMess)
+        print('to_Tactics:',res)
 
-    async def get_message_chatTactics(self, sender, user_id):
-        res_list = []
-        message_list = await self.get_messages(f'chat_{user_id}')    
-        for message_box in message_list:
-            mess_box = await self.box_extraction(message_box) 
-            if sender != None:
-                if sender not in mess_box:
-                    continue  
-            res_list.append(mess_box)
-        return res_list
+    async def get_message_chatTactic(self, sender, user_id):
+        message_box = await self.get_messages(f'chat_{user_id}')  
+        res = '' 
+        if isinstance(message_box, dict):
+            mess_box = await self.box_extraction(message_box)      
+            if isinstance(mess_box, dict):
+                chat_box = mess_box['message']
+                if isinstance(chat_box, ChatArena):    
+                    if sender != None:
+                        if sender not in chat_box.sender:  
+                            return ''
+                        else:
+                            res = chat_box.message
+        return res
     
     async def get_all_message_chatTactics(self, sender, user_id):
         res_list = []
-        message_list = await self.get_messages(f'chat_{user_id}')    
-        for message_box in message_list:
-            mess_box = await self.box_extraction(message_box) 
-            if sender != None:
-                if sender not in mess_box:
-                    continue  
-            res_list.append(mess_box)
+        message_list = await self.get_messages(f'chat_{user_id}') 
+        print('>>> all chatTactics:',type(message_list),message_list) 
+        if isinstance(message_list, list):   
+            for message_box in message_list:
+                mess_box = await self.box_extraction(message_box) 
+                if isinstance(mess_box, dict):
+                    chat_box = mess_box['message']
+                    if isinstance(chat_box, ChatArena):    
+                        if sender != None:
+                            if sender in chat_box.sender:  
+                                res_list.append(chat_box.message)
+                        else:
+                            res_list.append(chat_box.message)
+  
         return res_list
 
 #---------------------------------------------------------------------------    

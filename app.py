@@ -117,7 +117,7 @@ def run_flask_app(app, stop_event, base_port=6511):
             app.run(debug=True, port=port)
         except OSError as e:
             if "Address already in use" in str(e):
-                logger.warning(f"Порт {port} занят. Flak уже запущен.")
+                logger.warning(f"Порт {port} занят. Flask уже запущен.")
             else:
                 logger.error(f"Ошибка при запуске Flask: {e}")
 

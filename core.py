@@ -174,7 +174,7 @@ class BattleManager:
                 players_waiting = await self.start_waiting_for_players(stop_event)
                 if players_waiting:
                     await self.generate_arena()
-                    #await self.start_battle()
+                    await self.start_battle()
             game_cicle+=1    
 
 
@@ -182,12 +182,7 @@ class BattleManager:
      
 # 'tactic_chat', 'arena_chat', 'general_chat'
     async def start_battle(self):
-        
-        #_arena = await self.sm.get_status('arena')
-        
-        # logger.info(f'START ARENA: {type(_arena)}, {_arena}')
-        # logger.info(f'ARENA: {_arena.id}, {_arena.image_url}')
-        
+
         logger.info(f"--- Battle {self.battle_count + 1} started ---")
         try:
             self.battle_count += 1

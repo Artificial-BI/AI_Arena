@@ -97,7 +97,7 @@ async def get_registered_characters():
                 })
         return jsonify(characters)
     except Exception as e:
-        logger.error(f"Error fetching registered characters: {e}", exc_info=True)
+        logger.error(f"fetching registered characters: {e}", exc_info=True)
         return jsonify({"error": "Internal server error"}), 500
 
 @arena_bp.route('/get_chat_messages/<chat_type>', methods=['GET'])
@@ -142,7 +142,7 @@ async def get_arena_image_url(arena_id):
         else:
             return jsonify({"error": "Arena image not found"}), 404
     except Exception as e:
-        logger.error(f"Error fetching arena image URL: {e}", exc_info=True)
+        logger.error(f"fetching arena image URL: {e}", exc_info=True)
         return jsonify({"error": "Internal server error"}), 500
 
 @arena_bp.route('/get_latest_arena_image')
@@ -157,6 +157,11 @@ async def get_latest_arena_image():
 async def get_status():
     
     try:
+        battle = plm.battle_status
+        timer = plm.timer_status
+        game = plm.game_status
+        user = plm.user_status        
+        #logger.info(f" >>>>>>>> | {game} | {user} | {battle} | {timer}")
         # characters = await sm.get_state('characters')
         # game_status = await sm.get_state('game')
         # arena_status = await sm.get_state('arena')
@@ -171,10 +176,10 @@ async def get_status():
         
         return jsonify({
             #'registered_players': registered_players,
-            'battle_status': plm.battle_status,
-            'timer_status': plm.timer_status,
-            'game_status': plm.game_status,
-            'arena_status': plm.arena_status
+            'battle_status': battle,
+            'timer_status': timer,
+            'game_status': game,
+            'user_status': user
         }), 200
 
     except Exception as e:

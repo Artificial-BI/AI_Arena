@@ -85,6 +85,7 @@ class StatusManager:
     async def status_subscribe(self, name, callback):
         resp = await self.client.subscribe(name, callback)
         res = await self.box_extraction(resp)  
+        print('sub>>>',name,res)
         if res:
             return res 
 

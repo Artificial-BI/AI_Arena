@@ -26,6 +26,7 @@ class MessageClient:
     def __init__(self):
         self.config = Config()
         self.host = self.config.MESS_HOST
+        self.port = self.config.MESS_PORT
 
     async def make_transport(self, action, channel, message_box=None):
         """Формирование контейнера сообщения."""
@@ -60,7 +61,6 @@ class MessageClient:
 
     async def send_message(self, transport):
         """Отправка сообщения на сервер."""
-        self.port = self.config.MESS_PORT
         reader, writer = await asyncio.open_connection(self.host, self.port)
         serialized_message = pickle.dumps(transport)
         writer.write(len(serialized_message).to_bytes(8, 'big'))

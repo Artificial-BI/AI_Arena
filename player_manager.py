@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class PlayerManager:
-    def __init__(self, loop=None):
+    def __init__(self):
         self.step_number = 0
         self.step_tactic = 0
         self.start_step = 0
@@ -31,8 +31,9 @@ class PlayerManager:
         self.battle_process = False
         self.arena_id = None
         self.battleStart = True
-        self.once = True
+        self.once = {}
         
+        self.user_status = False
         self.game_status = ""
         self.error_status = ""
         self.battle_status = ""
@@ -46,20 +47,26 @@ class PlayerManager:
         self.timer_status = 0
         self.arena_status = ""  
 
-    async def initial_stat_mess(self, user_id):
-        res_mes = await self.mm.create_channel_message(f'chat_{user_id}')
-        res_stat = "" #await self.statuses_subscribe()
-        logger.info(f"User: {user_id} init stat: {res_stat} | mes: {res_mes}")
+    async def initial_mess(self, user_id):
+        res_stat = await self.mm.create_channel_message(f'stat_{user_id}')
+        res_chat = await self.mm.create_channel_message(f'chat_{user_id}')
+
+        logger.info(f"User: {user_id} | stat: {res_stat} | chat: {res_chat} ")
         logger.info(f"channels: {await self.mm.get_name_channels()}")
+
         
-    async def statuses_subscribe(self): 
+    # chat_40719177622694151  
+    # chat_4789789882024500043  
+    
+      
+    async def set_statuses_subscribe(self): 
         subscribe_stat = {  'game':self.game_callback,
                             'error':self.error_callback,
                             'battle':self.battle_callback,
                             'timer':self.timer_callback,
                             'battle_process':self.battle_process_callback
                          }
-        
+        logger.info(f"---- PLM SUBSCRIBE ----")
         await self.sm.subscribe_statuses(subscribe_stat)
         
     def timer_callback(self, response):
@@ -81,6 +88,14 @@ class PlayerManager:
         self.battle_process = response     
         print('battle_process:', self.battle_process)
 
+    async def get_statuses(self,user_id):
+        self.user_status = await self.sm.get_status(f'stat_{user_id}')
+        self.timer_status = await self.sm.get_status('timer')
+        self.game_status = await self.sm.get_status('game')
+        self.error_status = await self.sm.get_status('error')
+        self.battle_status = await self.sm.get_status('battle')
+        self.arena_status =  await self.sm.get_status('arena')
+        self.battle_process = await self.sm.get_status('battle_process')
 
     def add_PreRegistrar(self, user_id, character_id):
         # Проверяем, есть ли запись в PreRegistrar
@@ -105,21 +120,17 @@ class PlayerManager:
         return character
 
     async def battle_trigger(self, user_id):
+        await self.get_statuses(user_id)
         
-        #logger.info(f"T: {self.once}")
-        self.once = False
-        if self.once:
-            logger.info(f"START: {user_id}")
+        if not self.once.get(user_id):
+            await self.initial_mess(user_id)
             #await self.battle_start(user_id)
-            
-            self.once = False 
-        return ""    
+            self.once[user_id] = True 
+   
 
     async def battle_start(self, user_id):
 
-        await self.initial_stat_mess(user_id)
-
-        logger.info(f'STAT game:{self.game_status}, error:{self.error_status}, battle:{self.battle_status}, timer:{self.timer_status}, arena:{self.arena_status}')
+        logger.info(f'STAT PLM:{self.game_status}, error:{self.error_status}, battle:{self.battle_status}, timer:{self.timer_status}, arena:{self.arena_status}')
 
         if self.battle_process:
             await self.process_battle(user_id)
@@ -159,10 +170,10 @@ class PlayerManager:
                     # получаем ходы зарегистрированный пользователей (кроме своего)
                     for user_reg in user_ids: 
                         if user_reg != user_id:
-                            opponent_mov = await self.mm.get_message_chatArena(sender='fighter', arena_id=None, user_id=user_reg, mark_user_id=user_id)
+                            opponent_mov = await self.mm.get_message_chatArena(sender='fighter', arena_id=None, user_id=user_reg)
                             opponent_moves_list.append(opponent_mov)
                     # получаем оценки рефери
-                    referee_rating_list = await self.mm.get_message_chatArena(sender='referee', arena_id=None, user_id=self.config.SYS_ID, mark_user_id=user_id)
+                    referee_rating_list = await self.mm.get_message_chatArena(sender='referee', arena_id=None, user_id=self.config.SYS_ID)
                     
                     if await self.sm.get_status(f'stat_{user_id}') == False:
                         recomendation = await self.tcm.generate_tactics(user_id, arena, cur_character, opponent_character_list, opponent_moves_list, referee_rating_list)
@@ -229,7 +240,7 @@ class FighterManager:
         
         tactical_recommendation = await self.mm.get_message_chatTactics(sender='tactic', user_id=user_id)
         user_wishes = await self.mm.get_message_chatTactics(sender='user', user_id=user_id)
-
+        logger.info(f'-- generate_fighter >>> {user_wishes}')
         cur_arena_txt = cur_arena.to_str() 
         cur_character_txt =cur_character.to_str() 
         prompt = f"Arena: {cur_arena_txt}\n\n"

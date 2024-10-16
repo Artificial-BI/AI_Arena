@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", function() {
     function updateStatus(data) {
         const statusMessage = `
             Game Status: ${data.game_status} <br>
-            Arena Status: ${data.arena_status} <br>
+            User Status: ${data.user_status} <br>
             Battle Status: ${data.battle_status} <br>
             Timer Status: ${data.timer_status}
         `;

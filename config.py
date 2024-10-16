@@ -62,7 +62,7 @@ class Config:
     IMAGE_QUALITY = 'standard'
     IMAGE_SIZE = '1024x1024'
     
-    DEBUG = True
+    DEBUG = False
 
     # Путь к JSON-файлу
     FIRST_VISIT_FILE = 'first_visit.json'
